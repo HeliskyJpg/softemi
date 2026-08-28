@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Flower2, Shield, User, Lock, ArrowRight, Sparkles } from 'lucide-react';
+import { Shield, User, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
+import { EmilaLogo } from '../common/EmilaLogo';
 
 export const LoginView: React.FC = () => {
   const { login } = useApp();
@@ -60,14 +61,14 @@ export const LoginView: React.FC = () => {
         >
           {/* Logo & Header */}
           <div className="text-center mb-8 relative">
-            <div className="w-12 h-12 rounded-2xl bg-[#681B2B] text-white flex items-center justify-center mx-auto mb-3 shadow-xs">
-              <Flower2 className="w-6 h-6" />
+            <div className="flex justify-center mb-3">
+              <EmilaLogo size={88} variant="circle" className="shadow-md hover:scale-105 transition-transform" />
             </div>
-            <h1 className="text-2xl font-bold text-[#681B2B] tracking-tight">EMILA</h1>
+            <h1 className="text-2xl font-bold text-[#681B2B] tracking-tight">EMILA FLORISTERÍA</h1>
             <p className="text-xs text-[#7D6871] font-medium mt-1">
               Sistema de Gestión de Pedidos Personalizados
             </p>
-            <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-0.5 rounded-full bg-[#FBECEF] text-[#681B2B] text-[11px] font-medium border border-[#F2D6DE]/60">
+            <div className="inline-flex items-center gap-1.5 mt-2.5 px-3 py-0.5 rounded-full bg-[#FBECEF] text-[#681B2B] text-[11px] font-medium border border-[#F2D6DE]/60">
               <Sparkles className="w-3 h-3" />
               Prototipo de Validación
             </div>

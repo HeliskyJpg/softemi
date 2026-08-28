@@ -9,6 +9,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { EmilaLogo } from '../common/EmilaLogo';
 
 interface NavbarProps {
   onToggleMobileSidebar: () => void;
@@ -36,7 +37,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <span className="font-bold text-lg text-[#681B2B] lg:hidden">EMILA</span>
+          <div className="flex items-center gap-2">
+            <EmilaLogo size={28} variant="circle" />
+            <span className="font-bold text-base text-[#681B2B] tracking-tight">EMILA</span>
+          </div>
         </div>
 
         {/* Desktop spacer to push right session menu */}

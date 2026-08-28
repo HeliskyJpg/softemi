@@ -12,6 +12,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { ActiveView } from '../../types';
+import { EmilaLogo } from '../common/EmilaLogo';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -106,17 +107,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
             onClick={() => handleNavClick('dashboard')}
             className="flex items-center gap-3 cursor-pointer select-none group pb-4 border-b border-[#F2D6DE]/60"
           >
-            <div className="w-11 h-11 rounded-full bg-[#681B2B] flex items-center justify-center text-white shadow-xs">
-              <span className="font-serif text-sm tracking-wider font-bold italic text-[#FBECEF]">
-                EMILA
-              </span>
-            </div>
+            <EmilaLogo size={46} variant="circle" className="shadow-xs hover:scale-105 transition-transform" />
             <div>
               <h1 className="text-base font-extrabold tracking-tight text-[#2C1E23] leading-none">
                 EMILA
               </h1>
               <p className="text-[11px] text-[#7D6871] mt-1 font-medium">
-                Gestión de pedidos
+                Floristería &bull; Taller
               </p>
             </div>
           </div>
