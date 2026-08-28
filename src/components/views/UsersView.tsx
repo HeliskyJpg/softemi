@@ -12,7 +12,7 @@ import {
 import { SystemUser, UserRole } from '../../types';
 
 export const UsersView: React.FC = () => {
-  const { users, currentUser, addUser, updateUser, addToast } = useApp();
+  const { users, currentUser, addUser, updateUser, addToast, switchUserRole } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
 
@@ -27,12 +27,26 @@ export const UsersView: React.FC = () => {
 
   if (!isAdmin) {
     return (
-      <div className="p-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60">
-        <Shield className="w-10 h-10 text-[#681B2B] mx-auto mb-2" />
-        <h2 className="text-lg font-bold text-[#2C1E23]">Acceso Restringido</h2>
-        <p className="text-xs text-[#7D6871] mt-1">
-          Este módulo está reservado exclusivamente para usuarios con rol de Administrador.
-        </p>
+      <div className="max-w-xl mx-auto p-8 sm:p-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs space-y-4">
+        <div className="w-12 h-12 rounded-full bg-[#FBECEF] text-[#681B2B] flex items-center justify-center mx-auto">
+          <Shield className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-[#2C1E23]">Módulo de Usuarios y Roles</h2>
+          <p className="text-xs text-[#7D6871] mt-1 max-w-md mx-auto">
+            Este módulo requiere privilegios de <strong>Administrador</strong> para gestionar cuentas, credenciales y permisos del personal. Tu usuario actual tiene rol <strong>Colaborador</strong>.
+          </p>
+        </div>
+
+        <div className="pt-2">
+          <button
+            onClick={() => switchUserRole('Administrador')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-medium text-xs shadow-xs transition-colors cursor-pointer"
+          >
+            <Shield className="w-3.5 h-3.5" />
+            Cambiar a Administrador (Modo Demo)
+          </button>
+        </div>
       </div>
     );
   }

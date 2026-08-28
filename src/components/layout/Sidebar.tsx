@@ -6,6 +6,8 @@ import {
   Users,
   Package,
   CalendarDays,
+  BarChart3,
+  UserCheck,
   Plus,
   LogOut,
 } from 'lucide-react';
@@ -21,35 +23,55 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
 
   if (!currentUser) return null;
 
-  const navItems = [
+  const isAdmin = currentUser.role === 'Administrador';
+
+  const navItems: Array<{
+    id: ActiveView;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    matchViews?: ActiveView[];
+    adminOnly?: boolean;
+  }> = [
     {
-      id: 'dashboard' as ActiveView,
+      id: 'dashboard',
       label: 'Dashboard',
       icon: LayoutGrid,
     },
     {
-      id: 'orders' as ActiveView,
+      id: 'orders',
       label: 'Pedidos',
       icon: FileText,
       matchViews: ['orders', 'order-detail', 'order-edit'],
     },
     {
-      id: 'clients' as ActiveView,
+      id: 'clients',
       label: 'Clientes',
       icon: Users,
       matchViews: ['clients'],
     },
     {
-      id: 'components' as ActiveView,
+      id: 'components',
       label: 'Componentes',
       icon: Package,
       matchViews: ['components'],
     },
     {
-      id: 'calendar' as ActiveView,
-      label: 'Agenda y reportes',
+      id: 'calendar',
+      label: 'Agenda',
       icon: CalendarDays,
-      matchViews: ['calendar', 'reports'],
+      matchViews: ['calendar'],
+    },
+    {
+      id: 'reports',
+      label: 'Reportes',
+      icon: BarChart3,
+      matchViews: ['reports'],
+    },
+    {
+      id: 'users',
+      label: 'Usuarios y roles',
+      icon: UserCheck,
+      matchViews: ['users'],
     },
   ];
 

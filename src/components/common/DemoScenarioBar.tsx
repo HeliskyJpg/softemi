@@ -65,6 +65,15 @@ export const DemoScenarioBar: React.FC = () => {
     );
   };
 
+  const handleTestUsersRoles = () => {
+    setActiveView('users');
+    addToast(
+      'Módulo de usuarios: creación de cuentas, asignación de roles y matriz de permisos.',
+      'info',
+      'Guía de Demostración'
+    );
+  };
+
   return (
     <aside
       id="demo-scenario-bar"
@@ -104,7 +113,7 @@ export const DemoScenarioBar: React.FC = () => {
       {/* Expanded Quick Demo Links */}
       {isExpanded && (
         <div className="border-t border-white/10 bg-[#541421] px-4 sm:px-8 py-2.5">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
             <button
               onClick={handleTestCreateOrder}
               className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-left transition-colors flex items-start gap-2 cursor-pointer"
@@ -150,9 +159,22 @@ export const DemoScenarioBar: React.FC = () => {
             >
               <PlayCircle className="w-3.5 h-3.5 shrink-0 text-[#F5B5C8] mt-0.5" />
               <div>
-                <strong className="block text-white text-[11px]">4. Catálogo & Ajuste Stock</strong>
+                <strong className="block text-white text-[11px]">4. Catálogo & Stock</strong>
                 <span className="text-[10px] text-white/70">
-                  Auditoría y control de inventario.
+                  Auditoría de inventario.
+                </span>
+              </div>
+            </button>
+
+            <button
+              onClick={handleTestUsersRoles}
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-left transition-colors flex items-start gap-2 cursor-pointer"
+            >
+              <PlayCircle className="w-3.5 h-3.5 shrink-0 text-[#F5B5C8] mt-0.5" />
+              <div>
+                <strong className="block text-white text-[11px]">5. Usuarios & Roles</strong>
+                <span className="text-[10px] text-white/70">
+                  Cuentas y control de acceso.
                 </span>
               </div>
             </button>
