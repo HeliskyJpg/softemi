@@ -132,16 +132,17 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     const existingQty = existingInForm ? existingInForm.quantity : 0;
     const totalRequested = existingQty + selectedComponentQty;
 
-    // For editing, consider stock plus what was already allocated
-    let effectiveStock = comp.stock;
+    // For editing, consider available stock plus what was already allocated to this order
+    const baseAvailable = comp.physicalStock - comp.reservedStock;
+    let effectiveAvailable = baseAvailable;
     if (existingOrder) {
       const originalAllocated = existingOrder.items.find((it) => it.componentId === comp.id)?.quantity || 0;
-      effectiveStock += originalAllocated;
+      effectiveAvailable += originalAllocated;
     }
 
-    if (totalRequested > effectiveStock) {
+    if (totalRequested > effectiveAvailable) {
       addToast(
-        `Disponibilidad insuficiente para "${comp.name}". Disponible: ${effectiveStock}, Solicitado total: ${totalRequested}.`,
+        `Disponibilidad insuficiente para "${comp.name}". Disponible: ${effectiveAvailable}, Solicitado total: ${totalRequested}.`,
         'error'
       );
       return;
@@ -184,15 +185,16 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     const comp = components.find((c) => c.id === componentId);
     if (!comp) return;
 
-    let effectiveStock = comp.stock;
+    const baseAvailable = comp.physicalStock - comp.reservedStock;
+    let effectiveAvailable = baseAvailable;
     if (existingOrder) {
       const originalAllocated = existingOrder.items.find((it) => it.componentId === comp.id)?.quantity || 0;
-      effectiveStock += originalAllocated;
+      effectiveAvailable += originalAllocated;
     }
 
-    if (newQty > effectiveStock) {
+    if (newQty > effectiveAvailable) {
       addToast(
-        `Stock máximo disponible para "${comp.name}" es de ${effectiveStock} unidades.`,
+        `Stock máximo disponible para "${comp.name}" es de ${effectiveAvailable} ${comp.unit || 'unidades'}.`,
         'warning'
       );
       return;
@@ -575,12 +577,12 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 ) : (
                   items.map((it) => {
                     const comp = components.find((c) => c.id === it.componentId);
-                    let effectiveStock = comp?.stock || 0;
+                    const baseAvailable = comp ? comp.physicalStock - comp.reservedStock : 0;
+                    let effectiveAvailable = baseAvailable;
                     if (existingOrder) {
                       const originalAllocated =
-                        existingOrder.items.find((x) => x.componentId === it.componentId)?.quantity ||
-                        0;
-                      effectiveStock += originalAllocated;
+                        existingOrder.items.find((x) => x.componentId === it.componentId)?.quantity || 0;
+                      effectiveAvailable += originalAllocated;
                     }
 
                     return (
@@ -590,7 +592,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                         className="hover:bg-[#FFF7FA]/50 transition-colors"
                       >
                         <td className="py-2.5 px-3 font-semibold text-[#3A2D33]">
-                          {it.componentName}
+                          <div>{it.componentName}</div>
+                          <div className="text-[10px] text-[#6D5C64] font-normal">
+                            Físico: {comp?.physicalStock ?? 0} | Reservado: {comp?.reservedStock ?? 0}
+                          </div>
                         </td>
                         <td className="py-2.5 px-3 text-[#6D5C64]">
                           <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] font-medium">
@@ -600,12 +605,14 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                         <td className="py-2.5 px-3 text-center">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              effectiveStock < 10
+                              effectiveAvailable <= 0
+                                ? 'bg-red-100 text-red-800'
+                                : effectiveAvailable < 10
                                 ? 'bg-amber-100 text-amber-900'
                                 : 'bg-[#EBF1DE] text-[#4F5B2F]'
                             }`}
                           >
-                            {effectiveStock} unids.
+                            {effectiveAvailable} {comp?.unit || 'unids.'}
                           </span>
                         </td>
                         <td className="py-2.5 px-3 text-right font-medium text-[#3A2D33]">
@@ -615,7 +622,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                           <input
                             type="number"
                             min={1}
-                            max={effectiveStock}
+                            max={effectiveAvailable}
                             value={it.quantity}
                             onChange={(e) =>
                               handleUpdateItemQuantity(
@@ -889,16 +896,18 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   <option value="">-- Seleccionar del catálogo --</option>
                   {components
                     .filter((c) => c.active)
-                    .map((comp) => (
-                      <option
-                        key={comp.id}
-                        value={comp.id}
-                        disabled={comp.stock <= 0}
-                      >
-                        {comp.name} [{comp.category}] — Q{comp.price.toFixed(2)} (Stock:{' '}
-                        {comp.stock})
-                      </option>
-                    ))}
+                    .map((comp) => {
+                      const avail = comp.physicalStock - comp.reservedStock;
+                      return (
+                        <option
+                          key={comp.id}
+                          value={comp.id}
+                          disabled={avail <= 0}
+                        >
+                          {comp.name} [{comp.category}] — Q{comp.price.toFixed(2)} (Disponible: {avail} {comp.unit})
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
 
@@ -906,25 +915,28 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 (() => {
                   const comp = components.find((c) => c.id === selectedComponentId);
                   if (!comp) return null;
+                  const avail = comp.physicalStock - comp.reservedStock;
 
                   return (
                     <div className="p-3.5 rounded-xl bg-[#FFF7FA] border border-[#FBDAE3] text-xs space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-[#8E315E]">{comp.name}</span>
-                        <span className="font-bold text-[#65733D]">Q {comp.price.toFixed(2)} c/u</span>
+                        <span className="font-bold text-[#65733D]">Q {comp.price.toFixed(2)} / {comp.unit}</span>
                       </div>
-                      <p className="text-[#6D5C64] text-[11px]">{comp.description}</p>
-                      <div className="flex items-center justify-between pt-1 border-t border-[#FBDAE3]/50">
-                        <span className="text-[#6D5C64]">Existencia en taller:</span>
-                        <span
-                          className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${
-                            comp.stock < 10
-                              ? 'bg-amber-100 text-amber-900'
-                              : 'bg-[#EBF1DE] text-[#4F5B2F]'
-                          }`}
-                        >
-                          {comp.stock} unidades disponibles
-                        </span>
+                      {comp.description && <p className="text-[#6D5C64] text-[11px]">{comp.description}</p>}
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#FBDAE3]/50 text-center text-[11px]">
+                        <div className="p-1.5 rounded-lg bg-white border border-gray-100">
+                          <span className="text-[#6D5C64] block text-[10px]">Físico</span>
+                          <span className="font-bold text-[#3A2D33]">{comp.physicalStock}</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-white border border-gray-100">
+                          <span className="text-[#6D5C64] block text-[10px]">Reservado</span>
+                          <span className="font-bold text-amber-700">{comp.reservedStock}</span>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-[#EBF1DE] border border-[#D5E2BA]">
+                          <span className="text-[#4F5B2F] block text-[10px]">Disponible</span>
+                          <span className="font-bold text-[#4F5B2F]">{avail}</span>
+                        </div>
                       </div>
                     </div>
                   );
@@ -941,7 +953,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   min={1}
                   max={
                     selectedComponentId
-                      ? components.find((c) => c.id === selectedComponentId)?.stock || 1
+                      ? Math.max(1, (components.find((c) => c.id === selectedComponentId)?.physicalStock || 0) - (components.find((c) => c.id === selectedComponentId)?.reservedStock || 0))
                       : 100
                   }
                   value={selectedComponentQty}

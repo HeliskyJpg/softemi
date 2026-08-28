@@ -44,8 +44,11 @@ export const DashboardView: React.FC = () => {
     })
     .slice(0, 6);
 
-  // Low stock alert items
-  const lowStockItems = components.filter((c) => c.stock <= c.minStockAlert);
+  // Low stock alert items based on available stock
+  const lowStockItems = components.filter((c) => {
+    const available = c.physicalStock - c.reservedStock;
+    return available <= c.minStockAlert;
+  });
 
   const metrics = [
     {
@@ -285,19 +288,28 @@ export const DashboardView: React.FC = () => {
                   <p className="font-semibold">Atención: {lowStockItems.length} componentes bajo stock</p>
                 </div>
                 <div className="space-y-2">
-                  {lowStockItems.slice(0, 4).map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between text-xs p-2 rounded-lg bg-[#FFF7FA]"
-                    >
-                      <span className="font-medium text-[#3A2D33] truncate max-w-[150px]">
-                        {item.name}
-                      </span>
-                      <span className="font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px]">
-                        {item.stock} unids.
-                      </span>
-                    </div>
-                  ))}
+                  {lowStockItems.slice(0, 4).map((item) => {
+                    const avail = item.physicalStock - item.reservedStock;
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between text-xs p-2 rounded-lg bg-[#FFF7FA]"
+                      >
+                        <span className="font-medium text-[#3A2D33] truncate max-w-[150px]">
+                          {item.name}
+                        </span>
+                        <span
+                          className={`font-bold px-2 py-0.5 rounded-full text-[11px] ${
+                            avail <= 0
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-amber-100 text-amber-900'
+                          }`}
+                        >
+                          {avail} {item.unit || 'unids.'}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : (

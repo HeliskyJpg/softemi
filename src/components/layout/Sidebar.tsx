@@ -32,7 +32,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
   const pendingOrdersCount = orders.filter(
     (o) => o.status === 'Pendiente' || o.status === 'En preparación'
   ).length;
-  const lowStockCount = components.filter((c) => c.stock <= c.minStockAlert).length;
+  const lowStockCount = components.filter(
+    (c) => c.active && (c.physicalStock - c.reservedStock) <= c.minStockAlert
+  ).length;
 
   const navItems = [
     {
