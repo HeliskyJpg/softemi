@@ -1,0 +1,8 @@
+{
+  "name": "Remix EMILA - Gestión de Pedidos Personalizados",
+  "description": "Sistema administrativo interno para la gestión, personalización, control de stock y agenda de pedidos personalizados de floristería y detalles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
