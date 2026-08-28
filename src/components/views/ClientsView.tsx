@@ -6,10 +6,7 @@ import {
   Plus,
   Edit2,
   Phone,
-  MessageSquare,
   ShoppingBag,
-  Sparkles,
-  UserCheck,
   X,
 } from 'lucide-react';
 import { Client } from '../../types';
@@ -93,11 +90,11 @@ export const ClientsView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#3A2D33] tracking-tight flex items-center gap-2">
-            <Users className="w-6 h-6 text-[#8E315E]" />
+          <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight flex items-center gap-2">
+            <Users className="w-6 h-6 text-[#681B2B]" />
             Directorio de Clientes
           </h1>
-          <p className="text-xs sm:text-sm text-[#6D5C64] mt-0.5">
+          <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5">
             Registro de contactos frecuentes, preferencias florales e historial de pedidos.
           </p>
         </div>
@@ -105,17 +102,17 @@ export const ClientsView: React.FC = () => {
         <button
           id="btn-new-client"
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E315E] hover:bg-[#7A294F] text-white font-bold text-sm shadow-sm transition-all cursor-pointer hover:shadow-md"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-sm shadow-xs transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          + Nuevo Cliente
+          Nuevo Cliente
         </button>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-[#FBDAE3] shadow-xs">
+      <div className="bg-white rounded-2xl p-4 border border-[#F2D6DE]/60 shadow-xs">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6D5C64]">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
             <Search className="w-4 h-4" />
           </div>
           <input
@@ -124,7 +121,7 @@ export const ClientsView: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por nombre de cliente, teléfono o preferencias..."
-            className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-[#FFF7FA]/50 focus:bg-white text-[#3A2D33] placeholder-[#6D5C64]/60 focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30"
+            className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/20 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20"
           />
         </div>
       </div>
@@ -132,10 +129,10 @@ export const ClientsView: React.FC = () => {
       {/* Clients Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredClients.length === 0 ? (
-          <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-[#FBDAE3]">
-            <Users className="w-8 h-8 text-[#FBDAE3] mx-auto mb-2" />
-            <p className="font-semibold text-sm text-[#3A2D33]">No se encontraron clientes</p>
-            <p className="text-xs text-[#6D5C64]">Intente con otros términos de búsqueda.</p>
+          <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60">
+            <Users className="w-8 h-8 text-[#F2D6DE] mx-auto mb-2" />
+            <p className="font-semibold text-sm text-[#2C1E23]">No se encontraron clientes</p>
+            <p className="text-xs text-[#7D6871]">Intente con otros términos de búsqueda.</p>
           </div>
         ) : (
           filteredClients.map((client) => {
@@ -145,21 +142,21 @@ export const ClientsView: React.FC = () => {
               <div
                 key={client.id}
                 id={`client-card-${client.id}`}
-                className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs hover:border-[#F2D6DE] transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-bold text-sm text-[#3A2D33]">{client.name}</h3>
-                      <div className="flex items-center gap-1.5 text-xs text-[#6D5C64] mt-1">
-                        <Phone className="w-3.5 h-3.5 text-[#65733D]" />
+                      <h3 className="font-bold text-sm text-[#2C1E23]">{client.name}</h3>
+                      <div className="flex items-center gap-1.5 text-xs text-[#7D6871] mt-1">
+                        <Phone className="w-3.5 h-3.5 text-[#059669]" />
                         <span>{client.phone}</span>
                       </div>
                     </div>
 
                     <button
                       onClick={() => handleOpenEdit(client)}
-                      className="p-1.5 rounded-lg border border-[#FBDAE3] bg-[#FFF7FA] text-[#8E315E] hover:bg-[#8E315E] hover:text-white transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg border border-[#F2D6DE] bg-[#FBECEF]/40 text-[#681B2B] hover:bg-[#681B2B] hover:text-white transition-colors cursor-pointer"
                       title="Editar cliente"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -167,29 +164,29 @@ export const ClientsView: React.FC = () => {
                   </div>
 
                   {client.notes ? (
-                    <div className="mt-3 p-2.5 rounded-xl bg-[#FFF7FA] border border-[#FBDAE3]/60 text-xs text-[#3A2D33]">
-                      <span className="text-[10px] font-bold text-[#8E315E] uppercase block">
+                    <div className="mt-3 p-2.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60 text-xs text-[#2C1E23]">
+                      <span className="text-[10px] font-bold text-[#681B2B] uppercase block">
                         Preferencias:
                       </span>
-                      <p className="text-[11px] text-[#6D5C64] mt-0.5 italic">"{client.notes}"</p>
+                      <p className="text-[11px] text-[#7D6871] mt-0.5 italic">"{client.notes}"</p>
                     </div>
                   ) : (
-                    <p className="mt-3 text-[11px] text-[#6D5C64] italic">
+                    <p className="mt-3 text-[11px] text-[#7D6871] italic">
                       Sin observaciones adicionales registradas.
                     </p>
                   )}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-xs text-[#6D5C64]">
+                <div className="mt-4 pt-3 border-t border-[#F2D6DE]/40 flex items-center justify-between">
+                  <span className="text-xs text-[#7D6871]">
                     Pedidos:{' '}
-                    <strong className="text-[#8E315E] font-extrabold">{clientTotalOrders}</strong>
+                    <strong className="text-[#681B2B] font-extrabold">{clientTotalOrders}</strong>
                   </span>
 
                   <button
                     id={`btn-view-client-history-${client.id}`}
                     onClick={() => setClientForHistory(client)}
-                    className="text-xs font-semibold text-[#8E315E] hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-semibold text-[#681B2B] hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
                     Ver historial
@@ -209,24 +206,24 @@ export const ClientsView: React.FC = () => {
           id="modal-client-form"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#FBDAE3] relative animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-[#3A2D33] mb-1">
+            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
               {editingClient ? 'Editar Cliente' : 'Registrar Nuevo Cliente'}
             </h3>
-            <p className="text-xs text-[#6D5C64] mb-4">
+            <p className="text-xs text-[#7D6871] mb-4">
               Mantenga la información de contacto y gustos florales del cliente.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Nombre Completo <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -236,12 +233,12 @@ export const ClientsView: React.FC = () => {
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="Ej. Sofía Morales"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Teléfono / WhatsApp
                 </label>
                 <input
@@ -250,12 +247,12 @@ export const ClientsView: React.FC = () => {
                   value={formPhone}
                   onChange={(e) => setFormPhone(e.target.value)}
                   placeholder="Ej. 5555-1234"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Observaciones / Preferencias
                 </label>
                 <textarea
@@ -264,22 +261,22 @@ export const ClientsView: React.FC = () => {
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                   placeholder="Ej. Prefiere tonos pastel, no le gustan los lirios amarillos..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none resize-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#6D5C64] hover:bg-gray-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-client-form"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#8E315E] hover:bg-[#7A294F] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
                 >
                   Guardar Cliente
                 </button>
@@ -297,53 +294,53 @@ export const ClientsView: React.FC = () => {
           id="modal-client-history"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-[#FBDAE3] relative animate-in fade-in max-h-[85vh] flex flex-col">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[85vh] flex flex-col">
             <button
               onClick={() => setClientForHistory(null)}
-              className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-[#3A2D33] mb-1">
+            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
               Historial de Pedidos de {clientForHistory.name}
             </h3>
-            <p className="text-xs text-[#6D5C64] mb-4">
+            <p className="text-xs text-[#7D6871] mb-4">
               Teléfono: {clientForHistory.phone} &bull; {clientOrders.length} pedidos registrados
             </p>
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {clientOrders.length === 0 ? (
-                <p className="text-center py-6 text-xs text-[#6D5C64]">
+                <p className="text-center py-6 text-xs text-[#7D6871]">
                   Este cliente aún no tiene pedidos registrados.
                 </p>
               ) : (
                 clientOrders.map((o) => (
                   <div
                     key={o.id}
-                    className="p-3 rounded-xl bg-[#FFF7FA] border border-[#FBDAE3] flex items-center justify-between text-xs"
+                    className="p-3 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] flex items-center justify-between text-xs"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#8E315E]">{o.code}</span>
-                        <span className="text-[11px] text-[#6D5C64]">{o.deliveryDate}</span>
+                        <span className="font-bold text-[#681B2B]">{o.code}</span>
+                        <span className="text-[11px] text-[#7D6871]">{o.deliveryDate}</span>
                       </div>
-                      <p className="text-[11px] text-[#3A2D33] mt-0.5 truncate max-w-xs">
+                      <p className="text-[11px] text-[#2C1E23] mt-0.5 truncate max-w-xs">
                         {o.description}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="font-bold text-[#3A2D33] block">Q {o.total.toFixed(2)}</span>
-                        <span className="text-[10px] text-[#65733D] font-semibold">{o.status}</span>
+                        <span className="font-bold text-[#2C1E23] block">Q {o.total.toFixed(2)}</span>
+                        <span className="text-[10px] text-[#059669] font-semibold">{o.status}</span>
                       </div>
                       <button
                         onClick={() => {
                           setClientForHistory(null);
                           navigateToOrderDetail(o.id);
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-white border border-[#FBDAE3] text-[#8E315E] font-bold text-[11px] hover:bg-[#8E315E] hover:text-white transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-white border border-[#F2D6DE] text-[#681B2B] font-bold text-[11px] hover:bg-[#681B2B] hover:text-white transition-colors cursor-pointer"
                       >
                         Ver
                       </button>
@@ -353,10 +350,10 @@ export const ClientsView: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-3 border-t border-gray-100 flex justify-end mt-4">
+            <div className="pt-3 border-t border-[#F2D6DE]/40 flex justify-end mt-4">
               <button
                 onClick={() => setClientForHistory(null)}
-                className="px-4 py-2 text-xs font-bold bg-[#8E315E] text-white rounded-xl"
+                className="px-4 py-2 text-xs font-bold bg-[#681B2B] text-white rounded-xl cursor-pointer"
               >
                 Cerrar
               </button>

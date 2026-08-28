@@ -1,18 +1,13 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import {
-  LayoutDashboard,
-  ShoppingBag,
-  PlusCircle,
+  LayoutGrid,
+  FileText,
   Users,
-  Layers,
-  Calendar,
-  BarChart3,
-  UserCheck,
-  User,
+  Package,
+  CalendarDays,
+  Plus,
   LogOut,
-  Flower,
-  Sparkles,
 } from 'lucide-react';
 import { ActiveView } from '../../types';
 
@@ -22,92 +17,39 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
-  const { activeView, setActiveView, currentUser, orders, components, logout } = useApp();
+  const { activeView, setActiveView, currentUser, logout } = useApp();
 
   if (!currentUser) return null;
 
-  const isAdmin = currentUser.role === 'Administrador';
-
-  // Counts for reactive badges
-  const pendingOrdersCount = orders.filter(
-    (o) => o.status === 'Pendiente' || o.status === 'En preparación'
-  ).length;
-  const lowStockCount = components.filter(
-    (c) => c.active && (c.physicalStock - c.reservedStock) <= c.minStockAlert
-  ).length;
-
   const navItems = [
     {
-      section: 'PROCESO PRINCIPAL',
-      items: [
-        {
-          id: 'dashboard' as ActiveView,
-          label: 'Dashboard',
-          icon: LayoutDashboard,
-          badge: null,
-        },
-        {
-          id: 'orders' as ActiveView,
-          label: 'Pedidos',
-          icon: ShoppingBag,
-          badge: pendingOrdersCount > 0 ? `${pendingOrdersCount} activos` : null,
-          badgeClass: 'bg-[#FBDAE3] text-[#8E315E]',
-        },
-        {
-          id: 'order-new' as ActiveView,
-          label: 'Nuevo Pedido',
-          icon: PlusCircle,
-          badge: 'Nuevo',
-          badgeClass: 'bg-[#65733D] text-white',
-          highlight: true,
-        },
-      ],
+      id: 'dashboard' as ActiveView,
+      label: 'Dashboard',
+      icon: LayoutGrid,
     },
     {
-      section: 'GESTIÓN Y APOYO',
-      items: [
-        {
-          id: 'clients' as ActiveView,
-          label: 'Clientes',
-          icon: Users,
-          badge: null,
-        },
-        {
-          id: 'components' as ActiveView,
-          label: 'Componentes y Stock',
-          icon: Layers,
-          badge: lowStockCount > 0 ? `${lowStockCount} bajo stock` : null,
-          badgeClass: 'bg-amber-100 text-amber-900 border border-amber-300',
-        },
-        {
-          id: 'calendar' as ActiveView,
-          label: 'Agenda de Entregas',
-          icon: Calendar,
-          badge: null,
-        },
-      ],
+      id: 'orders' as ActiveView,
+      label: 'Pedidos',
+      icon: FileText,
+      matchViews: ['orders', 'order-detail', 'order-edit'],
     },
     {
-      section: 'ANÁLISIS Y CONTROL',
-      items: [
-        {
-          id: 'reports' as ActiveView,
-          label: 'Reportes de Pedidos',
-          icon: BarChart3,
-          badge: null,
-        },
-        ...(isAdmin
-          ? [
-              {
-                id: 'users' as ActiveView,
-                label: 'Usuarios y Roles',
-                icon: UserCheck,
-                badge: 'Admin',
-                badgeClass: 'bg-[#8E315E]/15 text-[#8E315E]',
-              },
-            ]
-          : []),
-      ],
+      id: 'clients' as ActiveView,
+      label: 'Clientes',
+      icon: Users,
+      matchViews: ['clients'],
+    },
+    {
+      id: 'components' as ActiveView,
+      label: 'Componentes',
+      icon: Package,
+      matchViews: ['components'],
+    },
+    {
+      id: 'calendar' as ActiveView,
+      label: 'Agenda y reportes',
+      icon: CalendarDays,
+      matchViews: ['calendar', 'reports'],
     },
   ];
 
@@ -118,95 +60,116 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
 
   return (
     <>
-      {/* Mobile backdrop overlay */}
+      {/* Mobile backdrop */}
       {isOpen && (
         <div
           id="mobile-sidebar-backdrop"
           onClick={onCloseMobile}
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-xs lg:hidden"
         />
       )}
 
       {/* Sidebar container */}
       <aside
         id="app-main-sidebar"
-        className={`fixed top-16 bottom-0 left-0 z-40 w-64 bg-white border-r border-[#FBDAE3] flex flex-col justify-between transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-[#FBECEF] flex flex-col justify-between p-5 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
-          {navItems.map((group, gIdx) => (
-            <div key={gIdx} className="space-y-1">
-              <p className="px-3 text-[10px] font-bold tracking-wider text-[#6D5C64] uppercase mb-2">
-                {group.section}
-              </p>
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  activeView === item.id ||
-                  (item.id === 'orders' &&
-                    (activeView === 'order-detail' || activeView === 'order-edit'));
-
-                return (
-                  <button
-                    key={item.id}
-                    id={`sidebar-nav-${item.id}`}
-                    onClick={() => handleNavClick(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                      isActive
-                        ? 'bg-[#8E315E] text-white shadow-xs'
-                        : item.highlight
-                        ? 'bg-[#FFF7FA] text-[#8E315E] border border-[#FAB2D7] hover:bg-[#FBDAE3]/50'
-                        : 'text-[#3A2D33] hover:bg-[#FFF7FA] hover:text-[#8E315E]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 truncate">
-                      <Icon
-                        className={`w-4 h-4 shrink-0 ${
-                          isActive
-                            ? 'text-white'
-                            : item.highlight
-                            ? 'text-[#8E315E]'
-                            : 'text-[#6D5C64]'
-                        }`}
-                      />
-                      <span className="truncate">{item.label}</span>
-                    </div>
-
-                    {item.badge && (
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold shrink-0 ${
-                          isActive ? 'bg-white/20 text-white' : item.badgeClass || 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom footer card inside sidebar */}
-        <div className="p-3 border-t border-[#FBDAE3] bg-[#FFF7FA]/60">
-          <div className="bg-white rounded-xl p-3 border border-[#FBDAE3] shadow-xs">
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-1.5">
-                <Flower className="w-3.5 h-3.5 text-[#8E315E]" />
-                <span className="text-xs font-bold text-[#3A2D33]">EMILA Floristería</span>
-              </div>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#65733D]/15 text-[#65733D]">
-                v1.0 Prototipo
+        {/* Top: Logo & Navigation */}
+        <div className="space-y-8">
+          {/* Logo Brand Header */}
+          <div
+            id="sidebar-brand-header"
+            onClick={() => handleNavClick('dashboard')}
+            className="flex items-center gap-3 cursor-pointer select-none group pt-1"
+          >
+            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#F5B5C8] to-[#E39CB2] flex items-center justify-center text-white shadow-xs border border-white/60">
+              <span className="font-serif text-sm tracking-wider font-semibold italic text-white">
+                EMILA
               </span>
             </div>
-            <p className="text-[11px] text-[#6D5C64] leading-relaxed">
-              Enfoque: Gestión de pedidos personalizados y stock simulado.
-            </p>
+            <div>
+              <h1 className="text-base font-extrabold tracking-tight text-[#2C1E23] leading-none">
+                EMILA
+              </h1>
+              <p className="text-[11px] text-[#7D6871] mt-1 font-medium">
+                Gestión de pedidos
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation Items List */}
+          <nav className="space-y-1.5">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                activeView === item.id ||
+                (item.matchViews && item.matchViews.includes(activeView));
+
+              return (
+                <button
+                  key={item.id}
+                  id={`sidebar-nav-${item.id}`}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-[#681B2B] text-white shadow-xs'
+                      : 'text-[#4A202A] hover:bg-white/50 hover:text-[#681B2B]'
+                  }`}
+                >
+                  <Icon
+                    className={`w-4 h-4 shrink-0 ${
+                      isActive ? 'text-white' : 'text-[#681B2B]/70'
+                    }`}
+                  />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom Section: New Order Button & User Profile */}
+        <div className="space-y-3 pt-4">
+          {/* Primary Action Button */}
+          <button
+            id="btn-sidebar-new-order"
+            onClick={() => handleNavClick('order-new')}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-sm shadow-xs transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            Nuevo pedido
+          </button>
+
+          {/* Current User Session Card */}
+          <div className="bg-white/80 backdrop-blur-xs rounded-2xl p-2.5 flex items-center justify-between border border-[#F2D6DE]/60">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                {currentUser.name.charAt(0)}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[#2C1E23] truncate leading-tight">
+                  {currentUser.name}
+                </p>
+                <p className="text-[10px] text-[#7D6871] font-medium leading-tight mt-0.5">
+                  {currentUser.role === 'Administrador' ? 'Admin' : 'Colaborador'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              id="btn-sidebar-logout"
+              onClick={logout}
+              className="p-1.5 rounded-lg text-[#7D6871] hover:text-[#DC2626] hover:bg-[#FBECEF] transition-colors cursor-pointer"
+              title="Cerrar sesión"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </aside>
     </>
   );
 };
+

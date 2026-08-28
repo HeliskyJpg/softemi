@@ -4,11 +4,7 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
   TrendingUp,
-  ShoppingBag,
   Layers,
-  Sparkles,
-  CheckCircle2,
-  DollarSign,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -24,7 +20,7 @@ import {
 } from 'recharts';
 
 export const ReportsView: React.FC = () => {
-  const { orders, components } = useApp();
+  const { orders } = useApp();
 
   // 1. Orders by Status
   const statusData = useMemo(() => {
@@ -41,8 +37,8 @@ export const ReportsView: React.FC = () => {
 
     return [
       { name: 'Pendiente', count: counts['Pendiente'], color: '#B45309' },
-      { name: 'En preparación', count: counts['En preparación'], color: '#8E315E' },
-      { name: 'Listo', count: counts['Listo'], color: '#65733D' },
+      { name: 'En preparación', count: counts['En preparación'], color: '#681B2B' },
+      { name: 'Listo', count: counts['Listo'], color: '#4B6B4E' },
       { name: 'Entregado', count: counts['Entregado'], color: '#047857' },
       { name: 'Cancelado', count: counts['Cancelado'], color: '#9B2C2C' },
     ];
@@ -61,7 +57,7 @@ export const ReportsView: React.FC = () => {
       else channels['Otro'] = (channels['Otro'] || 0) + 1;
     });
 
-    const COLORS = ['#25D366', '#E1306C', '#8E315E', '#6D5C64'];
+    const COLORS = ['#25D366', '#E1306C', '#681B2B', '#7D6871'];
     return Object.keys(channels).map((key, idx) => ({
       name: key,
       value: channels[key],
@@ -107,59 +103,59 @@ export const ReportsView: React.FC = () => {
     <div id="reports-view-container" className="space-y-6 pb-16">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#3A2D33] tracking-tight flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-[#8E315E]" />
+        <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight flex items-center gap-2">
+          <BarChart3 className="w-6 h-6 text-[#681B2B]" />
           Reportes y Estadísticas de Pedidos
         </h1>
-        <p className="text-xs sm:text-sm text-[#6D5C64] mt-0.5">
+        <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5">
           Análisis del volumen de pedidos, canales de recepción e insumos más solicitados en taller.
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs">
-          <span className="text-[11px] font-bold text-[#6D5C64] uppercase">Total de Pedidos</span>
-          <div className="text-2xl font-extrabold text-[#3A2D33] mt-1">{orders.length}</div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">{activeOrdersCount} pedidos activos</p>
+        <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs">
+          <span className="text-[11px] font-bold text-[#7D6871] uppercase">Total de Pedidos</span>
+          <div className="text-2xl font-extrabold text-[#2C1E23] mt-1">{orders.length}</div>
+          <p className="text-[11px] text-[#7D6871] mt-0.5">{activeOrdersCount} pedidos activos</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs">
-          <span className="text-[11px] font-bold text-[#8E315E] uppercase">
+        <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs">
+          <span className="text-[11px] font-bold text-[#681B2B] uppercase">
             Monto de Pedidos Activos
           </span>
-          <div className="text-2xl font-extrabold text-[#8E315E] mt-1">
+          <div className="text-2xl font-extrabold text-[#681B2B] mt-1">
             Q {totalVolume.toFixed(2)}
           </div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">Excluye pedidos cancelados</p>
+          <p className="text-[11px] text-[#7D6871] mt-0.5">Excluye pedidos cancelados</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs">
-          <span className="text-[11px] font-bold text-[#65733D] uppercase">
+        <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs">
+          <span className="text-[11px] font-bold text-[#4B6B4E] uppercase">
             Anticipos Recibidos
           </span>
-          <div className="text-2xl font-extrabold text-[#65733D] mt-1">
+          <div className="text-2xl font-extrabold text-[#4B6B4E] mt-1">
             Q {totalAdvance.toFixed(2)}
           </div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">Ingresos iniciales en taller</p>
+          <p className="text-[11px] text-[#7D6871] mt-0.5">Ingresos iniciales en taller</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs">
+        <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs">
           <span className="text-[11px] font-bold text-emerald-800 uppercase">Tasa de Entrega</span>
           <div className="text-2xl font-extrabold text-emerald-700 mt-1">{deliveryRate}%</div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">{deliveredCount} pedidos entregados</p>
+          <p className="text-[11px] text-[#7D6871] mt-0.5">{deliveredCount} pedidos entregados</p>
         </div>
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Chart 1: Status Distribution */}
-        <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs space-y-3">
-          <h2 className="text-sm font-bold text-[#3A2D33] flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#8E315E]" />
+        <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs space-y-3">
+          <h2 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-[#681B2B]" />
             Distribución de Pedidos por Estado
           </h2>
-          <p className="text-xs text-[#6D5C64]">
+          <p className="text-xs text-[#7D6871]">
             Cantidad de órdenes en cada etapa del flujo de taller.
           </p>
 
@@ -170,7 +166,7 @@ export const ReportsView: React.FC = () => {
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip
                   formatter={(val: number) => [`${val} pedidos`, 'Cantidad']}
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #FBDAE3', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #F2D6DE', fontSize: '12px' }}
                 />
                 <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                   {statusData.map((entry, index) => (
@@ -183,12 +179,12 @@ export const ReportsView: React.FC = () => {
         </div>
 
         {/* Chart 2: Orders by Reception Channel */}
-        <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs space-y-3">
-          <h2 className="text-sm font-bold text-[#3A2D33] flex items-center gap-2">
-            <PieChartIcon className="w-4 h-4 text-[#8E315E]" />
+        <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs space-y-3">
+          <h2 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
+            <PieChartIcon className="w-4 h-4 text-[#681B2B]" />
             Canales de Recepción de Pedidos
           </h2>
-          <p className="text-xs text-[#6D5C64]">
+          <p className="text-xs text-[#7D6871]">
             Proporción de pedidos ingresados por WhatsApp, Instagram, Llamada u otros.
           </p>
 
@@ -211,7 +207,7 @@ export const ReportsView: React.FC = () => {
                 </Pie>
                 <Tooltip
                   formatter={(val: number) => [`${val} pedidos`, 'Canal']}
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #FBDAE3', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #F2D6DE', fontSize: '12px' }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
               </PieChart>
@@ -220,12 +216,12 @@ export const ReportsView: React.FC = () => {
         </div>
 
         {/* Chart 3: Top Demanded Components */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs space-y-3">
-          <h2 className="text-sm font-bold text-[#3A2D33] flex items-center gap-2">
-            <Layers className="w-4 h-4 text-[#65733D]" />
+        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs space-y-3">
+          <h2 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[#4B6B4E]" />
             Insumos y Flores Más Solicitados en Pedidos Personalizados
           </h2>
-          <p className="text-xs text-[#6D5C64]">
+          <p className="text-xs text-[#7D6871]">
             Ranking de componentes con mayor consumo acumulado en los arreglos florales activos.
           </p>
 
@@ -240,9 +236,9 @@ export const ReportsView: React.FC = () => {
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={120} />
                 <Tooltip
                   formatter={(val: number) => [`${val} unidades utilizadas`, 'Consumo']}
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #FBDAE3', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #F2D6DE', fontSize: '12px' }}
                 />
-                <Bar dataKey="quantity" fill="#65733D" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="quantity" fill="#4B6B4E" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -251,3 +247,4 @@ export const ReportsView: React.FC = () => {
     </div>
   );
 };
+

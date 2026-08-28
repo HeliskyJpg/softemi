@@ -289,16 +289,16 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
           <button
             id="btn-order-form-back"
             onClick={() => setActiveView(isEditing ? 'order-detail' : 'orders')}
-            className="p-2 rounded-xl bg-white border border-[#FBDAE3] text-[#6D5C64] hover:text-[#8E315E] hover:bg-[#FFF7FA] transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-white border border-[#F2D6DE] text-[#7D6871] hover:text-[#681B2B] hover:bg-[#FBECEF]/40 transition-colors cursor-pointer"
             title="Volver"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-[#3A2D33] tracking-tight">
+            <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight">
               {isEditing ? `Editar Pedido ${existingOrder?.code}` : 'Nuevo Pedido Personalizado'}
             </h1>
-            <p className="text-xs text-[#6D5C64]">
+            <p className="text-xs text-[#7D6871] mt-0.5 font-medium">
               {isEditing
                 ? 'Modifique datos, componentes o anticipo. El stock se recalculará automáticamente.'
                 : 'Complete las 4 secciones para registrar el pedido y validar disponibilidad.'}
@@ -307,7 +307,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         </div>
 
         {isEditing && (
-          <span className="text-xs font-bold px-3 py-1 bg-[#FBDAE3] text-[#8E315E] rounded-full border border-[#FAB2D7]">
+          <span className="text-xs font-bold px-3 py-1 bg-[#FBECEF] text-[#681B2B] rounded-full border border-[#F2D6DE]">
             Modo Edición
           </span>
         )}
@@ -319,11 +319,11 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         {/* ============================================================ */}
         <div
           id="section-order-client"
-          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#FBDAE3] shadow-xs space-y-4"
+          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4"
         >
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-            <h2 className="text-sm font-bold text-[#3A2D33] uppercase tracking-wider flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#8E315E] text-white flex items-center justify-center text-xs">
+          <div className="flex items-center justify-between border-b border-[#F2D6DE]/40 pb-3">
+            <h2 className="text-sm font-bold text-[#2C1E23] uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold">
                 1
               </span>
               Identificación del Cliente
@@ -333,10 +333,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               id="btn-open-quick-client-modal"
               type="button"
               onClick={() => setShowClientModal(true)}
-              className="text-xs font-bold text-[#8E315E] hover:text-[#7A294F] bg-[#FFF7FA] hover:bg-[#FBDAE3]/50 px-3 py-1.5 rounded-xl border border-[#FBDAE3] flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="text-xs font-bold text-[#681B2B] hover:text-[#541421] bg-[#FBECEF]/60 hover:bg-[#FBECEF] px-3 py-1.5 rounded-xl border border-[#F2D6DE] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              + Nuevo Cliente
+              Nuevo Cliente
             </button>
           </div>
 
@@ -344,7 +344,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
             <div>
               <label
                 htmlFor="select-order-client"
-                className="block text-xs font-bold text-[#3A2D33] mb-1.5"
+                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
               >
                 Seleccionar Cliente <span className="text-red-500">*</span>
               </label>
@@ -352,8 +352,8 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 id="select-order-client"
                 value={selectedClientId}
                 onChange={(e) => setSelectedClientId(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#3A2D33] bg-white focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium ${
-                  errors.client ? 'border-red-400 bg-red-50/30' : 'border-[#FBDAE3]'
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer ${
+                  errors.client ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
                 }`}
               >
                 <option value="">-- Buscar o seleccionar cliente --</option>
@@ -369,18 +369,18 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
             {selectedClient && (
               <div
                 id="selected-client-card"
-                className="p-3.5 rounded-xl bg-[#FFF7FA] border border-[#FBDAE3] flex flex-col justify-between text-xs"
+                className="p-3.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] flex flex-col justify-between text-xs"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#8E315E]">{selectedClient.name}</span>
-                  <span className="text-[#6D5C64] font-medium">{selectedClient.phone}</span>
+                  <span className="font-bold text-[#681B2B]">{selectedClient.name}</span>
+                  <span className="text-[#7D6871] font-medium">{selectedClient.phone}</span>
                 </div>
                 {selectedClient.notes && (
-                  <p className="text-[#6D5C64] mt-1 text-[11px] italic">
+                  <p className="text-[#7D6871] mt-1 text-[11px] italic">
                     Prefiere: "{selectedClient.notes}"
                   </p>
                 )}
-                <div className="mt-2 text-[10px] text-[#65733D] font-semibold">
+                <div className="mt-2 text-[10px] text-[#059669] font-semibold">
                   Pedidos previos registrados: {selectedClient.totalOrders || 0}
                 </div>
               </div>
@@ -393,11 +393,11 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         {/* ============================================================ */}
         <div
           id="section-order-details"
-          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#FBDAE3] shadow-xs space-y-4"
+          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4"
         >
-          <div className="border-b border-gray-100 pb-3">
-            <h2 className="text-sm font-bold text-[#3A2D33] uppercase tracking-wider flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#8E315E] text-white flex items-center justify-center text-xs">
+          <div className="border-b border-[#F2D6DE]/40 pb-3">
+            <h2 className="text-sm font-bold text-[#2C1E23] uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold">
                 2
               </span>
               Datos del Pedido y Entrega
@@ -408,7 +408,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
             <div>
               <label
                 htmlFor="select-order-channel"
-                className="block text-xs font-bold text-[#3A2D33] mb-1.5"
+                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
               >
                 Canal de Recepción <span className="text-red-500">*</span>
               </label>
@@ -416,7 +416,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 id="select-order-channel"
                 value={channel}
                 onChange={(e) => setChannel(e.target.value as OrderChannel)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#FBDAE3] text-sm text-[#3A2D33] bg-white focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#F2D6DE] text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer"
               >
                 <option value="WhatsApp">WhatsApp</option>
                 <option value="Instagram">Instagram</option>
@@ -428,7 +428,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
             <div>
               <label
                 htmlFor="input-order-date"
-                className="block text-xs font-bold text-[#3A2D33] mb-1.5"
+                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
               >
                 Fecha de Entrega <span className="text-red-500">*</span>
               </label>
@@ -437,8 +437,8 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 type="date"
                 value={deliveryDate}
                 onChange={(e) => setDeliveryDate(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#3A2D33] bg-white focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium ${
-                  errors.deliveryDate ? 'border-red-400 bg-red-50/30' : 'border-[#FBDAE3]'
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
+                  errors.deliveryDate ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
                 }`}
               />
               {errors.deliveryDate && (
@@ -449,7 +449,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
             <div>
               <label
                 htmlFor="input-order-time"
-                className="block text-xs font-bold text-[#3A2D33] mb-1.5"
+                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
               >
                 Hora de Entrega <span className="text-red-500">*</span>
               </label>
@@ -458,8 +458,8 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 type="time"
                 value={deliveryTime}
                 onChange={(e) => setDeliveryTime(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#3A2D33] bg-white focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium ${
-                  errors.deliveryTime ? 'border-red-400 bg-red-50/30' : 'border-[#FBDAE3]'
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
+                  errors.deliveryTime ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
                 }`}
               />
               {errors.deliveryTime && (
@@ -471,7 +471,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
           <div>
             <label
               htmlFor="input-order-description"
-              className="block text-xs font-bold text-[#3A2D33] mb-1.5"
+              className="block text-xs font-bold text-[#2C1E23] mb-1.5"
             >
               Descripción del Arreglo / Pedido <span className="text-red-500">*</span>
             </label>
@@ -481,8 +481,8 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ej. Arreglo floral de rosas rojas con caja hexagonal y chocolates"
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#3A2D33] bg-white focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium ${
-                errors.description ? 'border-red-400 bg-red-50/30' : 'border-[#FBDAE3]'
+              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
+                errors.description ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
               }`}
             />
             {errors.description && (
@@ -493,7 +493,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
           <div>
             <label
               htmlFor="input-order-observations"
-              className="block text-xs font-bold text-[#3A2D33] mb-1.5"
+              className="block text-xs font-bold text-[#2C1E23] mb-1.5"
             >
               Dedicatoria / Observaciones Especiales
             </label>
@@ -503,7 +503,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
               placeholder="Texto de tarjeta personalizada, color de listón preferido, instrucciones de entrega..."
-              className="w-full px-3.5 py-2 rounded-xl border border-[#FBDAE3] text-sm text-[#3A2D33] bg-white focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium resize-none"
+              className="w-full px-3.5 py-2 rounded-xl border border-[#F2D6DE] text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium resize-none"
             />
           </div>
         </div>
@@ -513,17 +513,17 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         {/* ============================================================ */}
         <div
           id="section-order-components"
-          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#FBDAE3] shadow-xs space-y-4"
+          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4"
         >
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#F2D6DE]/40 pb-3">
             <div>
-              <h2 className="text-sm font-bold text-[#3A2D33] uppercase tracking-wider flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-[#8E315E] text-white flex items-center justify-center text-xs">
+              <h2 className="text-sm font-bold text-[#2C1E23] uppercase tracking-wider flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold">
                   3
                 </span>
                 Selección de Componentes y Flores
               </h2>
-              <p className="text-xs text-[#6D5C64] mt-0.5">
+              <p className="text-xs text-[#7D6871] mt-0.5">
                 Personalice el arreglo agregando insumos. El stock se validará en tiempo real.
               </p>
             </div>
@@ -532,24 +532,24 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               id="btn-open-add-component-modal"
               type="button"
               onClick={() => setShowAddComponentModal(true)}
-              className="px-4 py-2 rounded-xl bg-[#65733D] hover:bg-[#546032] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" />
-              + Agregar Componente
+              Agregar Componente
             </button>
           </div>
 
           {errors.items && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-[#9B2C2C] text-xs font-medium flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-[#DC2626] text-xs font-medium flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               {errors.items}
             </div>
           )}
 
           {/* Components Items Table */}
-          <div className="overflow-x-auto border border-[#FBDAE3] rounded-xl">
+          <div className="overflow-x-auto border border-[#F2D6DE]/60 rounded-xl">
             <table id="table-order-items" className="w-full text-left text-xs">
-              <thead className="bg-[#FFF7FA] text-[#6D5C64] uppercase text-[10px] tracking-wider border-b border-[#FBDAE3]">
+              <thead className="bg-[#FBECEF]/40 text-[#8C7A82] uppercase text-[10px] tracking-wider border-b border-[#F2D6DE]/60">
                 <tr>
                   <th className="py-2.5 px-3 font-semibold">Componente</th>
                   <th className="py-2.5 px-3 font-semibold">Categoría</th>
@@ -560,15 +560,15 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   <th className="py-2.5 px-3 font-semibold text-center w-12">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#F2D6DE]/30">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-[#6D5C64]">
-                      <Layers className="w-6 h-6 mx-auto mb-1 text-[#FBDAE3]" />
-                      <p className="font-semibold text-sm text-[#3A2D33]">
+                    <td colSpan={7} className="py-8 text-center text-[#7D6871]">
+                      <Layers className="w-6 h-6 mx-auto mb-1 text-[#F2D6DE]" />
+                      <p className="font-semibold text-sm text-[#2C1E23]">
                         No hay componentes agregados
                       </p>
-                      <p className="text-xs text-[#6D5C64]">
+                      <p className="text-xs text-[#7D6871]">
                         Haga clic en "+ Agregar Componente" para incluir rosas, empaques, chocolates,
                         etc.
                       </p>
@@ -589,15 +589,15 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                       <tr
                         key={it.componentId}
                         id={`item-row-${it.componentId}`}
-                        className="hover:bg-[#FFF7FA]/50 transition-colors"
+                        className="hover:bg-[#FBECEF]/30 transition-colors"
                       >
-                        <td className="py-2.5 px-3 font-semibold text-[#3A2D33]">
+                        <td className="py-2.5 px-3 font-semibold text-[#2C1E23]">
                           <div>{it.componentName}</div>
-                          <div className="text-[10px] text-[#6D5C64] font-normal">
+                          <div className="text-[10px] text-[#7D6871] font-normal">
                             Físico: {comp?.physicalStock ?? 0} | Reservado: {comp?.reservedStock ?? 0}
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 text-[#6D5C64]">
+                        <td className="py-2.5 px-3 text-[#7D6871]">
                           <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] font-medium">
                             {it.category}
                           </span>
@@ -609,13 +609,13 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                                 ? 'bg-red-100 text-red-800'
                                 : effectiveAvailable < 10
                                 ? 'bg-amber-100 text-amber-900'
-                                : 'bg-[#EBF1DE] text-[#4F5B2F]'
+                                : 'bg-[#ECFDF5] text-[#047857]'
                             }`}
                           >
                             {effectiveAvailable} {comp?.unit || 'unids.'}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right font-medium text-[#3A2D33]">
+                        <td className="py-2.5 px-3 text-right font-medium text-[#2C1E23]">
                           Q {it.unitPrice.toFixed(2)}
                         </td>
                         <td className="py-2.5 px-3 text-center">
@@ -630,10 +630,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                                 parseInt(e.target.value) || 1
                               )
                             }
-                            className="w-16 px-2 py-1 rounded-lg border border-[#FBDAE3] text-center font-bold text-xs focus:ring-1 focus:ring-[#8E315E]"
+                            className="w-16 px-2 py-1 rounded-lg border border-[#F2D6DE] text-center font-bold text-xs focus:ring-1 focus:ring-[#681B2B]"
                           />
                         </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-[#8E315E]">
+                        <td className="py-2.5 px-3 text-right font-bold text-[#681B2B]">
                           Q {it.subtotal.toFixed(2)}
                         </td>
                         <td className="py-2.5 px-3 text-center">
@@ -660,11 +660,11 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         {/* ============================================================ */}
         <div
           id="section-order-summary"
-          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#FBDAE3] shadow-xs space-y-4"
+          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4"
         >
-          <div className="border-b border-gray-100 pb-3">
-            <h2 className="text-sm font-bold text-[#3A2D33] uppercase tracking-wider flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#8E315E] text-white flex items-center justify-center text-xs">
+          <div className="border-b border-[#F2D6DE]/40 pb-3">
+            <h2 className="text-sm font-bold text-[#2C1E23] uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold">
                 4
               </span>
               Resumen de Precios y Anticipo
@@ -673,32 +673,32 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Subtotal */}
-            <div className="p-4 rounded-xl bg-[#FFF7FA] border border-[#FBDAE3]">
-              <span className="text-[11px] font-semibold text-[#6D5C64] uppercase">
+            <div className="p-4 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60">
+              <span className="text-[11px] font-semibold text-[#7D6871] uppercase">
                 Subtotal
               </span>
-              <div className="text-xl font-bold text-[#3A2D33] mt-1">
+              <div className="text-xl font-bold text-[#2C1E23] mt-1">
                 Q {calculatedSubtotal.toFixed(2)}
               </div>
-              <p className="text-[10px] text-[#6D5C64] mt-0.5">Suma de componentes</p>
+              <p className="text-[10px] text-[#7D6871] mt-0.5">Suma de componentes</p>
             </div>
 
             {/* Total */}
-            <div className="p-4 rounded-xl bg-[#FBDAE3]/30 border border-[#FAB2D7]">
-              <span className="text-[11px] font-semibold text-[#8E315E] uppercase">
+            <div className="p-4 rounded-xl bg-[#FBECEF]/60 border border-[#F2D6DE]">
+              <span className="text-[11px] font-semibold text-[#681B2B] uppercase">
                 Total del Pedido
               </span>
-              <div className="text-2xl font-extrabold text-[#8E315E] mt-1">
+              <div className="text-2xl font-extrabold text-[#681B2B] mt-1">
                 Q {calculatedTotal.toFixed(2)}
               </div>
-              <p className="text-[10px] text-[#6D5C64] mt-0.5">Monto total a cobrar</p>
+              <p className="text-[10px] text-[#7D6871] mt-0.5">Monto total a cobrar</p>
             </div>
 
             {/* Anticipo Input */}
-            <div className="p-4 rounded-xl bg-white border border-[#FBDAE3]">
+            <div className="p-4 rounded-xl bg-white border border-[#F2D6DE]/60">
               <label
                 htmlFor="input-order-advance"
-                className="block text-[11px] font-bold text-[#65733D] uppercase mb-1"
+                className="block text-[11px] font-bold text-[#059669] uppercase mb-1"
               >
                 Anticipo Registrado (Q)
               </label>
@@ -710,43 +710,43 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 step="any"
                 value={advancePayment}
                 onChange={(e) => setAdvancePayment(parseFloat(e.target.value) || 0)}
-                className={`w-full px-3 py-1.5 rounded-lg border text-sm font-bold text-[#3A2D33] focus:outline-none focus:ring-2 focus:ring-[#65733D]/30 ${
-                  errors.advancePayment ? 'border-red-400 bg-red-50' : 'border-[#FBDAE3]'
+                className={`w-full px-3 py-1.5 rounded-lg border text-sm font-bold text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#059669]/30 ${
+                  errors.advancePayment ? 'border-red-400 bg-red-50' : 'border-[#F2D6DE]'
                 }`}
               />
               {errors.advancePayment ? (
                 <p className="text-red-600 text-[10px] mt-1">{errors.advancePayment}</p>
               ) : (
-                <p className="text-[10px] text-[#6D5C64] mt-0.5">Pago inicial recibido</p>
+                <p className="text-[10px] text-[#7D6871] mt-0.5">Pago inicial recibido</p>
               )}
             </div>
 
             {/* Saldo Pendiente */}
-            <div className="p-4 rounded-xl bg-[#FFF7FA] border border-[#FBDAE3]">
-              <span className="text-[11px] font-semibold text-[#6D5C64] uppercase">
+            <div className="p-4 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60">
+              <span className="text-[11px] font-semibold text-[#7D6871] uppercase">
                 Saldo Pendiente
               </span>
               <div
                 className={`text-xl font-bold mt-1 ${
-                  calculatedBalance > 0 ? 'text-[#9B2C2C]' : 'text-emerald-700'
+                  calculatedBalance > 0 ? 'text-[#DC2626]' : 'text-emerald-700'
                 }`}
               >
                 Q {calculatedBalance.toFixed(2)}
               </div>
-              <p className="text-[10px] text-[#6D5C64] mt-0.5">
+              <p className="text-[10px] text-[#7D6871] mt-0.5">
                 {calculatedBalance === 0 ? 'Pagado completamente' : 'Pendiente al entregar'}
               </p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-gray-100">
+          <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-4 border-t border-[#F2D6DE]/40">
             <button
               id="btn-order-form-cancel"
               type="button"
               onClick={() => setActiveView(isEditing ? 'order-detail' : 'orders')}
               disabled={isSubmitting}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-[#6D5C64] hover:text-[#3A2D33] hover:bg-gray-50 text-sm font-medium transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-50 text-sm font-medium transition-colors cursor-pointer"
             >
               Cancelar
             </button>
@@ -755,7 +755,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               id="btn-order-form-save"
               type="submit"
               disabled={isSubmitting}
-              className="w-full sm:w-auto px-8 py-2.5 rounded-xl bg-[#8E315E] hover:bg-[#7A294F] text-white text-sm font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="w-full sm:w-auto px-8 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
@@ -781,22 +781,22 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
           id="modal-quick-client"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#FBDAE3] relative animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
             <button
               onClick={() => setShowClientModal(false)}
-              className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-[#8E315E] mb-1">Registrar Nuevo Cliente</h3>
-            <p className="text-xs text-[#6D5C64] mb-4">
+            <h3 className="text-base font-bold text-[#681B2B] mb-1">Registrar Nuevo Cliente</h3>
+            <p className="text-xs text-[#7D6871] mb-4">
               Agregue al cliente para asociarlo de inmediato a este pedido.
             </p>
 
             <form onSubmit={handleCreateClientQuick} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Nombre Completo <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -806,12 +806,12 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
                   placeholder="Ej. Andrea López"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Teléfono / WhatsApp
                 </label>
                 <input
@@ -820,12 +820,12 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   value={newClientPhone}
                   onChange={(e) => setNewClientPhone(e.target.value)}
                   placeholder="Ej. 5512-3456"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Observaciones / Preferencias
                 </label>
                 <textarea
@@ -834,22 +834,22 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   value={newClientNotes}
                   onChange={(e) => setNewClientNotes(e.target.value)}
                   placeholder="Tonos favoritos, tipo de flores preferidas..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none resize-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
                 <button
                   type="button"
                   onClick={() => setShowClientModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#6D5C64] hover:bg-gray-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-quick-client"
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold bg-[#8E315E] hover:bg-[#7A294F] text-white rounded-xl shadow-xs"
+                  className="px-4 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
                 >
                   Guardar y Seleccionar
                 </button>
@@ -867,31 +867,31 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
           id="modal-add-component-item"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#FBDAE3] relative animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
             <button
               onClick={() => setShowAddComponentModal(false)}
-              className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-[#3A2D33] mb-1">
+            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
               Agregar Componente al Arreglo
             </h3>
-            <p className="text-xs text-[#6D5C64] mb-4">
+            <p className="text-xs text-[#7D6871] mb-4">
               Seleccione el insumo del catálogo y la cantidad a descontar de inventario.
             </p>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1.5">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
                   Componente / Flor / Empaque
                 </label>
                 <select
                   id="select-add-component"
                   value={selectedComponentId}
                   onChange={(e) => setSelectedComponentId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 bg-white font-medium outline-none"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 bg-white font-medium outline-none cursor-pointer"
                 >
                   <option value="">-- Seleccionar del catálogo --</option>
                   {components
@@ -918,24 +918,24 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   const avail = comp.physicalStock - comp.reservedStock;
 
                   return (
-                    <div className="p-3.5 rounded-xl bg-[#FFF7FA] border border-[#FBDAE3] text-xs space-y-2">
+                    <div className="p-3.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] text-xs space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-[#8E315E]">{comp.name}</span>
-                        <span className="font-bold text-[#65733D]">Q {comp.price.toFixed(2)} / {comp.unit}</span>
+                        <span className="font-bold text-[#681B2B]">{comp.name}</span>
+                        <span className="font-bold text-[#059669]">Q {comp.price.toFixed(2)} / {comp.unit}</span>
                       </div>
-                      {comp.description && <p className="text-[#6D5C64] text-[11px]">{comp.description}</p>}
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#FBDAE3]/50 text-center text-[11px]">
+                      {comp.description && <p className="text-[#7D6871] text-[11px]">{comp.description}</p>}
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#F2D6DE]/50 text-center text-[11px]">
                         <div className="p-1.5 rounded-lg bg-white border border-gray-100">
-                          <span className="text-[#6D5C64] block text-[10px]">Físico</span>
-                          <span className="font-bold text-[#3A2D33]">{comp.physicalStock}</span>
+                          <span className="text-[#7D6871] block text-[10px]">Físico</span>
+                          <span className="font-bold text-[#2C1E23]">{comp.physicalStock}</span>
                         </div>
                         <div className="p-1.5 rounded-lg bg-white border border-gray-100">
-                          <span className="text-[#6D5C64] block text-[10px]">Reservado</span>
+                          <span className="text-[#7D6871] block text-[10px]">Reservado</span>
                           <span className="font-bold text-amber-700">{comp.reservedStock}</span>
                         </div>
-                        <div className="p-1.5 rounded-lg bg-[#EBF1DE] border border-[#D5E2BA]">
-                          <span className="text-[#4F5B2F] block text-[10px]">Disponible</span>
-                          <span className="font-bold text-[#4F5B2F]">{avail}</span>
+                        <div className="p-1.5 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0]">
+                          <span className="text-[#047857] block text-[10px]">Disponible</span>
+                          <span className="font-bold text-[#047857]">{avail}</span>
                         </div>
                       </div>
                     </div>
@@ -944,7 +944,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               )}
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1.5">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
                   Cantidad a Incluir
                 </label>
                 <input
@@ -958,15 +958,15 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   }
                   value={selectedComponentQty}
                   onChange={(e) => setSelectedComponentQty(parseInt(e.target.value) || 1)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#FBDAE3] font-bold text-center focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#F2D6DE] font-bold text-center focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
                 <button
                   type="button"
                   onClick={() => setShowAddComponentModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#6D5C64] hover:bg-gray-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -975,7 +975,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   type="button"
                   onClick={handleAddComponentItem}
                   disabled={!selectedComponentId}
-                  className="px-5 py-2 text-xs font-bold bg-[#65733D] hover:bg-[#546032] text-white rounded-xl shadow-xs disabled:opacity-50 cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs disabled:opacity-50 cursor-pointer"
                 >
                   Agregar Línea
                 </button>
@@ -985,5 +985,6 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         </div>
       )}
     </div>
+
   );
 };

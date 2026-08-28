@@ -8,52 +8,35 @@ interface StatusBadgeProps {
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' }) => {
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-xs',
-    md: 'px-2.5 py-1 text-xs font-semibold',
-    lg: 'px-3 py-1.5 text-sm font-semibold',
+    sm: 'px-2.5 py-0.5 text-[11px]',
+    md: 'px-3 py-1 text-xs font-medium',
+    lg: 'px-3.5 py-1.5 text-sm font-medium',
   };
 
   const getStyle = () => {
     switch (status) {
       case 'Pendiente':
-        return 'bg-amber-100 text-amber-900 border border-amber-300';
+        return 'bg-[#FEF3C7] text-[#B45309]';
       case 'En preparación':
-        return 'bg-[#FBDAE3] text-[#8E315E] border border-[#FAB2D7]';
+        return 'bg-[#DBEAFE] text-[#2563EB]';
       case 'Listo':
-        return 'bg-[#EBF1DE] text-[#4F5B2F] border border-[#65733D]/30';
+        return 'bg-[#DCFCE7] text-[#16A34A]';
       case 'Entregado':
-        return 'bg-emerald-100 text-emerald-900 border border-emerald-300';
+        return 'bg-[#D1FAE5] text-[#059669]';
       case 'Cancelado':
-        return 'bg-red-100 text-[#9B2C2C] border border-red-300';
+        return 'bg-[#FEE2E2] text-[#DC2626]';
       default:
-        return 'bg-gray-100 text-gray-800 border border-gray-300';
-    }
-  };
-
-  const getDotColor = () => {
-    switch (status) {
-      case 'Pendiente':
-        return 'bg-amber-500';
-      case 'En preparación':
-        return 'bg-[#8E315E] animate-pulse';
-      case 'Listo':
-        return 'bg-[#65733D]';
-      case 'Entregado':
-        return 'bg-emerald-600';
-      case 'Cancelado':
-        return 'bg-[#9B2C2C]';
-      default:
-        return 'bg-gray-500';
+        return 'bg-[#F3F4F6] text-[#4B5563]';
     }
   };
 
   return (
     <span
       id={`badge-status-${status.toLowerCase().replace(/\s+/g, '-')}`}
-      className={`inline-flex items-center gap-1.5 rounded-full ${sizeClasses[size]} ${getStyle()} transition-all`}
+      className={`inline-flex items-center justify-center rounded-full ${sizeClasses[size]} ${getStyle()} font-medium transition-all`}
     >
-      <span className={`w-2 h-2 rounded-full ${getDotColor()}`} />
       {status}
     </span>
   );
 };
+

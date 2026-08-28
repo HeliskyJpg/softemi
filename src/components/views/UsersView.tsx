@@ -3,14 +3,10 @@ import { useApp } from '../../context/AppContext';
 import {
   UserCheck,
   Shield,
-  User,
   Plus,
   Edit2,
   CheckCircle2,
   XCircle,
-  Lock,
-  Sparkles,
-  AlertTriangle,
   X,
 } from 'lucide-react';
 import { SystemUser, UserRole } from '../../types';
@@ -31,10 +27,10 @@ export const UsersView: React.FC = () => {
 
   if (!isAdmin) {
     return (
-      <div className="p-12 text-center bg-white rounded-2xl border border-red-200">
-        <Shield className="w-10 h-10 text-red-500 mx-auto mb-2" />
-        <h2 className="text-lg font-bold text-[#3A2D33]">Acceso Restringido</h2>
-        <p className="text-xs text-[#6D5C64] mt-1">
+      <div className="p-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60">
+        <Shield className="w-10 h-10 text-[#681B2B] mx-auto mb-2" />
+        <h2 className="text-lg font-bold text-[#2C1E23]">Acceso Restringido</h2>
+        <p className="text-xs text-[#7D6871] mt-1">
           Este módulo está reservado exclusivamente para usuarios con rol de Administrador.
         </p>
       </div>
@@ -93,11 +89,11 @@ export const UsersView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#3A2D33] tracking-tight flex items-center gap-2">
-            <UserCheck className="w-6 h-6 text-[#8E315E]" />
+          <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight flex items-center gap-2">
+            <UserCheck className="w-6 h-6 text-[#681B2B]" />
             Control de Usuarios y Roles
           </h1>
-          <p className="text-xs sm:text-sm text-[#6D5C64] mt-0.5">
+          <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5">
             Gestión de cuentas del personal, asignación de permisos y control de acceso.
           </p>
         </div>
@@ -105,7 +101,7 @@ export const UsersView: React.FC = () => {
         <button
           id="btn-new-user"
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E315E] hover:bg-[#7A294F] text-white font-bold text-sm shadow-sm transition-all cursor-pointer hover:shadow-md"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-medium text-xs shadow-xs transition-colors cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           + Nuevo Usuario
@@ -113,10 +109,10 @@ export const UsersView: React.FC = () => {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-2xl border border-[#FBDAE3] shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#FFF7FA] border-b border-[#FBDAE3] text-[#6D5C64] uppercase text-[11px] tracking-wider">
+            <thead className="bg-[#FBECEF]/30 border-b border-[#F2D6DE]/60 text-[#7D6871] uppercase text-[11px] tracking-wider">
               <tr>
                 <th className="py-3.5 px-4 font-bold">Nombre Completo</th>
                 <th className="py-3.5 px-4 font-bold">Usuario</th>
@@ -125,24 +121,24 @@ export const UsersView: React.FC = () => {
                 <th className="py-3.5 px-4 font-bold text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#F2D6DE]/30">
               {users.map((u) => (
-                <tr key={u.id} className="hover:bg-[#FFF7FA]/60 transition-colors">
+                <tr key={u.id} className="hover:bg-[#FBECEF]/20 transition-colors">
                   <td className="py-3.5 px-4">
-                    <div className="font-bold text-[#3A2D33]">{u.name}</div>
+                    <div className="font-bold text-[#2C1E23]">{u.name}</div>
                     {u.id === currentUser?.id && (
-                      <span className="text-[10px] text-[#8E315E] font-semibold">
+                      <span className="text-[10px] text-[#681B2B] font-semibold">
                         (Tu sesión actual)
                       </span>
                     )}
                   </td>
-                  <td className="py-3.5 px-4 font-medium text-[#6D5C64]">@{u.username}</td>
+                  <td className="py-3.5 px-4 font-medium text-[#7D6871]">@{u.username}</td>
                   <td className="py-3.5 px-4">
                     <span
                       className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
                         u.role === 'Administrador'
-                          ? 'bg-[#FBDAE3] text-[#8E315E]'
-                          : 'bg-[#EBF1DE] text-[#4F5B2F]'
+                          ? 'bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE]'
+                          : 'bg-[#F2D6DE]/30 text-[#2C1E23]'
                       }`}
                     >
                       <Shield className="w-3 h-3" />
@@ -151,12 +147,12 @@ export const UsersView: React.FC = () => {
                   </td>
                   <td className="py-3.5 px-4 text-center">
                     {u.active ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         Activo
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
                         <XCircle className="w-3.5 h-3.5" />
                         Inactivo
                       </span>
@@ -165,7 +161,7 @@ export const UsersView: React.FC = () => {
                   <td className="py-3.5 px-4 text-right">
                     <button
                       onClick={() => handleOpenEdit(u)}
-                      className="px-2.5 py-1.5 rounded-lg border border-[#FBDAE3] bg-[#FFF7FA] text-[#8E315E] hover:bg-[#8E315E] hover:text-white font-semibold text-xs transition-colors flex items-center gap-1 ml-auto cursor-pointer"
+                      className="px-2.5 py-1.5 rounded-lg border border-[#F2D6DE]/60 bg-white text-[#681B2B] hover:bg-[#681B2B] hover:text-white font-medium text-xs transition-colors inline-flex items-center gap-1 cursor-pointer"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                       Editar
@@ -179,22 +175,22 @@ export const UsersView: React.FC = () => {
       </div>
 
       {/* Permissions Matrix Reference Card */}
-      <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs space-y-3">
-        <h3 className="text-sm font-bold text-[#3A2D33] flex items-center gap-2">
-          <Shield className="w-4 h-4 text-[#8E315E]" />
+      <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs space-y-3">
+        <h3 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
+          <Shield className="w-4 h-4 text-[#681B2B]" />
           Matriz de Permisos por Rol en EMILA
         </h3>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border border-gray-100 rounded-xl overflow-hidden">
-            <thead className="bg-[#FFF7FA] text-[#6D5C64] uppercase text-[10px]">
+          <table className="w-full text-left text-xs border border-[#F2D6DE]/40 rounded-xl overflow-hidden">
+            <thead className="bg-[#FBECEF]/30 text-[#7D6871] uppercase text-[10px]">
               <tr>
-                <th className="py-2 px-3">Módulo / Acción</th>
-                <th className="py-2 px-3 text-center">Colaborador (Empleado)</th>
-                <th className="py-2 px-3 text-center">Administrador</th>
+                <th className="py-2.5 px-3">Módulo / Acción</th>
+                <th className="py-2.5 px-3 text-center">Colaborador (Empleado)</th>
+                <th className="py-2.5 px-3 text-center">Administrador</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-[#3A2D33]">
+            <tbody className="divide-y divide-[#F2D6DE]/30 text-[#2C1E23]">
               <tr>
                 <td className="py-2 px-3 font-medium">Recepción & Creación de Pedidos</td>
                 <td className="py-2 px-3 text-center text-emerald-700 font-bold">✓ Permitido</td>
@@ -212,12 +208,12 @@ export const UsersView: React.FC = () => {
               </tr>
               <tr>
                 <td className="py-2 px-3 font-medium">Ajuste Manual de Existencias (Stock)</td>
-                <td className="py-2 px-3 text-center text-red-600 font-bold">✗ Restringido</td>
+                <td className="py-2 px-3 text-center text-rose-600 font-bold">✗ Restringido</td>
                 <td className="py-2 px-3 text-center text-emerald-700 font-bold">✓ Permitido</td>
               </tr>
               <tr>
                 <td className="py-2 px-3 font-medium">Gestión de Usuarios y Roles</td>
-                <td className="py-2 px-3 text-center text-red-600 font-bold">✗ Oculto</td>
+                <td className="py-2 px-3 text-center text-rose-600 font-bold">✗ Oculto</td>
                 <td className="py-2 px-3 text-center text-emerald-700 font-bold">✓ Permitido</td>
               </tr>
             </tbody>
@@ -233,25 +229,25 @@ export const UsersView: React.FC = () => {
           id="modal-user-form"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#FBDAE3] relative animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE]/60 relative animate-in fade-in">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-[#3A2D33] mb-1">
+            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
               {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
             </h3>
-            <p className="text-xs text-[#6D5C64] mb-4">
+            <p className="text-xs text-[#7D6871] mb-4">
               Configure credenciales y rol en el sistema EMILA.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
-                  Nombre Completo <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                  Nombre Completo <span className="text-rose-500">*</span>
                 </label>
                 <input
                   id="input-user-name"
@@ -260,13 +256,13 @@ export const UsersView: React.FC = () => {
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="Ej. Sofía Valenzuela"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
-                  Nombre de Usuario (Login) <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                  Nombre de Usuario (Login) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   id="input-user-username"
@@ -275,13 +271,13 @@ export const UsersView: React.FC = () => {
                   value={formUsername}
                   onChange={(e) => setFormUsername(e.target.value)}
                   placeholder="Ej. svalenzuela"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
-                  Contraseña <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                  Contraseña <span className="text-rose-500">*</span>
                 </label>
                 <input
                   id="input-user-password"
@@ -290,16 +286,16 @@ export const UsersView: React.FC = () => {
                   value={formPassword}
                   onChange={(e) => setFormPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none font-mono"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">Rol Asignado</label>
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">Rol Asignado</label>
                 <select
                   value={formRole}
                   onChange={(e) => setFormRole(e.target.value as UserRole)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-semibold"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium text-[#2C1E23]"
                 >
                   <option value="Colaborador">Colaborador (Recepción y Taller)</option>
                   <option value="Administrador">Administrador (Acceso Total)</option>
@@ -312,25 +308,25 @@ export const UsersView: React.FC = () => {
                   type="checkbox"
                   checked={formActive}
                   onChange={(e) => setFormActive(e.target.checked)}
-                  className="w-4 h-4 text-[#8E315E] rounded border-[#FBDAE3] focus:ring-[#8E315E]"
+                  className="w-4 h-4 text-[#681B2B] rounded border-[#F2D6DE] focus:ring-[#681B2B]"
                 />
-                <label htmlFor="checkbox-user-active" className="text-xs font-medium text-[#3A2D33]">
+                <label htmlFor="checkbox-user-active" className="text-xs font-medium text-[#2C1E23]">
                   Usuario Activo (permite iniciar sesión)
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#6D5C64] hover:bg-gray-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-[#FBECEF]/40 rounded-xl"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-user-form"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#8E315E] hover:bg-[#7A294F] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="px-5 py-2 text-xs font-medium bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer"
                 >
                   Guardar Usuario
                 </button>
@@ -342,3 +338,4 @@ export const UsersView: React.FC = () => {
     </div>
   );
 };
+

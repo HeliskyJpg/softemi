@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Flower2, Shield, User, Lock, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Flower2, Shield, User, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const LoginView: React.FC = () => {
@@ -48,32 +48,27 @@ export const LoginView: React.FC = () => {
   return (
     <div
       id="login-page-container"
-      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#FFF7FA] via-[#FBDAE3]/30 to-[#FFF7FA]"
+      className="min-h-screen flex items-center justify-center p-4 bg-[#FBECEF]"
     >
       <div className="max-w-md w-full">
         {/* Brand Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-[#FBDAE3] relative overflow-hidden"
+          className="bg-white rounded-3xl p-8 sm:p-10 shadow-sm border border-[#F2D6DE]/60 relative overflow-hidden"
         >
-          {/* Decorative subtle background icon */}
-          <div className="absolute -right-8 -top-8 text-[#FBDAE3]/40 pointer-events-none">
-            <Flower2 className="w-40 h-40" />
-          </div>
-
           {/* Logo & Header */}
           <div className="text-center mb-8 relative">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#8E315E] to-[#65733D] text-white flex items-center justify-center mx-auto mb-3 shadow-md">
-              <Flower2 className="w-8 h-8" />
+            <div className="w-12 h-12 rounded-2xl bg-[#681B2B] text-white flex items-center justify-center mx-auto mb-3 shadow-xs">
+              <Flower2 className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-extrabold text-[#8E315E] tracking-tight">EMILA</h1>
-            <p className="text-xs text-[#6D5C64] font-medium mt-1">
+            <h1 className="text-2xl font-bold text-[#681B2B] tracking-tight">EMILA</h1>
+            <p className="text-xs text-[#7D6871] font-medium mt-1">
               Sistema de Gestión de Pedidos Personalizados
             </p>
-            <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-[#FBDAE3]/60 text-[#8E315E] text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-0.5 rounded-full bg-[#FBECEF] text-[#681B2B] text-[11px] font-medium border border-[#F2D6DE]/60">
+              <Sparkles className="w-3 h-3" />
               Prototipo de Validación
             </div>
           </div>
@@ -84,9 +79,9 @@ export const LoginView: React.FC = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               id="login-error-alert"
-              className="mb-6 p-3.5 rounded-xl bg-red-50 border border-red-200 text-[#9B2C2C] text-xs font-medium flex items-center gap-2"
+              className="mb-6 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2"
             >
-              <div className="w-2 h-2 rounded-full bg-[#9B2C2C] shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-rose-600 shrink-0" />
               <span>{errorMsg}</span>
             </motion.div>
           )}
@@ -96,12 +91,12 @@ export const LoginView: React.FC = () => {
             <div>
               <label
                 htmlFor="input-login-username"
-                className="block text-xs font-bold text-[#3A2D33] uppercase tracking-wider mb-1.5"
+                className="block text-xs font-bold text-[#2C1E23] uppercase tracking-wider mb-1.5"
               >
                 Usuario
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6D5C64]">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
                   <User className="w-4 h-4" />
                 </div>
                 <input
@@ -110,7 +105,7 @@ export const LoginView: React.FC = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Ej. empleado o admin"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#FBDAE3] bg-[#FFF7FA]/50 focus:bg-white text-sm text-[#3A2D33] placeholder-[#6D5C64]/60 focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 focus:border-[#8E315E] transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#F2D6DE]/60 bg-[#FBECEF]/10 focus:bg-white text-sm text-[#2C1E23] placeholder-[#7D6871]/50 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] transition-all"
                   autoComplete="username"
                   required
                 />
@@ -120,12 +115,12 @@ export const LoginView: React.FC = () => {
             <div>
               <label
                 htmlFor="input-login-password"
-                className="block text-xs font-bold text-[#3A2D33] uppercase tracking-wider mb-1.5"
+                className="block text-xs font-bold text-[#2C1E23] uppercase tracking-wider mb-1.5"
               >
                 Contraseña
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6D5C64]">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
                   <Lock className="w-4 h-4" />
                 </div>
                 <input
@@ -134,7 +129,7 @@ export const LoginView: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#FBDAE3] bg-[#FFF7FA]/50 focus:bg-white text-sm text-[#3A2D33] placeholder-[#6D5C64]/60 focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 focus:border-[#8E315E] transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#F2D6DE]/60 bg-[#FBECEF]/10 focus:bg-white text-sm text-[#2C1E23] placeholder-[#7D6871]/50 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] transition-all"
                   autoComplete="current-password"
                   required
                 />
@@ -145,7 +140,7 @@ export const LoginView: React.FC = () => {
               id="btn-login-submit"
               type="submit"
               disabled={isSubmitting}
-              className="w-full mt-2 py-3 px-4 rounded-xl bg-[#8E315E] hover:bg-[#7A294F] text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+              className="w-full mt-2 py-2.5 px-4 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-medium text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
             >
               {isSubmitting ? (
                 <>
@@ -162,8 +157,8 @@ export const LoginView: React.FC = () => {
           </form>
 
           {/* Quick Demo Accounts Selection */}
-          <div className="mt-8 pt-6 border-t border-gray-100">
-            <p className="text-center text-[11px] font-semibold text-[#6D5C64] uppercase tracking-wider mb-3">
+          <div className="mt-8 pt-6 border-t border-[#F2D6DE]/40">
+            <p className="text-center text-[11px] font-semibold text-[#7D6871] uppercase tracking-wider mb-3">
               Acceso Rápido para Demostración:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -171,19 +166,19 @@ export const LoginView: React.FC = () => {
                 id="btn-quick-login-colaborador"
                 type="button"
                 onClick={() => handleQuickLogin('empleado', 'demo123')}
-                className="p-3 rounded-xl border border-[#65733D]/30 bg-[#EBF1DE]/40 hover:bg-[#EBF1DE] text-left transition-all group cursor-pointer"
+                className="p-3 rounded-xl border border-[#F2D6DE]/60 bg-[#FBECEF]/20 hover:bg-[#FBECEF]/50 text-left transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-[#4F5B2F]">Colaborador</span>
-                  <span className="text-[10px] bg-[#65733D] text-white px-1.5 py-0.2 rounded font-bold">
+                  <span className="text-xs font-bold text-[#681B2B]">Colaborador</span>
+                  <span className="text-[10px] bg-[#681B2B] text-white px-1.5 py-0.2 rounded font-medium">
                     Demo Principal
                   </span>
                 </div>
-                <p className="text-[11px] text-[#6D5C64]">
-                  user: <strong className="text-[#3A2D33]">empleado</strong>
+                <p className="text-[11px] text-[#7D6871]">
+                  user: <strong className="text-[#2C1E23]">empleado</strong>
                 </p>
-                <p className="text-[11px] text-[#6D5C64]">
-                  pass: <strong className="text-[#3A2D33]">demo123</strong>
+                <p className="text-[11px] text-[#7D6871]">
+                  pass: <strong className="text-[#2C1E23]">demo123</strong>
                 </p>
               </button>
 
@@ -191,17 +186,17 @@ export const LoginView: React.FC = () => {
                 id="btn-quick-login-admin"
                 type="button"
                 onClick={() => handleQuickLogin('admin', 'admin123')}
-                className="p-3 rounded-xl border border-[#8E315E]/30 bg-[#FBDAE3]/30 hover:bg-[#FBDAE3]/60 text-left transition-all group cursor-pointer"
+                className="p-3 rounded-xl border border-[#F2D6DE]/60 bg-[#FBECEF]/20 hover:bg-[#FBECEF]/50 text-left transition-colors cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-[#8E315E]">Administrador</span>
-                  <Shield className="w-3.5 h-3.5 text-[#8E315E]" />
+                  <span className="text-xs font-bold text-[#681B2B]">Administrador</span>
+                  <Shield className="w-3.5 h-3.5 text-[#681B2B]" />
                 </div>
-                <p className="text-[11px] text-[#6D5C64]">
-                  user: <strong className="text-[#3A2D33]">admin</strong>
+                <p className="text-[11px] text-[#7D6871]">
+                  user: <strong className="text-[#2C1E23]">admin</strong>
                 </p>
-                <p className="text-[11px] text-[#6D5C64]">
-                  pass: <strong className="text-[#3A2D33]">admin123</strong>
+                <p className="text-[11px] text-[#7D6871]">
+                  pass: <strong className="text-[#2C1E23]">admin123</strong>
                 </p>
               </button>
             </div>
@@ -209,10 +204,11 @@ export const LoginView: React.FC = () => {
         </motion.div>
 
         {/* Footer info */}
-        <p className="text-center text-xs text-[#6D5C64] mt-6">
+        <p className="text-center text-xs text-[#7D6871] mt-6">
           EMILA &bull; Prototipo funcional navegable para validación académica
         </p>
       </div>
     </div>
   );
 };
+

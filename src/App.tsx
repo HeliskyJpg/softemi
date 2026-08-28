@@ -60,34 +60,35 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div id="emila-app-root" className="min-h-screen bg-[#FFF7FA] flex flex-col font-sans">
+    <div id="emila-app-root" className="min-h-screen bg-[#FBECEF] flex flex-col font-sans">
       {/* Validation banner on top for demo test cases */}
       <DemoScenarioBar />
 
-      {/* Primary Top Bar */}
-      <Navbar onToggleMobileSidebar={() => setMobileSidebarOpen((prev) => !prev)} />
-
-      {/* Main Layout Body */}
-      <div className="flex-1 flex pt-16">
+      <div className="flex-1 flex flex-col lg:flex-row">
         {/* Left Navigation Sidebar */}
         <Sidebar
           isOpen={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
         />
 
-        {/* Main Content Area */}
-        <main
-          id="main-content-viewport"
-          className="flex-1 lg:pl-64 min-w-0 p-4 sm:p-6 lg:p-8 transition-all"
-        >
-          <div className="max-w-7xl mx-auto">{renderActiveView()}</div>
-        </main>
+        {/* Right side: Top Navbar + Main Content Viewport */}
+        <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
+          <Navbar onToggleMobileSidebar={() => setMobileSidebarOpen((prev) => !prev)} />
+
+          <main
+            id="main-content-viewport"
+            className="flex-1 min-w-0 px-4 sm:px-8 py-2 pb-14 transition-all"
+          >
+            <div className="max-w-7xl mx-auto">{renderActiveView()}</div>
+          </main>
+        </div>
       </div>
 
       {/* Feedback Toast Notification System */}
       <ToastContainer />
     </div>
   );
+
 };
 
 export default function App() {

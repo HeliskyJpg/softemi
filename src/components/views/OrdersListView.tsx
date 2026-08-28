@@ -93,15 +93,14 @@ export const OrdersListView: React.FC = () => {
   const statusOptions = ['Todos', 'Pendiente', 'En preparación', 'Listo', 'Entregado', 'Cancelado'];
 
   return (
-    <div id="orders-list-view-container" className="space-y-5 pb-12">
+    <div id="orders-list-view-container" className="space-y-6 pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#3A2D33] tracking-tight flex items-center gap-2">
-            <ShoppingBag className="w-6 h-6 text-[#8E315E]" />
+          <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight">
             Listado General de Pedidos
           </h1>
-          <p className="text-xs sm:text-sm text-[#6D5C64] mt-0.5">
+          <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5 font-medium">
             Registro completo de pedidos personalizados, saldos y seguimiento de entregas.
           </p>
         </div>
@@ -109,19 +108,19 @@ export const OrdersListView: React.FC = () => {
         <button
           id="btn-orders-new"
           onClick={() => setActiveView('order-new')}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E315E] hover:bg-[#7A294F] text-white font-bold text-sm shadow-sm transition-all cursor-pointer hover:shadow-md"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
         >
-          <PlusCircle className="w-4 h-4" />
-          + Nuevo Pedido
+          <PlusCircle className="w-4 h-4 stroke-[2.2]" />
+          Nuevo Pedido
         </button>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-[#FBDAE3] shadow-xs space-y-3">
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F2D6DE]/60 shadow-xs space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Search input */}
           <div className="relative lg:col-span-2">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6D5C64]">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
               <Search className="w-4 h-4" />
             </div>
             <input
@@ -133,7 +132,7 @@ export const OrdersListView: React.FC = () => {
                 setCurrentPage(1);
               }}
               placeholder="Buscar por código (PED-XXXX), cliente o descripción..."
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-[#FFF7FA]/50 focus:bg-white text-[#3A2D33] placeholder-[#6D5C64]/60 focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 focus:border-[#8E315E] transition-all"
+              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/30 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] transition-all"
             />
           </div>
 
@@ -147,7 +146,7 @@ export const OrdersListView: React.FC = () => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-white text-[#3A2D33] focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium cursor-pointer"
+              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer"
             >
               {statusOptions.map((st) => (
                 <option key={st} value={st}>
@@ -167,7 +166,7 @@ export const OrdersListView: React.FC = () => {
                 setDateFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-white text-[#3A2D33] focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium cursor-pointer"
+              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer"
             >
               <option value="todos">Fechas: Todos los pedidos</option>
               <option value="hoy">Entregas de Hoy</option>
@@ -178,9 +177,9 @@ export const OrdersListView: React.FC = () => {
         </div>
 
         {/* Active filters pill list */}
-        <div className="flex items-center justify-between text-xs text-[#6D5C64] pt-2 border-t border-gray-100">
+        <div className="flex items-center justify-between text-xs text-[#7D6871] pt-2 border-t border-[#F2D6DE]/40">
           <span>
-            Mostrando <strong className="text-[#3A2D33]">{sortedOrders.length}</strong> pedidos encontrados
+            Mostrando <strong className="text-[#2C1E23]">{sortedOrders.length}</strong> pedidos encontrados
           </span>
           {(searchTerm || statusFilter !== 'Todos' || dateFilter !== 'todos') && (
             <button
@@ -191,7 +190,7 @@ export const OrdersListView: React.FC = () => {
                 setDateFilter('todos');
                 setCurrentPage(1);
               }}
-              className="text-[#8E315E] hover:underline font-semibold cursor-pointer"
+              className="text-[#681B2B] hover:underline font-semibold cursor-pointer"
             >
               Limpiar filtros
             </button>
@@ -200,14 +199,14 @@ export const OrdersListView: React.FC = () => {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-2xl border border-[#FBDAE3] shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table id="table-orders-list" className="w-full text-left text-xs">
-            <thead className="bg-[#FFF7FA] border-b border-[#FBDAE3] text-[#6D5C64] uppercase tracking-wider text-[11px]">
+            <thead className="bg-[#FBECEF]/40 border-b border-[#F2D6DE]/60 text-[#8C7A82] uppercase tracking-wider text-[11px]">
               <tr>
                 <th
                   onClick={() => toggleSort('code')}
-                  className="py-3.5 px-4 font-bold cursor-pointer hover:text-[#8E315E] transition-colors"
+                  className="py-3.5 px-4 font-bold cursor-pointer hover:text-[#681B2B] transition-colors"
                 >
                   <div className="flex items-center gap-1">
                     Código
@@ -218,7 +217,7 @@ export const OrdersListView: React.FC = () => {
                 <th className="py-3.5 px-4 font-bold">Descripción</th>
                 <th
                   onClick={() => toggleSort('deliveryDate')}
-                  className="py-3.5 px-4 font-bold cursor-pointer hover:text-[#8E315E] transition-colors"
+                  className="py-3.5 px-4 font-bold cursor-pointer hover:text-[#681B2B] transition-colors"
                 >
                   <div className="flex items-center gap-1">
                     Fecha Entrega
@@ -227,7 +226,7 @@ export const OrdersListView: React.FC = () => {
                 </th>
                 <th
                   onClick={() => toggleSort('total')}
-                  className="py-3.5 px-4 font-bold cursor-pointer hover:text-[#8E315E] transition-colors text-right"
+                  className="py-3.5 px-4 font-bold cursor-pointer hover:text-[#681B2B] transition-colors text-right"
                 >
                   <div className="flex items-center justify-end gap-1">
                     Total
@@ -240,14 +239,14 @@ export const OrdersListView: React.FC = () => {
                 <th className="py-3.5 px-4 font-bold text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#F2D6DE]/30">
               {paginatedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-[#6D5C64]">
+                  <td colSpan={9} className="py-12 text-center text-[#7D6871]">
                     <div className="max-w-xs mx-auto space-y-2">
-                      <ShoppingBag className="w-8 h-8 mx-auto text-[#FBDAE3]" />
-                      <p className="font-semibold text-[#3A2D33]">No se encontraron pedidos</p>
-                      <p className="text-xs text-[#6D5C64]">
+                      <ShoppingBag className="w-8 h-8 mx-auto text-[#F2D6DE]" />
+                      <p className="font-semibold text-[#2C1E23]">No se encontraron pedidos</p>
+                      <p className="text-xs text-[#7D6871]">
                         Intente ajustar los filtros de búsqueda o registre un nuevo pedido.
                       </p>
                     </div>
@@ -264,53 +263,53 @@ export const OrdersListView: React.FC = () => {
                     <tr
                       key={order.id}
                       id={`order-row-${order.code}`}
-                      className="hover:bg-[#FFF7FA]/80 transition-colors group"
+                      className="hover:bg-[#FBECEF]/30 transition-colors group"
                     >
-                      <td className="py-3.5 px-4 font-bold text-[#8E315E] whitespace-nowrap">
+                      <td className="py-3.5 px-4 font-bold text-[#681B2B] whitespace-nowrap">
                         {order.code}
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="font-semibold text-[#3A2D33]">{order.clientName}</div>
-                        <div className="text-[11px] text-[#6D5C64]">{order.clientPhone}</div>
+                        <div className="font-semibold text-[#2C1E23]">{order.clientName}</div>
+                        <div className="text-[11px] text-[#7D6871]">{order.clientPhone}</div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="text-[#3A2D33] font-medium max-w-xs truncate" title={order.description}>
+                        <div className="text-[#2C1E23] font-medium max-w-xs truncate" title={order.description}>
                           {order.description}
                         </div>
-                        <div className="text-[10px] text-[#6D5C64]">Canal: {order.channel}</div>
+                        <div className="text-[10px] text-[#7D6871]">Canal: {order.channel}</div>
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         <div
                           className={`font-semibold ${
                             isToday
-                              ? 'text-[#8E315E]'
+                              ? 'text-[#2563EB]'
                               : isLate
-                              ? 'text-[#9B2C2C]'
-                              : 'text-[#3A2D33]'
+                              ? 'text-[#DC2626]'
+                              : 'text-[#2C1E23]'
                           }`}
                         >
                           {order.deliveryDate}
                         </div>
-                        <div className="text-[11px] text-[#6D5C64] flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-[#6D5C64]" />
+                        <div className="text-[11px] text-[#7D6871] flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-[#7D6871]" />
                           {order.deliveryTime || '--:--'}
                           {isToday && (
-                            <span className="ml-1 text-[10px] font-bold px-1.5 py-0.2 bg-[#FBDAE3] text-[#8E315E] rounded">
+                            <span className="ml-1 text-[10px] font-bold px-1.5 py-0.2 bg-[#DBEAFE] text-[#2563EB] rounded">
                               Hoy
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-bold text-[#3A2D33] whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right font-bold text-[#2C1E23] whitespace-nowrap">
                         Q {order.total.toFixed(2)}
                       </td>
-                      <td className="py-3.5 px-4 text-right text-[#65733D] font-semibold whitespace-nowrap">
+                      <td className="py-3.5 px-4 text-right text-[#059669] font-semibold whitespace-nowrap">
                         Q {order.advancePayment.toFixed(2)}
                       </td>
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <span
                           className={`font-bold ${
-                            order.balance > 0 ? 'text-[#9B2C2C]' : 'text-emerald-700'
+                            order.balance > 0 ? 'text-[#DC2626]' : 'text-emerald-700'
                           }`}
                         >
                           Q {order.balance.toFixed(2)}
@@ -324,7 +323,7 @@ export const OrdersListView: React.FC = () => {
                           <button
                             id={`btn-view-order-${order.code}`}
                             onClick={() => navigateToOrderDetail(order.id)}
-                            className="p-1.5 rounded-lg bg-[#FFF7FA] hover:bg-[#8E315E] hover:text-white text-[#8E315E] border border-[#FBDAE3] transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg bg-[#FBECEF]/60 hover:bg-[#681B2B] hover:text-white text-[#681B2B] border border-[#F2D6DE] transition-colors cursor-pointer"
                             title="Ver Detalle del Pedido"
                           >
                             <Eye className="w-4 h-4" />
@@ -333,7 +332,7 @@ export const OrdersListView: React.FC = () => {
                             <button
                               id={`btn-edit-order-${order.code}`}
                               onClick={() => navigateToOrderEdit(order.id)}
-                              className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-200 text-[#3A2D33] border border-gray-200 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-200 text-[#2C1E23] border border-gray-200 transition-colors cursor-pointer"
                               title="Editar Pedido"
                             >
                               <Edit className="w-4 h-4" />
@@ -350,10 +349,10 @@ export const OrdersListView: React.FC = () => {
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-4 border-t border-[#FBDAE3] bg-[#FFF7FA]/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <span className="text-[#6D5C64]">
-            Página <strong className="text-[#3A2D33]">{currentPage}</strong> de{' '}
-            <strong className="text-[#3A2D33]">{totalPages}</strong> (
+        <div className="p-4 border-t border-[#F2D6DE]/60 bg-[#FBECEF]/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <span className="text-[#7D6871]">
+            Página <strong className="text-[#2C1E23]">{currentPage}</strong> de{' '}
+            <strong className="text-[#2C1E23]">{totalPages}</strong> (
             {sortedOrders.length} pedidos totales)
           </span>
 
@@ -362,7 +361,7 @@ export const OrdersListView: React.FC = () => {
               id="btn-pagination-prev"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-lg border border-[#FBDAE3] bg-white text-[#3A2D33] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBDAE3]/30 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-[#F2D6DE] bg-white text-[#2C1E23] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBECEF]/40 transition-colors font-medium flex items-center gap-1 cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               Anterior
@@ -374,8 +373,8 @@ export const OrdersListView: React.FC = () => {
                 onClick={() => setCurrentPage(pageNum)}
                 className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   currentPage === pageNum
-                    ? 'bg-[#8E315E] text-white shadow-xs'
-                    : 'bg-white text-[#6D5C64] hover:bg-[#FBDAE3]/30 border border-[#FBDAE3]'
+                    ? 'bg-[#681B2B] text-white shadow-xs'
+                    : 'bg-white text-[#7D6871] hover:bg-[#FBECEF]/40 border border-[#F2D6DE]'
                 }`}
               >
                 {pageNum}
@@ -386,7 +385,7 @@ export const OrdersListView: React.FC = () => {
               id="btn-pagination-next"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-lg border border-[#FBDAE3] bg-white text-[#3A2D33] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBDAE3]/30 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-[#F2D6DE] bg-white text-[#2C1E23] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBECEF]/40 transition-colors font-medium flex items-center gap-1 cursor-pointer"
             >
               Siguiente
               <ChevronRight className="w-3.5 h-3.5" />
@@ -396,4 +395,5 @@ export const OrdersListView: React.FC = () => {
       </div>
     </div>
   );
+
 };

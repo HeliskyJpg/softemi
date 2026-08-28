@@ -330,13 +330,13 @@ export const ComponentsView: React.FC = () => {
       {/* Header with Title and Primary Action */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#3A2D33] tracking-tight flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-[#FBDAE3] flex items-center justify-center text-[#8E315E]">
-              <Layers className="w-5 h-5" />
+          <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#FBECEF] flex items-center justify-center text-[#681B2B]">
+              <Layers className="w-4 h-4" />
             </div>
             Componentes y Stock de Taller
           </h1>
-          <p className="text-xs sm:text-sm text-[#6D5C64] mt-1">
+          <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5">
             Control de insumos, flores y cálculo automático de existencias disponibles y reservadas.
           </p>
         </div>
@@ -345,43 +345,43 @@ export const ComponentsView: React.FC = () => {
           <button
             id="btn-new-component"
             onClick={handleOpenCreate}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#8E315E] hover:bg-[#7A294F] text-white font-bold text-sm shadow-sm transition-all cursor-pointer hover:shadow-md"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-sm shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            + Nuevo componente
+            Nuevo componente
           </button>
         )}
       </div>
 
       {/* KPI Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 rounded-2xl bg-white border border-[#FBDAE3] shadow-xs">
-          <div className="flex items-center justify-between text-xs text-[#6D5C64] font-medium">
+        <div className="p-4 rounded-2xl bg-white border border-[#F2D6DE]/60 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-[#7D6871] font-medium">
             <span>Insumos Activos</span>
-            <Package className="w-4 h-4 text-[#8E315E]" />
+            <Package className="w-4 h-4 text-[#681B2B]" />
           </div>
-          <div className="text-2xl font-extrabold text-[#3A2D33] mt-1.5">
+          <div className="text-2xl font-extrabold text-[#2C1E23] mt-1.5">
             {summaryMetrics.active}{' '}
-            <span className="text-xs font-normal text-[#6D5C64]">/ {summaryMetrics.total} total</span>
+            <span className="text-xs font-normal text-[#7D6871]">/ {summaryMetrics.total} total</span>
           </div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">Catálogo registrado en taller</p>
+          <p className="text-[11px] text-[#7D6871] mt-0.5">Catálogo registrado en taller</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#EBF1DE] shadow-xs">
-          <div className="flex items-center justify-between text-xs text-[#4F5B2F] font-medium">
+        <div className="p-4 rounded-2xl bg-white border border-[#F2D6DE]/60 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-[#7D6871] font-medium">
             <span>Stock Físico Total</span>
-            <Boxes className="w-4 h-4 text-[#65733D]" />
+            <Boxes className="w-4 h-4 text-[#681B2B]" />
           </div>
-          <div className="text-2xl font-extrabold text-[#4F5B2F] mt-1.5">
+          <div className="text-2xl font-extrabold text-[#2C1E23] mt-1.5">
             {summaryMetrics.totalPhysical}{' '}
-            <span className="text-xs font-normal text-[#6D5C64]">unids.</span>
+            <span className="text-xs font-normal text-[#7D6871]">unids.</span>
           </div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">
+          <p className="text-[11px] text-[#7D6871] mt-0.5">
             {summaryMetrics.totalReserved} unids. reservadas en pedidos
           </p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-amber-200 shadow-xs">
+        <div className="p-4 rounded-2xl bg-white border border-[#F2D6DE]/60 shadow-xs">
           <div className="flex items-center justify-between text-xs text-amber-800 font-medium">
             <span>Bajo Stock (Alerta)</span>
             <AlertTriangle className="w-4 h-4 text-amber-600" />
@@ -389,31 +389,31 @@ export const ComponentsView: React.FC = () => {
           <div className="text-2xl font-extrabold text-amber-800 mt-1.5">
             {summaryMetrics.lowStock}
           </div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">Disponibilidad ≤ stock mínimo</p>
+          <p className="text-[11px] text-[#7D6871] mt-0.5">Disponibilidad ≤ stock mínimo</p>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-red-200 shadow-xs">
+        <div className="p-4 rounded-2xl bg-white border border-[#F2D6DE]/60 shadow-xs">
           <div className="flex items-center justify-between text-xs text-red-800 font-medium">
             <span>Insumos Agotados</span>
             <XCircle className="w-4 h-4 text-red-600" />
           </div>
-          <div className="text-2xl font-extrabold text-[#9B2C2C] mt-1.5">
+          <div className="text-2xl font-extrabold text-[#DC2626] mt-1.5">
             {summaryMetrics.outOfStock}
           </div>
-          <p className="text-[11px] text-[#6D5C64] mt-0.5">Disponibilidad igual a 0</p>
+          <p className="text-[11px] text-[#7D6871] mt-0.5">Disponibilidad igual a 0</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-[#FBDAE3] pb-1">
+      <div className="flex items-center justify-between border-b border-[#F2D6DE]/60 pb-1">
         <div className="flex items-center gap-2 text-xs">
           <button
             id="tab-catalog"
             onClick={() => setActiveTab('catalog')}
             className={`px-4 py-2 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'catalog'
-                ? 'bg-[#8E315E] text-white shadow-xs'
-                : 'text-[#6D5C64] hover:text-[#3A2D33] hover:bg-white'
+                ? 'bg-[#681B2B] text-white shadow-xs'
+                : 'text-[#7D6871] hover:text-[#2C1E23] hover:bg-white'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -425,8 +425,8 @@ export const ComponentsView: React.FC = () => {
             onClick={() => setActiveTab('logs')}
             className={`px-4 py-2 font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'logs'
-                ? 'bg-[#8E315E] text-white shadow-xs'
-                : 'text-[#6D5C64] hover:text-[#3A2D33] hover:bg-white'
+                ? 'bg-[#681B2B] text-white shadow-xs'
+                : 'text-[#7D6871] hover:text-[#2C1E23] hover:bg-white'
             }`}
           >
             <History className="w-3.5 h-3.5" />
@@ -434,19 +434,19 @@ export const ComponentsView: React.FC = () => {
           </button>
         </div>
 
-        <div className="text-xs text-[#6D5C64] hidden sm:block">
-          <span className="font-semibold text-[#8E315E]">Regla operativa:</span> Disponible = Físico − Reservado
+        <div className="text-xs text-[#7D6871] hidden sm:block">
+          <span className="font-semibold text-[#681B2B]">Regla operativa:</span> Disponible = Físico − Reservado
         </div>
       </div>
 
       {activeTab === 'catalog' ? (
         <>
           {/* Filters Bar */}
-          <div className="bg-white rounded-2xl p-4 border border-[#FBDAE3] shadow-xs space-y-3">
+          <div className="bg-white rounded-2xl p-4 border border-[#F2D6DE]/60 shadow-xs space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               {/* Search */}
               <div className="relative md:col-span-2">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#6D5C64]">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
                   <Search className="w-4 h-4" />
                 </div>
                 <input
@@ -455,7 +455,7 @@ export const ComponentsView: React.FC = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Buscar por nombre, descripción o categoría..."
-                  className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-[#FFF7FA]/40 focus:bg-white text-[#3A2D33] placeholder-[#6D5C64]/60 focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30"
+                  className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/20 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20"
                 />
               </div>
 
@@ -465,7 +465,7 @@ export const ComponentsView: React.FC = () => {
                   id="select-components-category-filter"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-white text-[#3A2D33] focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium cursor-pointer"
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer"
                 >
                   <option value="Todas">Categoría: Todas</option>
                   {uniqueCategories.map((cat) => (
@@ -482,7 +482,7 @@ export const ComponentsView: React.FC = () => {
                   id="select-components-status-filter"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-white text-[#3A2D33] focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium cursor-pointer"
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer"
                 >
                   <option value="all">Estado: Todos</option>
                   <option value="available">Disponibles</option>
@@ -495,10 +495,10 @@ export const ComponentsView: React.FC = () => {
           </div>
 
           {/* Components Table */}
-          <div className="bg-white rounded-2xl border border-[#FBDAE3] shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table id="table-components" className="w-full text-left text-xs">
-                <thead className="bg-[#FFF7FA] border-b border-[#FBDAE3] text-[#6D5C64] uppercase text-[10px] tracking-wider">
+                <thead className="bg-[#FBECEF]/40 border-b border-[#F2D6DE]/60 text-[#8C7A82] uppercase text-[10px] tracking-wider">
                   <tr>
                     <th className="py-3 px-4 font-bold">Componente / Insumo</th>
                     <th className="py-3 px-3 font-bold">Categoría</th>
@@ -510,15 +510,15 @@ export const ComponentsView: React.FC = () => {
                     <th className="py-3 px-4 font-bold text-right">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-[#F2D6DE]/30">
                   {filteredComponents.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-[#6D5C64]">
-                        <Layers className="w-8 h-8 mx-auto mb-2 text-[#FBDAE3]" />
-                        <p className="font-semibold text-sm text-[#3A2D33]">
+                      <td colSpan={8} className="py-12 text-center text-[#7D6871]">
+                        <Layers className="w-8 h-8 mx-auto mb-2 text-[#F2D6DE]" />
+                        <p className="font-semibold text-sm text-[#2C1E23]">
                           No se encontraron componentes
                         </p>
-                        <p className="text-xs text-[#6D5C64] mt-1">
+                        <p className="text-xs text-[#7D6871] mt-1">
                           Pruebe ajustando los filtros de búsqueda o registre un nuevo insumo.
                         </p>
                       </td>
@@ -533,14 +533,14 @@ export const ComponentsView: React.FC = () => {
                         <tr
                           key={comp.id}
                           id={`row-component-${comp.id}`}
-                          className={`hover:bg-[#FFF7FA]/80 transition-colors ${
+                          className={`hover:bg-[#FBECEF]/20 transition-colors ${
                             !comp.active ? 'bg-gray-50/70 opacity-75' : ''
                           }`}
                         >
                           {/* Name & Description */}
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-[#3A2D33] text-sm">{comp.name}</span>
+                              <span className="font-bold text-[#2C1E23] text-sm">{comp.name}</span>
                               {!comp.active && (
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 text-gray-700">
                                   Inactivo
@@ -548,7 +548,7 @@ export const ComponentsView: React.FC = () => {
                               )}
                             </div>
                             {comp.description && (
-                              <div className="text-[11px] text-[#6D5C64] truncate max-w-xs mt-0.5">
+                              <div className="text-[11px] text-[#7D6871] truncate max-w-xs mt-0.5">
                                 {comp.description}
                               </div>
                             )}
@@ -556,22 +556,22 @@ export const ComponentsView: React.FC = () => {
 
                           {/* Category */}
                           <td className="py-3 px-3">
-                            <span className="px-2.5 py-1 rounded-full bg-gray-100 text-[#3A2D33] font-medium text-[11px] whitespace-nowrap">
+                            <span className="px-2.5 py-1 rounded-full bg-gray-100 text-[#2C1E23] font-medium text-[11px] whitespace-nowrap">
                               {comp.category}
                             </span>
                           </td>
 
                           {/* Price */}
-                          <td className="py-3 px-3 text-right font-bold text-[#8E315E] whitespace-nowrap">
+                          <td className="py-3 px-3 text-right font-bold text-[#681B2B] whitespace-nowrap">
                             Q {comp.price.toFixed(2)}{' '}
-                            <span className="text-[10px] font-normal text-[#6D5C64]">
+                            <span className="text-[10px] font-normal text-[#7D6871]">
                               /{comp.unit || 'ud'}
                             </span>
                           </td>
 
                           {/* Physical Stock */}
                           <td className="py-3 px-3 text-center">
-                            <span className="text-xs font-bold text-[#3A2D33] px-2 py-1 bg-gray-100 rounded-lg">
+                            <span className="text-xs font-bold text-[#2C1E23] px-2 py-1 bg-gray-100 rounded-lg">
                               {comp.physicalStock} {comp.unit}
                             </span>
                           </td>
@@ -581,8 +581,8 @@ export const ComponentsView: React.FC = () => {
                             <span
                               className={`text-xs font-bold px-2 py-1 rounded-lg ${
                                 comp.reservedStock > 0
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                                  : 'text-[#6D5C64] bg-gray-50'
+                                  ? 'bg-amber-50 text-amber-900 border border-amber-200'
+                                  : 'text-[#7D6871] bg-gray-50'
                               }`}
                               title="Comprometido en pedidos confirmados"
                             >
@@ -595,10 +595,10 @@ export const ComponentsView: React.FC = () => {
                             <span
                               className={`text-xs font-extrabold px-2.5 py-1 rounded-xl ${
                                 isOutOfStock
-                                  ? 'bg-red-100 text-[#9B2C2C] border border-red-200'
+                                  ? 'bg-red-50 text-[#DC2626] border border-red-200'
                                   : isLowStock
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-200'
-                                  : 'bg-[#EBF1DE] text-[#4F5B2F] border border-[#D5E2BA]'
+                                  ? 'bg-amber-50 text-amber-900 border border-amber-200'
+                                  : 'bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]'
                               }`}
                             >
                               {available} {comp.unit}
@@ -608,21 +608,21 @@ export const ComponentsView: React.FC = () => {
                           {/* Availability Badge */}
                           <td className="py-3 px-3 text-center whitespace-nowrap">
                             {!comp.active ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 text-gray-700">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
                                 Desactivado
                               </span>
                             ) : isOutOfStock ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-[#9B2C2C]">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-50 text-[#DC2626]">
                                 <XCircle className="w-3 h-3" />
                                 Agotado
                               </span>
                             ) : isLowStock ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-900">
                                 <AlertTriangle className="w-3 h-3" />
                                 Bajo stock
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EBF1DE] text-[#4F5B2F]">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full bg-[#ECFDF5] text-[#047857]">
                                 <CheckCircle2 className="w-3 h-3" />
                                 Disponible
                               </span>
@@ -636,7 +636,7 @@ export const ComponentsView: React.FC = () => {
                               <button
                                 id={`btn-edit-comp-${comp.id}`}
                                 onClick={() => handleOpenEdit(comp)}
-                                className="px-2.5 py-1.5 rounded-lg border border-[#FBDAE3] bg-white hover:bg-[#8E315E] hover:text-white text-[#8E315E] font-semibold text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                                className="px-2.5 py-1.5 rounded-lg border border-[#F2D6DE] bg-white hover:bg-[#681B2B] hover:text-white text-[#681B2B] font-semibold text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
                                 title="Editar datos del componente (nombre, precio, etc.)"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
@@ -647,7 +647,7 @@ export const ComponentsView: React.FC = () => {
                               <button
                                 id={`btn-adjust-stock-${comp.id}`}
                                 onClick={() => handleOpenStockAdjust(comp)}
-                                className="px-2.5 py-1.5 rounded-lg bg-[#65733D] hover:bg-[#546032] text-white font-semibold text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                                className="px-2.5 py-1.5 rounded-lg bg-[#681B2B] hover:bg-[#541421] text-white font-semibold text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
                                 title="Registrar entrada o salida de inventario"
                               >
                                 <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -661,7 +661,7 @@ export const ComponentsView: React.FC = () => {
                                   onClick={() => handlePromptToggleActive(comp)}
                                   className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
                                     comp.active
-                                      ? 'border-gray-200 text-[#6D5C64] hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                                      ? 'border-gray-200 text-[#7D6871] hover:bg-red-50 hover:text-red-600 hover:border-red-200'
                                       : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                                   }`}
                                   title={comp.active ? 'Desactivar componente' : 'Reactivar componente'}
@@ -682,25 +682,25 @@ export const ComponentsView: React.FC = () => {
         </>
       ) : (
         /* Stock Adjustment Audit Logs Tab */
-        <div className="bg-white rounded-2xl border border-[#FBDAE3] shadow-xs overflow-hidden p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 pb-3">
+        <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#F2D6DE]/40 pb-3">
             <div>
-              <h3 className="text-sm font-bold text-[#3A2D33] flex items-center gap-2">
-                <History className="w-4 h-4 text-[#8E315E]" />
+              <h3 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
+                <History className="w-4 h-4 text-[#681B2B]" />
                 Registro de Movimientos y Ajustes de Stock
               </h3>
-              <p className="text-xs text-[#6D5C64]">
+              <p className="text-xs text-[#7D6871]">
                 Auditoría histórica de entradas, salidas y motivos de ajuste manual.
               </p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-[#FFF7FA] text-[#8E315E] rounded-full border border-[#FBDAE3]">
+            <span className="text-xs font-semibold px-2.5 py-1 bg-[#FBECEF] text-[#681B2B] rounded-full border border-[#F2D6DE]">
               {stockAdjustmentLogs.length} movimientos registrados
             </span>
           </div>
 
-          <div className="overflow-x-auto border border-[#FBDAE3] rounded-xl">
+          <div className="overflow-x-auto border border-[#F2D6DE]/60 rounded-xl">
             <table id="table-stock-logs" className="w-full text-left text-xs">
-              <thead className="bg-[#FFF7FA] text-[#6D5C64] uppercase text-[10px] tracking-wider border-b border-[#FBDAE3]">
+              <thead className="bg-[#FBECEF]/40 text-[#8C7A82] uppercase text-[10px] tracking-wider border-b border-[#F2D6DE]/60">
                 <tr>
                   <th className="py-2.5 px-3">Fecha y Hora</th>
                   <th className="py-2.5 px-3">Componente</th>
@@ -713,20 +713,20 @@ export const ComponentsView: React.FC = () => {
                   <th className="py-2.5 px-3">Usuario</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#F2D6DE]/30">
                 {stockAdjustmentLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-[#6D5C64]">
+                    <td colSpan={9} className="py-8 text-center text-[#7D6871]">
                       No hay registros de ajustes de stock aún.
                     </td>
                   </tr>
                 ) : (
                   stockAdjustmentLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-[#FFF7FA]/50 transition-colors">
-                      <td className="py-2.5 px-3 text-[#6D5C64] font-medium whitespace-nowrap">
+                    <tr key={log.id} className="hover:bg-[#FBECEF]/20 transition-colors">
+                      <td className="py-2.5 px-3 text-[#7D6871] font-medium whitespace-nowrap">
                         {log.timestamp}
                       </td>
-                      <td className="py-2.5 px-3 font-bold text-[#3A2D33]">
+                      <td className="py-2.5 px-3 font-bold text-[#2C1E23]">
                         {log.componentName}
                       </td>
                       <td className="py-2.5 px-3 text-center">
@@ -745,25 +745,25 @@ export const ComponentsView: React.FC = () => {
                           {log.type}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-center font-extrabold text-[#3A2D33]">
+                      <td className="py-2.5 px-3 text-center font-extrabold text-[#2C1E23]">
                         {log.type === 'Entrada' ? `+${log.quantity}` : `-${log.quantity}`}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-medium text-[#6D5C64]">
+                      <td className="py-2.5 px-3 text-center font-medium text-[#7D6871]">
                         {log.previousPhysicalStock}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-bold text-[#8E315E]">
+                      <td className="py-2.5 px-3 text-center font-bold text-[#681B2B]">
                         {log.newPhysicalStock}
                       </td>
                       <td className="py-2.5 px-3 text-center font-semibold text-amber-700">
                         {log.reservedStock}
                       </td>
-                      <td className="py-2.5 px-3 text-[#3A2D33]">
+                      <td className="py-2.5 px-3 text-[#2C1E23]">
                         <div className="font-semibold">{log.reason}</div>
                         {log.observation && (
-                          <div className="text-[11px] text-[#6D5C64] italic">{log.observation}</div>
+                          <div className="text-[11px] text-[#7D6871] italic">{log.observation}</div>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-[#6D5C64] font-medium whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-[#7D6871] font-medium whitespace-nowrap">
                         {log.user}
                       </td>
                     </tr>
@@ -783,18 +783,18 @@ export const ComponentsView: React.FC = () => {
           id="modal-component-form"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#FBDAE3] relative animate-in fade-in max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowEditModal(false)}
-              className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1.5 rounded-lg hover:bg-gray-100"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-lg font-bold text-[#3A2D33] mb-1">
+            <h3 className="text-lg font-bold text-[#2C1E23] mb-1">
               {editingComponent ? 'Editar Componente' : 'Nuevo Componente'}
             </h3>
-            <p className="text-xs text-[#6D5C64] mb-4">
+            <p className="text-xs text-[#7D6871] mb-4">
               {editingComponent
                 ? 'Actualice las características generales del insumo. El stock físico se edita exclusivamente con Ajustar stock.'
                 : 'Defina los datos del insumo y su existencia inicial para el taller.'}
@@ -813,7 +813,7 @@ export const ComponentsView: React.FC = () => {
             <form onSubmit={handleSaveComponent} className="space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Nombre del Insumo / Flor <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -823,7 +823,7 @@ export const ComponentsView: React.FC = () => {
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="Ej. Rosas Rosadas de Exportación"
-                  className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
@@ -832,13 +832,13 @@ export const ComponentsView: React.FC = () => {
                 {/* Category Combobox */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-[#3A2D33]">
+                    <label className="block text-xs font-bold text-[#2C1E23]">
                       Categoría <span className="text-red-500">*</span>
                     </label>
                     <button
                       type="button"
                       onClick={() => setIsAddingNewCat(!isAddingNewCat)}
-                      className="text-[11px] font-bold text-[#8E315E] hover:underline cursor-pointer"
+                      className="text-[11px] font-bold text-[#681B2B] hover:underline cursor-pointer"
                     >
                       {isAddingNewCat ? 'Seleccionar existente' : '+ Nueva categoría'}
                     </button>
@@ -851,14 +851,14 @@ export const ComponentsView: React.FC = () => {
                       value={newCustomCategory}
                       onChange={(e) => setNewCustomCategory(e.target.value)}
                       placeholder="Escriba nueva categoría..."
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-medium"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium"
                     />
                   ) : (
                     <select
                       id="select-comp-category"
                       value={formCategory}
                       onChange={(e) => setFormCategory(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-medium"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium cursor-pointer"
                     >
                       {uniqueCategories.map((c) => (
                         <option key={`modal-cat-${c}`} value={c}>
@@ -872,14 +872,14 @@ export const ComponentsView: React.FC = () => {
                 {/* Measurement Unit */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-[#3A2D33]">
+                    <label className="block text-xs font-bold text-[#2C1E23]">
                       Unidad de Medida <span className="text-red-500">*</span>
                     </label>
                     <button
                       id="btn-toggle-new-unit"
                       type="button"
                       onClick={() => setIsAddingNewUnit(!isAddingNewUnit)}
-                      className="text-[11px] font-bold text-[#8E315E] hover:underline cursor-pointer"
+                      className="text-[11px] font-bold text-[#681B2B] hover:underline cursor-pointer"
                     >
                       {isAddingNewUnit ? 'Seleccionar existente' : '+ Nueva unidad'}
                     </button>
@@ -893,14 +893,14 @@ export const ComponentsView: React.FC = () => {
                       value={newCustomUnit}
                       onChange={(e) => setNewCustomUnit(e.target.value)}
                       placeholder="Ej. Docena, Paquete de 25, Kilos..."
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-medium"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium"
                     />
                   ) : (
                     <select
                       id="select-comp-unit"
                       value={formUnit}
                       onChange={(e) => setFormUnit(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-medium"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium cursor-pointer"
                     >
                       {uniqueUnits.map((u) => (
                         <option key={`modal-unit-${u}`} value={u}>
@@ -916,7 +916,7 @@ export const ComponentsView: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Unit Price */}
                 <div>
-                  <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                     Precio Unitario (Q) <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -927,13 +927,13 @@ export const ComponentsView: React.FC = () => {
                     required
                     value={formPrice}
                     onChange={(e) => setFormPrice(parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none font-bold text-[#8E315E]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none font-bold text-[#681B2B]"
                   />
                 </div>
 
                 {/* Min Stock Alert */}
                 <div>
-                  <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                     Stock Mínimo para Alerta
                   </label>
                   <input
@@ -941,15 +941,15 @@ export const ComponentsView: React.FC = () => {
                     min={0}
                     value={formMinStock}
                     onChange={(e) => setFormMinStock(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                   />
                 </div>
               </div>
 
               {/* Initial Physical Stock (ONLY when creating) */}
               {!editingComponent && (
-                <div className="p-3 bg-[#FFF7FA] rounded-xl border border-[#FBDAE3]">
-                  <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <div className="p-3 bg-[#FBECEF]/30 rounded-xl border border-[#F2D6DE]">
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                     Stock Físico Inicial en Taller <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -959,9 +959,9 @@ export const ComponentsView: React.FC = () => {
                     required
                     value={formInitialPhysicalStock}
                     onChange={(e) => setFormInitialPhysicalStock(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none font-bold text-[#65733D] bg-white"
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none font-bold text-[#059669] bg-white"
                   />
-                  <p className="text-[11px] text-[#6D5C64] mt-1">
+                  <p className="text-[11px] text-[#7D6871] mt-1">
                     Cantidad física disponible inmediatamente para pedidos.
                   </p>
                 </div>
@@ -969,7 +969,7 @@ export const ComponentsView: React.FC = () => {
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Descripción / Observaciones
                 </label>
                 <textarea
@@ -977,7 +977,7 @@ export const ComponentsView: React.FC = () => {
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Detalles sobre presentación, color, proveedor o cuidado..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none resize-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
                 />
               </div>
 
@@ -988,26 +988,26 @@ export const ComponentsView: React.FC = () => {
                   type="checkbox"
                   checked={formActive}
                   onChange={(e) => setFormActive(e.target.checked)}
-                  className="w-4 h-4 text-[#8E315E] rounded border-gray-300 focus:ring-[#8E315E]"
+                  className="w-4 h-4 text-[#681B2B] rounded border-gray-300 focus:ring-[#681B2B]"
                 />
-                <label htmlFor="checkbox-comp-active" className="text-xs font-bold text-[#3A2D33] cursor-pointer">
+                <label htmlFor="checkbox-comp-active" className="text-xs font-bold text-[#2C1E23] cursor-pointer">
                   Componente activo (disponible para armar pedidos)
                 </label>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#6D5C64] hover:bg-gray-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-component"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#8E315E] hover:bg-[#7A294F] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
                 >
                   {editingComponent ? 'Guardar Cambios' : 'Crear Componente'}
                 </button>
@@ -1025,29 +1025,29 @@ export const ComponentsView: React.FC = () => {
           id="modal-adjust-stock"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#FBDAE3] relative animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
             <button
               onClick={() => setShowStockModal(false)}
-              className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1.5 rounded-lg hover:bg-gray-100"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-2 mb-1">
-              <div className="p-2 rounded-xl bg-[#EBF1DE] text-[#65733D]">
+              <div className="p-2 rounded-xl bg-[#FBECEF] text-[#681B2B]">
                 <SlidersHorizontal className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#3A2D33]">Ajustar Stock de Insumo</h3>
-                <p className="text-xs text-[#6D5C64]">{stockComponent.name} ({stockComponent.category})</p>
+                <h3 className="text-base font-bold text-[#2C1E23]">Ajustar Stock de Insumo</h3>
+                <p className="text-xs text-[#7D6871]">{stockComponent.name} ({stockComponent.category})</p>
               </div>
             </div>
 
             {/* Current Stock Indicators */}
             <div className="grid grid-cols-3 gap-2 my-4 text-center text-xs">
               <div className="p-2 rounded-xl bg-gray-50 border border-gray-200">
-                <span className="text-[#6D5C64] block text-[10px] font-medium">Físico Actual</span>
-                <span className="text-sm font-extrabold text-[#3A2D33]">
+                <span className="text-[#7D6871] block text-[10px] font-medium">Físico Actual</span>
+                <span className="text-sm font-extrabold text-[#2C1E23]">
                   {stockComponent.physicalStock} {stockComponent.unit}
                 </span>
               </div>
@@ -1057,9 +1057,9 @@ export const ComponentsView: React.FC = () => {
                   {stockComponent.reservedStock} {stockComponent.unit}
                 </span>
               </div>
-              <div className="p-2 rounded-xl bg-[#EBF1DE] border border-[#D5E2BA]">
-                <span className="text-[#4F5B2F] block text-[10px] font-medium">Disponible</span>
-                <span className="text-sm font-extrabold text-[#4F5B2F]">
+              <div className="p-2 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0]">
+                <span className="text-[#047857] block text-[10px] font-medium">Disponible</span>
+                <span className="text-sm font-extrabold text-[#047857]">
                   {getAvailableStock(stockComponent)} {stockComponent.unit}
                 </span>
               </div>
@@ -1068,7 +1068,7 @@ export const ComponentsView: React.FC = () => {
             <form onSubmit={handleConfirmStockAdjust} className="space-y-4">
               {/* Type: Entrada vs Salida */}
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1.5">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
                   Tipo de Movimiento <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1078,7 +1078,7 @@ export const ComponentsView: React.FC = () => {
                     className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                       adjustmentType === 'Entrada'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-white text-[#6D5C64] border-gray-200 hover:bg-gray-50'
+                        : 'bg-white text-[#7D6871] border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     <ArrowUpRight className="w-4 h-4" />
@@ -1090,8 +1090,8 @@ export const ComponentsView: React.FC = () => {
                     onClick={() => setAdjustmentType('Salida')}
                     className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
                       adjustmentType === 'Salida'
-                        ? 'bg-[#9B2C2C] text-white border-[#9B2C2C] shadow-xs'
-                        : 'bg-white text-[#6D5C64] border-gray-200 hover:bg-gray-50'
+                        ? 'bg-[#DC2626] text-white border-[#DC2626] shadow-xs'
+                        : 'bg-white text-[#7D6871] border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     <ArrowDownRight className="w-4 h-4" />
@@ -1102,7 +1102,7 @@ export const ComponentsView: React.FC = () => {
 
               {/* Quantity */}
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Cantidad a {adjustmentType === 'Entrada' ? 'Ingresar' : 'Retirar'} ({stockComponent.unit}) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1112,19 +1112,19 @@ export const ComponentsView: React.FC = () => {
                   required
                   value={adjustmentQty}
                   onChange={(e) => setAdjustmentQty(parseInt(e.target.value) || 1)}
-                  className="w-full px-3.5 py-2.5 text-base font-extrabold text-center rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none text-[#3A2D33]"
+                  className="w-full px-3.5 py-2.5 text-base font-extrabold text-center rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
                 />
               </div>
 
               {/* Reason */}
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Motivo del Ajuste <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={adjustmentReason}
                   onChange={(e) => setAdjustmentReason(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-medium"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium cursor-pointer"
                 >
                   {PRESET_ADJUSTMENT_REASONS.map((r) => (
                     <option key={r} value={r}>
@@ -1136,7 +1136,7 @@ export const ComponentsView: React.FC = () => {
 
               {/* Additional Observation */}
               <div>
-                <label className="block text-xs font-bold text-[#3A2D33] mb-1">
+                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Detalle / Nota adicional (Opcional)
                 </label>
                 <input
@@ -1144,7 +1144,7 @@ export const ComponentsView: React.FC = () => {
                   value={adjustmentObservation}
                   onChange={(e) => setAdjustmentObservation(e.target.value)}
                   placeholder="Ej. Factura #412, lote de Rosas rojas premium..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
               </div>
 
@@ -1164,12 +1164,12 @@ export const ComponentsView: React.FC = () => {
                     className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
                       isInvalidSalida
                         ? 'bg-red-50 border-red-200 text-red-900'
-                        : 'bg-[#FFF7FA] border-[#FBDAE3]'
+                        : 'bg-[#FBECEF]/30 border-[#F2D6DE]'
                     }`}
                   >
                     <div className="flex items-center justify-between font-bold">
                       <span>Resultado proyectado:</span>
-                      <span className={isInvalidSalida ? 'text-red-700' : 'text-[#8E315E]'}>
+                      <span className={isInvalidSalida ? 'text-red-700' : 'text-[#681B2B]'}>
                         Físico: {newPhysical} | Disponible: {newAvailable} {stockComponent.unit}
                       </span>
                     </div>
@@ -1183,18 +1183,18 @@ export const ComponentsView: React.FC = () => {
               })()}
 
               {/* Actions */}
-              <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#F2D6DE]/40">
                 <button
                   type="button"
                   onClick={() => setShowStockModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#6D5C64] hover:bg-gray-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-confirm-stock-adjust"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#65733D] hover:bg-[#546032] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
                 >
                   Confirmar y Guardar Ajuste
                 </button>
