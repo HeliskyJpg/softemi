@@ -11,7 +11,6 @@ import {
   UserCheck,
   User,
   LogOut,
-  Flower,
   Sparkles,
 } from 'lucide-react';
 import { ActiveView } from '../../types';
@@ -32,9 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
   const pendingOrdersCount = orders.filter(
     (o) => o.status === 'Pendiente' || o.status === 'En preparación'
   ).length;
-  const lowStockCount = components.filter(
-    (c) => c.active && (c.physicalStock - c.reservedStock) <= c.minStockAlert
-  ).length;
+  const lowStockCount = components.filter((c) => c.stock <= c.minStockAlert).length;
 
   const navItems = [
     {
@@ -193,16 +190,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
         <div className="p-3 border-t border-[#FBDAE3] bg-[#FFF7FA]/60">
           <div className="bg-white rounded-xl p-3 border border-[#FBDAE3] shadow-xs">
             <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-1.5">
-                <Flower className="w-3.5 h-3.5 text-[#8E315E]" />
+              <div className="flex items-center gap-2">
+                <img
+                  src="/emila-logo.png"
+                  alt="EMILA"
+                  className="w-6 h-6 object-contain rounded-full shadow-xs shrink-0"
+                  referrerPolicy="no-referrer"
+                />
                 <span className="text-xs font-bold text-[#3A2D33]">EMILA Floristería</span>
               </div>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#65733D]/15 text-[#65733D]">
-                v1.0 Prototipo
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#8E315E]/10 text-[#8E315E]">
+                Oficial
               </span>
             </div>
             <p className="text-[11px] text-[#6D5C64] leading-relaxed">
-              Enfoque: Gestión de pedidos personalizados y stock simulado.
+              Gestión de pedidos personalizados y stock de taller.
             </p>
           </div>
         </div>

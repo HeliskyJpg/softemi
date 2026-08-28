@@ -9,6 +9,7 @@ import {
   Sparkles,
   CheckCircle2,
   DollarSign,
+  Printer,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -105,15 +106,40 @@ export const ReportsView: React.FC = () => {
 
   return (
     <div id="reports-view-container" className="space-y-6 pb-16">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#3A2D33] tracking-tight flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-[#8E315E]" />
-          Reportes y Estadísticas de Pedidos
-        </h1>
-        <p className="text-xs sm:text-sm text-[#6D5C64] mt-0.5">
-          Análisis del volumen de pedidos, canales de recepción e insumos más solicitados en taller.
-        </p>
+      {/* Official Report Brand Header */}
+      <div className="bg-white rounded-2xl p-5 border border-[#FBDAE3] shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <img
+            src="/emila-logo.png"
+            alt="EMILA Floristería"
+            className="w-14 h-14 sm:w-16 sm:h-16 object-contain rounded-full shadow-xs shrink-0"
+            referrerPolicy="no-referrer"
+          />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#3A2D33] tracking-tight">
+                Reportes y Estadísticas de Taller
+              </h1>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FBDAE3] text-[#8E315E]">
+                EMILA
+              </span>
+            </div>
+            <p className="text-xs text-[#6D5C64] mt-0.5">
+              Informe administrativo de volumen de pedidos, canales de recepción y consumo de insumos.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            id="btn-print-report"
+            onClick={() => window.print()}
+            className="px-4 py-2 rounded-xl border border-[#FBDAE3] bg-[#FFF7FA] hover:bg-[#FBDAE3]/50 text-[#8E315E] text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Printer className="w-4 h-4" />
+            Imprimir Informe
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}

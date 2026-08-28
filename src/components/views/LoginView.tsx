@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Flower2, Shield, User, Lock, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Shield, User, Lock, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const LoginView: React.FC = () => {
@@ -58,18 +58,17 @@ export const LoginView: React.FC = () => {
           transition={{ duration: 0.3 }}
           className="bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-[#FBDAE3] relative overflow-hidden"
         >
-          {/* Decorative subtle background icon */}
-          <div className="absolute -right-8 -top-8 text-[#FBDAE3]/40 pointer-events-none">
-            <Flower2 className="w-40 h-40" />
-          </div>
-
           {/* Logo & Header */}
-          <div className="text-center mb-8 relative">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#8E315E] to-[#65733D] text-white flex items-center justify-center mx-auto mb-3 shadow-md">
-              <Flower2 className="w-8 h-8" />
+          <div className="text-center mb-8 relative flex flex-col items-center">
+            <div className="relative mb-2">
+              <img
+                src="/emila-logo.png"
+                alt="EMILA Floristería - Logo Oficial"
+                className="w-28 h-28 sm:w-32 sm:h-32 object-contain mx-auto rounded-full shadow-md transition-transform hover:scale-105"
+                referrerPolicy="no-referrer"
+              />
             </div>
-            <h1 className="text-3xl font-extrabold text-[#8E315E] tracking-tight">EMILA</h1>
-            <p className="text-xs text-[#6D5C64] font-medium mt-1">
+            <p className="text-xs text-[#6D5C64] font-medium mt-2">
               Sistema de Gestión de Pedidos Personalizados
             </p>
             <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-[#FBDAE3]/60 text-[#8E315E] text-xs font-semibold">

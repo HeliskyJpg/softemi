@@ -49,6 +49,9 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('Cancelación solicitada por el cliente');
 
+  // Print Preview Modal State
+  const [showPrintModal, setShowPrintModal] = useState(false);
+
   if (!order) {
     return (
       <div className="p-12 text-center bg-white rounded-2xl border border-[#FBDAE3]">
@@ -115,6 +118,17 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Print preview button */}
+          <button
+            id="btn-order-detail-print"
+            onClick={() => setShowPrintModal(true)}
+            className="px-4 py-2 rounded-xl border border-[#FBDAE3] bg-[#FFF7FA] hover:bg-[#FBDAE3]/50 text-[#8E315E] text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Ver vista previa de impresión o generar comprobante"
+          >
+            <Printer className="w-4 h-4" />
+            Imprimir Ficha
+          </button>
+
           {/* Edit button */}
           {!isCancelled && !isDelivered && (
             <button
@@ -407,6 +421,190 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* MODAL: VISTA PREVIA DE IMPRESIÓN / FICHA DE PEDIDO */}
+      {/* ============================================================ */}
+      {showPrintModal && (
+        <div
+          id="modal-print-order-preview"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs overflow-y-auto"
+        >
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-[#FBDAE3] my-8 animate-in fade-in">
+            {/* Action Bar inside preview */}
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-100 print:hidden">
+              <div className="flex items-center gap-2 text-xs text-[#6D5C64]">
+                <Printer className="w-4 h-4 text-[#8E315E]" />
+                <span className="font-semibold">Vista Previa de Impresión / Ficha Oficial</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPrintModal(false)}
+                  className="px-3 py-1.5 text-xs font-semibold text-[#6D5C64] hover:bg-gray-100 rounded-xl"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-1.5 text-xs font-bold bg-[#8E315E] hover:bg-[#7A294F] text-white rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Imprimir Documento
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Document Area */}
+            <div className="space-y-6 text-[#3A2D33]">
+              {/* Document Header with Logo */}
+              <div className="flex items-center justify-between border-b-2 border-[#FBDAE3] pb-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/emila-logo.png"
+                    alt="EMILA Floristería"
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain rounded-full shadow-xs shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-black text-[#8E315E] tracking-tight">
+                      EMILA FLORISTERÍA
+                    </h2>
+                    <p className="text-[11px] text-[#6D5C64]">
+                      Gestión de Pedidos y Diseños Florales Personalizados
+                    </p>
+                    <p className="text-[10px] text-[#6D5C64]">
+                      Documento Oficial de Taller y Entrega
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[10px] font-bold text-[#6D5C64] uppercase block">
+                    Código de Pedido
+                  </span>
+                  <span className="text-lg sm:text-xl font-extrabold text-[#8E315E]">
+                    {order.code}
+                  </span>
+                  <div className="text-[11px] text-[#6D5C64] mt-0.5">
+                    Estado: <strong>{order.status}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order and Client Summary */}
+              <div className="grid grid-cols-2 gap-4 text-xs bg-[#FFF7FA] p-4 rounded-2xl border border-[#FBDAE3]">
+                <div>
+                  <span className="text-[10px] font-bold text-[#6D5C64] uppercase block">
+                    Datos del Cliente
+                  </span>
+                  <p className="font-bold text-sm text-[#3A2D33] mt-0.5">{order.clientName}</p>
+                  <p className="text-[#6D5C64] mt-0.5">Tel: {order.clientPhone}</p>
+                  <p className="text-[#6D5C64]">Canal: {order.channel}</p>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-[#6D5C64] uppercase block">
+                    Programación de Entrega
+                  </span>
+                  <p className="font-bold text-sm text-[#8E315E] mt-0.5">
+                    Fecha: {order.deliveryDate}
+                  </p>
+                  <p className="text-[#3A2D33] mt-0.5">
+                    Hora: {order.deliveryTime || 'Por coordinar'}
+                  </p>
+                  <p className="text-[#6D5C64]">Registrado: {order.createdAt}</p>
+                </div>
+              </div>
+
+              {/* Order Description & Observations */}
+              <div className="text-xs space-y-2">
+                <div>
+                  <span className="text-[10px] font-bold text-[#6D5C64] uppercase block">
+                    Descripción del Pedido
+                  </span>
+                  <p className="font-semibold text-sm text-[#3A2D33]">{order.description}</p>
+                </div>
+                {order.observations && (
+                  <div className="p-3 bg-white rounded-xl border border-[#FBDAE3]">
+                    <span className="text-[10px] font-bold text-[#8E315E] uppercase block mb-0.5">
+                      Dedicatoria / Nota Especial:
+                    </span>
+                    <p className="italic text-xs text-[#3A2D33]">"{order.observations}"</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Items Breakdown Table */}
+              <div className="text-xs">
+                <span className="text-[10px] font-bold text-[#6D5C64] uppercase block mb-1.5">
+                  Detalle de Insumos y Componentes
+                </span>
+                <table className="w-full text-left border-collapse border border-gray-200 rounded-xl overflow-hidden">
+                  <thead>
+                    <tr className="bg-[#FFF7FA] text-[#6D5C64] text-[10px] uppercase border-b border-gray-200">
+                      <th className="p-2 font-bold">Elemento</th>
+                      <th className="p-2 font-bold">Categoría</th>
+                      <th className="p-2 font-bold text-center">Cant.</th>
+                      <th className="p-2 font-bold text-right">P. Unit</th>
+                      <th className="p-2 font-bold text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {order.items.map((item, idx) => (
+                      <tr key={idx}>
+                        <td className="p-2 font-semibold text-[#3A2D33]">{item.componentName}</td>
+                        <td className="p-2 text-[#6D5C64] text-[11px]">{item.category}</td>
+                        <td className="p-2 text-center font-bold">{item.quantity}</td>
+                        <td className="p-2 text-right text-[#6D5C64]">Q {item.unitPrice.toFixed(2)}</td>
+                        <td className="p-2 text-right font-bold text-[#8E315E]">
+                          Q {item.subtotal.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Financial Totals */}
+              <div className="flex justify-end pt-2">
+                <div className="w-64 space-y-1.5 text-xs bg-[#FFF7FA] p-3.5 rounded-2xl border border-[#FBDAE3]">
+                  <div className="flex justify-between text-[#6D5C64]">
+                    <span>Subtotal:</span>
+                    <span className="font-semibold">Q {order.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-black text-[#8E315E] pt-1 border-t border-gray-200">
+                    <span>Total:</span>
+                    <span>Q {order.total.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-[#65733D] font-semibold text-xs">
+                    <span>Anticipo:</span>
+                    <span>Q {order.advancePayment.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-xs pt-1 border-t border-gray-200">
+                    <span>Saldo Pendiente:</span>
+                    <span className={order.balance > 0 ? 'text-[#9B2C2C]' : 'text-emerald-700'}>
+                      Q {order.balance.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Signature section */}
+              <div className="grid grid-cols-2 gap-8 pt-8 text-center text-[10px] text-[#6D5C64] border-t border-gray-200">
+                <div>
+                  <div className="border-b border-gray-400 w-36 mx-auto mb-1" />
+                  <span>Firma Taller / Preparado</span>
+                </div>
+                <div>
+                  <div className="border-b border-gray-400 w-36 mx-auto mb-1" />
+                  <span>Firma Cliente / Recibido</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
