@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
-  Flower2,
   User,
   Shield,
   RotateCcw,
@@ -13,13 +12,16 @@ import {
 import { ConfirmModal } from '../common/ConfirmModal';
 
 interface NavbarProps {
-  onToggleSidebar: () => void;
+  onToggleSidebar?: () => void;
+  onToggleMobileSidebar?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, onToggleMobileSidebar }) => {
   const { currentUser, logout, switchUserRole, resetDemoData, setActiveView } = useApp();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const handleToggleMenu = onToggleMobileSidebar || onToggleSidebar || (() => {});
 
   if (!currentUser) return null;
 
@@ -33,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
           <div className="flex items-center gap-3">
             <button
               id="btn-toggle-mobile-sidebar"
-              onClick={onToggleSidebar}
+              onClick={handleToggleMenu}
               className="lg:hidden p-2 rounded-xl text-[#6D5C64] hover:text-[#3A2D33] hover:bg-[#FFF7FA] transition-colors"
               aria-label="Abrir menú"
             >
@@ -43,16 +45,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar }) => {
             <div
               id="brand-logo-container"
               onClick={() => setActiveView('dashboard')}
-              className="flex items-center gap-2.5 cursor-pointer group"
+              className="flex items-center gap-3 cursor-pointer group"
             >
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#8E315E] to-[#65733D] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
-                <Flower2 className="w-5 h-5" />
-              </div>
+              <img
+                src="/emila-logo.png"
+                alt="EMILA Floristería - Logo Oficial"
+                className="w-10 h-10 object-contain rounded-full shadow-xs group-hover:scale-105 transition-transform shrink-0"
+                referrerPolicy="no-referrer"
+              />
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xl font-bold tracking-tight text-[#8E315E]">EMILA</span>
                   <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-[#FBDAE3] text-[#8E315E] hidden sm:inline-block">
-                    Prototipo
+                    Floristería
                   </span>
                 </div>
                 <p className="text-[11px] text-[#6D5C64] leading-none hidden sm:block">

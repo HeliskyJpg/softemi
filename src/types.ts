@@ -16,28 +16,15 @@ export type OrderStatus = 'Pendiente' | 'En preparación' | 'Listo' | 'Entregado
 
 export type OrderChannel = 'WhatsApp' | 'Instagram' | 'Llamada' | 'Otro';
 
-export type ComponentUnit = 'Unidad' | 'Docena' | 'Paquete' | 'Metro' | 'Rollo' | string;
-
-export type ComponentCategory =
-  | 'Flores'
-  | 'Follajes'
-  | 'Empaques'
-  | 'Decoración'
-  | 'Dulces y chocolates'
-  | 'Globos'
-  | 'Tarjetas'
-  | 'Accesorios'
-  | string;
+export type ComponentCategory = 'Flores' | 'Empaques' | 'Accesorios' | 'Chocolates y Dulces' | 'Globos y Decoración';
 
 export interface ComponentItem {
   id: string;
   name: string;
-  category: string;
-  unit: ComponentUnit;
+  category: ComponentCategory;
   price: number; // in Quetzales (Q)
-  physicalStock: number; // Stock físico real
-  reservedStock: number; // Stock reservado en pedidos activos
-  minStockAlert: number; // Stock mínimo
+  stock: number;
+  minStockAlert: number;
   description?: string;
   active: boolean;
 }
@@ -45,7 +32,7 @@ export interface ComponentItem {
 export interface OrderItemDetail {
   componentId: string;
   componentName: string;
-  category: string;
+  category: ComponentCategory;
   quantity: number;
   unitPrice: number;
   subtotal: number;
@@ -96,13 +83,10 @@ export interface StockAdjustmentLog {
   id: string;
   componentId: string;
   componentName: string;
-  type: 'Entrada' | 'Salida';
-  quantity: number;
-  previousPhysicalStock: number;
-  newPhysicalStock: number;
-  reservedStock: number;
+  previousStock: number;
+  newStock: number;
+  difference: number;
   reason: string;
-  observation?: string;
   user: string;
   timestamp: string;
 }

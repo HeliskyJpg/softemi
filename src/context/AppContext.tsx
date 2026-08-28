@@ -17,9 +17,6 @@ import {
   INITIAL_CLIENTS,
   INITIAL_COMPONENTS,
   INITIAL_ORDERS,
-  INITIAL_CATEGORIES,
-  INITIAL_UNITS,
-  INITIAL_STOCK_LOGS,
 } from '../data/seedData';
 
 interface AppContextType {
@@ -72,21 +69,9 @@ interface AppContextType {
 
   // Components & Inventory
   components: ComponentItem[];
-  categories: string[];
-  addCategory: (name: string) => void;
-  units: string[];
-  addUnit: (name: string) => void;
-  addComponent: (item: Omit<ComponentItem, 'id' | 'reservedStock'>) => void;
-  updateComponent: (id: string, itemData: Partial<Omit<ComponentItem, 'id' | 'physicalStock' | 'reservedStock'>>) => void;
-  adjustComponentStock: (
-    id: string,
-    adjustment: {
-      type: 'Entrada' | 'Salida';
-      quantity: number;
-      reason: string;
-      observation?: string;
-    }
-  ) => { success: boolean; error?: string };
+  addComponent: (item: Omit<ComponentItem, 'id'>) => void;
+  updateComponent: (id: string, itemData: Partial<ComponentItem>) => void;
+  adjustComponentStock: (id: string, newStock: number, reason: string) => boolean;
   toggleComponentActive: (id: string) => void;
   stockAdjustmentLogs: StockAdjustmentLog[];
 
@@ -108,31 +93,12 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  USERS: 'emila_users_v2',
-  CURRENT_USER: 'emila_current_user_v2',
-  CLIENTS: 'emila_clients_v2',
-  COMPONENTS: 'emila_components_v2',
-  CATEGORIES: 'emila_categories_v2',
-  UNITS: 'emila_units_v2',
-  ORDERS: 'emila_orders_v2',
-  STOCK_LOGS: 'emila_stock_logs_v2',
-};
-
-const deduplicateStrings = (arr: unknown[]): string[] => {
-  if (!Array.isArray(arr)) return [];
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const item of arr) {
-    if (typeof item === 'string' && item.trim()) {
-      const trimmed = item.trim();
-      const lower = trimmed.toLowerCase();
-      if (!seen.has(lower)) {
-        seen.add(lower);
-        result.push(trimmed);
-      }
-    }
-  }
-  return result;
+  USERS: 'emila_users_v1',
+  CURRENT_USER: 'emila_current_user_v1',
+  CLIENTS: 'emila_clients_v1',
+  COMPONENTS: 'emila_components_v1',
+  ORDERS: 'emila_orders_v1',
+  STOCK_LOGS: 'emila_stock_logs_v1',
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -149,9 +115,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-      return saved ? JSON.parse(saved) : INITIAL_USERS[0]; // default to Elena Soto (Admin) to showcase full CRUD
+      return saved ? JSON.parse(saved) : INITIAL_USERS[1]; // default to Colaborador for demo flow
     } catch {
-      return INITIAL_USERS[0];
+      return INITIAL_USERS[1];
     }
   });
 
@@ -161,28 +127,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
     } catch {
       return INITIAL_CLIENTS;
-    }
-  });
-
-  const [categories, setCategories] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-      const parsed = saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-      const clean = deduplicateStrings(Array.isArray(parsed) ? parsed : INITIAL_CATEGORIES);
-      return clean.length > 0 ? clean : deduplicateStrings(INITIAL_CATEGORIES);
-    } catch {
-      return deduplicateStrings(INITIAL_CATEGORIES);
-    }
-  });
-
-  const [units, setUnits] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.UNITS);
-      const parsed = saved ? JSON.parse(saved) : INITIAL_UNITS;
-      const clean = deduplicateStrings(Array.isArray(parsed) ? parsed : INITIAL_UNITS);
-      return clean.length > 0 ? clean : deduplicateStrings(INITIAL_UNITS);
-    } catch {
-      return deduplicateStrings(INITIAL_UNITS);
     }
   });
 
@@ -207,14 +151,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [stockAdjustmentLogs, setStockAdjustmentLogs] = useState<StockAdjustmentLog[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.STOCK_LOGS);
-      return saved ? JSON.parse(saved) : INITIAL_STOCK_LOGS;
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return INITIAL_STOCK_LOGS;
+      return [];
     }
   });
 
   // Navigation State
-  const [activeView, setActiveView] = useState<ActiveView>('components');
+  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   // Toast System State
@@ -236,14 +180,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(clients));
   }, [clients]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
-  }, [categories]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.UNITS, JSON.stringify(units));
-  }, [units]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.COMPONENTS, JSON.stringify(components));
@@ -302,6 +238,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return false;
     }
 
+    // Password validation simulation
     if (password) {
       if (found.username === 'admin' && password !== 'admin123') {
         addToast('Contraseña incorrecta para el usuario admin.', 'error', 'Error de autenticación');
@@ -413,174 +350,71 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addToast('Datos del cliente actualizados.', 'success');
   };
 
-  // Category Management
-  const addCategory = (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setCategories((prev) => {
-      if (prev.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
-        return prev;
-      }
-      return [...prev, trimmed];
-    });
-    // Only show toast if it wasn't already in list
-    if (!categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
-      addToast(`Categoría "${trimmed}" agregada con éxito.`, 'success');
-    }
-  };
-
-  // Units of Measure Management
-  const addUnit = (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setUnits((prev) => {
-      if (prev.some((u) => u.toLowerCase() === trimmed.toLowerCase())) {
-        return prev;
-      }
-      return [...prev, trimmed];
-    });
-    // Only show toast if it wasn't already in list
-    if (!units.some((u) => u.toLowerCase() === trimmed.toLowerCase())) {
-      addToast(`Unidad de medida "${trimmed}" agregada con éxito.`, 'success');
-    }
-  };
-
-  // Components & Inventory Management
-  const addComponent = (item: Omit<ComponentItem, 'id' | 'reservedStock'>) => {
+  // Components & Stock Inventory Management
+  const addComponent = (item: Omit<ComponentItem, 'id'>) => {
     const newItem: ComponentItem = {
       ...item,
       id: 'cmp-' + Date.now(),
-      reservedStock: 0,
     };
-    setComponents((prev) => [newItem, ...prev]);
-
-    // Ensure category exists
-    if (item.category && item.category.trim()) {
-      addCategory(item.category.trim());
-    }
-
-    // Ensure unit exists
-    if (item.unit && item.unit.trim()) {
-      addUnit(item.unit.trim());
-    }
-
-    addToast('Componente creado correctamente.', 'success');
+    setComponents((prev) => [...prev, newItem]);
+    addToast(`Componente "${newItem.name}" agregado al catálogo.`, 'success');
   };
 
-  const updateComponent = (
-    id: string,
-    itemData: Partial<Omit<ComponentItem, 'id' | 'physicalStock' | 'reservedStock'>>
-  ) => {
+  const updateComponent = (id: string, itemData: Partial<ComponentItem>) => {
     setComponents((prev) =>
-      prev.map((c) => {
-        if (c.id === id) {
-          return {
-            ...c,
-            name: itemData.name !== undefined ? itemData.name : c.name,
-            category: itemData.category !== undefined ? itemData.category : c.category,
-            unit: itemData.unit !== undefined ? itemData.unit : c.unit,
-            price: itemData.price !== undefined ? itemData.price : c.price,
-            minStockAlert: itemData.minStockAlert !== undefined ? itemData.minStockAlert : c.minStockAlert,
-            description: itemData.description !== undefined ? itemData.description : c.description,
-            active: itemData.active !== undefined ? itemData.active : c.active,
-          };
-        }
-        return c;
-      })
+      prev.map((c) => (c.id === id ? { ...c, ...itemData } : c))
     );
-
-    // Ensure category exists in list if updated
-    if (itemData.category && itemData.category.trim()) {
-      addCategory(itemData.category.trim());
-    }
-
-    // Ensure unit exists in list if updated
-    if (itemData.unit && itemData.unit.trim()) {
-      addUnit(itemData.unit.trim());
-    }
-
     addToast('Componente actualizado correctamente.', 'success');
   };
 
-  const adjustComponentStock = (
-    id: string,
-    adjustment: {
-      type: 'Entrada' | 'Salida';
-      quantity: number;
-      reason: string;
-      observation?: string;
-    }
-  ): { success: boolean; error?: string } => {
+  const adjustComponentStock = (id: string, newStock: number, reason: string): boolean => {
     const comp = components.find((c) => c.id === id);
-    if (!comp) {
-      return { success: false, error: 'Componente no encontrado.' };
+    if (!comp) return false;
+    if (newStock < 0) {
+      addToast('La existencia no puede ser un número negativo.', 'error');
+      return false;
     }
 
-    if (adjustment.quantity <= 0) {
-      addToast('La cantidad debe ser mayor a 0.', 'error');
-      return { success: false, error: 'La cantidad debe ser mayor a 0.' };
-    }
+    const previousStock = comp.stock;
+    const diff = newStock - previousStock;
 
-    const previousPhysicalStock = comp.physicalStock;
-    let newPhysicalStock = previousPhysicalStock;
-
-    if (adjustment.type === 'Entrada') {
-      newPhysicalStock = previousPhysicalStock + adjustment.quantity;
-    } else if (adjustment.type === 'Salida') {
-      // Validate that physicalStock does not drop below reservedStock
-      const availableStock = comp.physicalStock - comp.reservedStock;
-      if (adjustment.quantity > availableStock) {
-        const errorMsg = `No es posible realizar el ajuste. Existen ${comp.reservedStock} unidades reservadas para pedidos (Disponible para salida: ${availableStock}).`;
-        addToast(errorMsg, 'error', 'Ajuste no permitido');
-        return { success: false, error: errorMsg };
-      }
-      newPhysicalStock = previousPhysicalStock - adjustment.quantity;
-    }
-
-    // Update state
+    // Update stock
     setComponents((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, physicalStock: newPhysicalStock } : c))
+      prev.map((c) => (c.id === id ? { ...c, stock: newStock } : c))
     );
 
-    // Create Audit Log
+    // Record adjustment log
     const newLog: StockAdjustmentLog = {
       id: 'log-' + Date.now(),
       componentId: comp.id,
       componentName: comp.name,
-      type: adjustment.type,
-      quantity: adjustment.quantity,
-      previousPhysicalStock,
-      newPhysicalStock,
-      reservedStock: comp.reservedStock,
-      reason: adjustment.reason.trim() || 'Ajuste de inventario',
-      observation: adjustment.observation?.trim() || '',
+      previousStock,
+      newStock,
+      difference: diff,
+      reason: reason.trim() || 'Ajuste manual administrativo',
       user: currentUser?.name || 'Administrador',
       timestamp: getFormattedNow(),
     };
-
     setStockAdjustmentLogs((prev) => [newLog, ...prev]);
 
-    addToast('Ajuste de stock aplicado correctamente.', 'success');
-    return { success: true };
+    addToast(
+      `Existencia de "${comp.name}" ajustada de ${previousStock} a ${newStock} unidades.`,
+      'success',
+      'Stock actualizado'
+    );
+    return true;
   };
 
   const toggleComponentActive = (id: string) => {
     const comp = components.find((c) => c.id === id);
     if (!comp) return;
-
-    const nextState = !comp.active;
     setComponents((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, active: nextState } : c))
+      prev.map((c) => (c.id === id ? { ...c, active: !c.active } : c))
     );
-
-    if (nextState) {
-      addToast(`Componente "${comp.name}" activado correctamente.`, 'success');
-    } else {
-      addToast('Componente desactivado correctamente.', 'info');
-    }
+    addToast(`Componente "${comp.name}" ${!comp.active ? 'activado' : 'desactivado'}.`, 'info');
   };
 
-  // Orders Management & Stock Reservation Rules
+  // Orders Management & Inventory Rules
   const createOrder = (orderData: {
     clientId: string;
     channel: OrderChannel;
@@ -591,6 +425,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     items: OrderItemDetail[];
     advancePayment: number;
   }): { success: boolean; orderId?: string; error?: string } => {
+    // 1. Validation check for client
     const client = clients.find((c) => c.id === orderData.clientId);
     if (!client) {
       return { success: false, error: 'Debe seleccionar un cliente válido.' };
@@ -600,7 +435,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return { success: false, error: 'Debe agregar al menos un componente al pedido.' };
     }
 
-    // 1. Check stock availability: quantity <= (physicalStock - reservedStock)
+    // 2. Validate stock availability for each item
     for (const item of orderData.items) {
       const comp = components.find((c) => c.id === item.componentId);
       if (!comp) {
@@ -609,45 +444,44 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (item.quantity <= 0) {
         return { success: false, error: `La cantidad de "${item.componentName}" debe ser mayor a 0.` };
       }
-      const available = comp.physicalStock - comp.reservedStock;
-      if (item.quantity > available) {
+      if (item.quantity > comp.stock) {
         return {
           success: false,
-          error: `Stock insuficiente para "${comp.name}". Disponible: ${available}, Solicitado: ${item.quantity}.`,
+          error: `Stock insuficiente para "${comp.name}". Disponible: ${comp.stock}, Solicitado: ${item.quantity}.`,
         };
       }
     }
 
-    // 2. Compute totals
+    // 3. Compute totals
     const subtotal = orderData.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const total = subtotal;
     const advance = Math.max(0, Math.min(orderData.advancePayment || 0, total));
     const balance = total - advance;
 
-    // 3. Generate next order code PED-XXXX
-    const nextNum = orders.length + 12;
+    // 4. Generate next order code PED-XXXX
+    const nextNum = orders.length + 12; // ensure nice sequencing
     const code = `PED-${String(nextNum).padStart(4, '0')}`;
     const orderId = 'ord-' + Date.now();
 
-    // 4. Reserve stock: Increase reservedStock by quantity (DO NOT modify physicalStock)
+    // 5. Deduct stock from components
     setComponents((prev) =>
       prev.map((c) => {
         const usedItem = orderData.items.find((it) => it.componentId === c.id);
         if (usedItem) {
-          return { ...c, reservedStock: c.reservedStock + usedItem.quantity };
+          return { ...c, stock: c.stock - usedItem.quantity };
         }
         return c;
       })
     );
 
-    // 5. Create History Entry
+    // 6. Create History Entry
     const initialHistory: OrderHistoryEntry[] = [
       {
         id: 'hist-' + Date.now(),
         timestamp: getFormattedNow(),
         user: currentUser?.name || 'Usuario',
         action: 'Pedido creado',
-        details: `Canal: ${orderData.channel}. Anticipo registrado: Q${advance.toFixed(2)}. Insumos reservados en stock.`,
+        details: `Canal: ${orderData.channel}. Anticipo registrado: Q${advance.toFixed(2)}.`,
         badgeType: 'primary',
       },
     ];
@@ -674,9 +508,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       history: initialHistory,
     };
 
+    // Update orders list
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Update client statistics
+    // Update client stats
     setClients((prev) =>
       prev.map((c) =>
         c.id === client.id
@@ -689,7 +524,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       )
     );
 
-    addToast(`Pedido ${code} guardado correctamente y componentes reservados.`, 'success', '¡Éxito!');
+    addToast(`Pedido ${code} guardado correctamente.`, 'success', '¡Éxito!');
     setSelectedOrderId(orderId);
     setActiveView('order-detail');
 
@@ -718,10 +553,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return { success: false, error: 'Un pedido cancelado no puede ser modificado.' };
     }
 
-    if (existingOrder.status === 'Entregado') {
-      return { success: false, error: 'Un pedido entregado no puede ser modificado.' };
-    }
-
     const client = clients.find((c) => c.id === orderData.clientId);
     if (!client) {
       return { success: false, error: 'Debe seleccionar un cliente válido.' };
@@ -731,8 +562,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return { success: false, error: 'Debe tener al menos un componente en el pedido.' };
     }
 
-    // Check availability for any delta increase:
-    // delta = newQty - oldQty
+    // Check stock delta for each component
+    // If order was not cancelled, we held previous quantities.
     for (const newItem of orderData.items) {
       const comp = components.find((c) => c.id === newItem.componentId);
       if (!comp) {
@@ -740,18 +571,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       const oldItem = existingOrder.items.find((it) => it.componentId === newItem.componentId);
       const oldQty = oldItem ? oldItem.quantity : 0;
-      const delta = newItem.quantity - oldQty;
+      const neededExtra = newItem.quantity - oldQty;
 
-      const available = comp.physicalStock - comp.reservedStock;
-      if (delta > 0 && available < delta) {
+      if (neededExtra > 0 && comp.stock < neededExtra) {
         return {
           success: false,
-          error: `No hay suficiente stock disponible para aumentar la cantidad de "${comp.name}". Disponible: ${available}, Requerido adicional: ${delta}.`,
+          error: `Stock insuficiente para "${comp.name}". Disponible en taller: ${comp.stock}, incremento solicitado: ${neededExtra}.`,
         };
       }
     }
 
-    // Apply reservedStock deltas (adjust only difference)
+    // Apply stock delta adjustments
     setComponents((prev) => {
       return prev.map((comp) => {
         const oldItem = existingOrder.items.find((it) => it.componentId === comp.id);
@@ -759,13 +589,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         const oldQty = oldItem ? oldItem.quantity : 0;
         const newQty = newItem ? newItem.quantity : 0;
-        const delta = newQty - oldQty;
+        const diff = newQty - oldQty; // if diff > 0, decrease stock by diff; if diff < 0, increase stock by |diff|
 
-        if (delta !== 0) {
-          return {
-            ...comp,
-            reservedStock: Math.max(0, comp.reservedStock + delta),
-          };
+        if (diff !== 0) {
+          return { ...comp, stock: comp.stock - diff };
         }
         return comp;
       });
@@ -781,7 +608,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       timestamp: getFormattedNow(),
       user: currentUser?.name || 'Usuario',
       action: 'Pedido modificado',
-      details: `Insumos actualizados. Total: Q${total.toFixed(2)}, Saldo: Q${balance.toFixed(2)}.`,
+      details: `Componentes y/o datos actualizados. Nuevo total: Q${total.toFixed(2)}, Saldo: Q${balance.toFixed(2)}.`,
       badgeType: 'warning',
     };
 
@@ -804,7 +631,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     setOrders((prev) => prev.map((o) => (o.id === id ? updatedOrder : o)));
-    addToast(`Pedido ${existingOrder.code} actualizado y reserva ajustada correctamente.`, 'success', 'Actualización exitosa');
+    addToast(`Pedido ${existingOrder.code} actualizado correctamente.`, 'success', 'Actualización exitosa');
     setSelectedOrderId(id);
     setActiveView('order-detail');
 
@@ -825,31 +652,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return false;
     }
 
-    if (order.status === 'Entregado') {
-      addToast('El pedido ya fue entregado y liquidado de inventario.', 'info');
-      return false;
-    }
-
-    // Special case: Cancelled order -> release reservation
+    // Special case: if changing to Cancelado, use cancelOrder to ensure stock is restored
     if (newStatus === 'Cancelado') {
       return cancelOrder(id, note || 'Cancelado desde cambio de estado');
-    }
-
-    // Special case: Delivered order -> Physical deduction & release reservation
-    if (newStatus === 'Entregado') {
-      setComponents((prev) =>
-        prev.map((comp) => {
-          const item = order.items.find((it) => it.componentId === comp.id);
-          if (item) {
-            return {
-              ...comp,
-              physicalStock: Math.max(0, comp.physicalStock - item.quantity),
-              reservedStock: Math.max(0, comp.reservedStock - item.quantity),
-            };
-          }
-          return comp;
-        })
-      );
     }
 
     // Determine badge type
@@ -863,11 +668,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       timestamp: getFormattedNow(),
       user: currentUser?.name || 'Usuario',
       action: `Estado cambiado a ${newStatus}`,
-      details: note
-        ? note.trim()
-        : newStatus === 'Entregado'
-        ? 'Pedido entregado al cliente. Salida física de componentes aplicada.'
-        : `El pedido avanzó al estado "${newStatus}".`,
+      details: note ? note.trim() : `El pedido avanzó al estado "${newStatus}".`,
       badgeType,
     };
 
@@ -883,12 +684,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       )
     );
 
-    addToast(
-      newStatus === 'Entregado'
-        ? `Pedido ${order.code} marcado como Entregado. Stock físico actualizado en taller.`
-        : `Estado del pedido ${order.code} cambiado a "${newStatus}".`,
-      'success'
-    );
+    addToast(`Estado del pedido ${order.code} cambiado a "${newStatus}".`, 'success');
     return true;
   };
 
@@ -901,15 +697,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return true;
     }
 
-    // Release reserved stock (physicalStock does not change)
+    // Restock all components that were in the order
     setComponents((prev) =>
       prev.map((comp) => {
         const item = order.items.find((it) => it.componentId === comp.id);
         if (item) {
-          return {
-            ...comp,
-            reservedStock: Math.max(0, comp.reservedStock - item.quantity),
-          };
+          return { ...comp, stock: comp.stock + item.quantity };
         }
         return comp;
       })
@@ -920,7 +713,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       timestamp: getFormattedNow(),
       user: currentUser?.name || 'Usuario',
       action: 'Pedido cancelado',
-      details: `Motivo: ${reason}. Insumos liberados de reserva y vueltos a poner disponibles.`,
+      details: `Motivo: ${reason}. Stock de componentes restaurado al inventario.`,
       badgeType: 'danger',
     };
 
@@ -936,21 +729,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       )
     );
 
-    addToast('Pedido cancelado y stock reservado liberado correctamente.', 'info', 'Pedido cancelado');
+    addToast(`Pedido ${order.code} cancelado correctamente y stock restituido.`, 'info', 'Pedido cancelado');
     return true;
   };
 
   const resetDemoData = () => {
     setUsers(INITIAL_USERS);
-    setCurrentUser(INITIAL_USERS[0]); // Elena Soto Admin
+    setCurrentUser(INITIAL_USERS[1]); // Colaborador as default
     setClients(INITIAL_CLIENTS);
-    setCategories(INITIAL_CATEGORIES);
-    setUnits(INITIAL_UNITS);
     setComponents(INITIAL_COMPONENTS);
     setOrders(INITIAL_ORDERS);
-    setStockAdjustmentLogs(INITIAL_STOCK_LOGS);
+    setStockAdjustmentLogs([]);
     setSelectedOrderId(null);
-    setActiveView('components');
+    setActiveView('dashboard');
     addToast('Datos del prototipo reiniciados a valores iniciales de prueba.', 'info', 'Reinicio completo');
   };
 
@@ -981,10 +772,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         cancelOrder,
 
         components,
-        categories,
-        addCategory,
-        units,
-        addUnit,
         addComponent,
         updateComponent,
         adjustComponentStock,
@@ -1015,4 +802,3 @@ export const useApp = (): AppContextType => {
   }
   return context;
 };
-
