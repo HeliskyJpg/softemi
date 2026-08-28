@@ -118,6 +118,23 @@ const STORAGE_KEYS = {
   STOCK_LOGS: 'emila_stock_logs_v2',
 };
 
+const deduplicateStrings = (arr: unknown[]): string[] => {
+  if (!Array.isArray(arr)) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const item of arr) {
+    if (typeof item === 'string' && item.trim()) {
+      const trimmed = item.trim();
+      const lower = trimmed.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        result.push(trimmed);
+      }
+    }
+  }
+  return result;
+};
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Load initial state from LocalStorage or Fallback to seed
   const [users, setUsers] = useState<User[]>(() => {
@@ -150,18 +167,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [categories, setCategories] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
-      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+      const clean = deduplicateStrings(Array.isArray(parsed) ? parsed : INITIAL_CATEGORIES);
+      return clean.length > 0 ? clean : deduplicateStrings(INITIAL_CATEGORIES);
     } catch {
-      return INITIAL_CATEGORIES;
+      return deduplicateStrings(INITIAL_CATEGORIES);
     }
   });
 
   const [units, setUnits] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.UNITS);
-      return saved ? JSON.parse(saved) : INITIAL_UNITS;
+      const parsed = saved ? JSON.parse(saved) : INITIAL_UNITS;
+      const clean = deduplicateStrings(Array.isArray(parsed) ? parsed : INITIAL_UNITS);
+      return clean.length > 0 ? clean : deduplicateStrings(INITIAL_UNITS);
     } catch {
-      return INITIAL_UNITS;
+      return deduplicateStrings(INITIAL_UNITS);
     }
   });
 
@@ -396,8 +417,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addCategory = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    setCategories((prev) => {
+      if (prev.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
+        return prev;
+      }
+      return [...prev, trimmed];
+    });
+    // Only show toast if it wasn't already in list
     if (!categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
-      setCategories((prev) => [...prev, trimmed]);
       addToast(`Categoría "${trimmed}" agregada con éxito.`, 'success');
     }
   };
@@ -406,8 +433,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addUnit = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    setUnits((prev) => {
+      if (prev.some((u) => u.toLowerCase() === trimmed.toLowerCase())) {
+        return prev;
+      }
+      return [...prev, trimmed];
+    });
+    // Only show toast if it wasn't already in list
     if (!units.some((u) => u.toLowerCase() === trimmed.toLowerCase())) {
-      setUnits((prev) => [...prev, trimmed]);
       addToast(`Unidad de medida "${trimmed}" agregada con éxito.`, 'success');
     }
   };
@@ -422,13 +455,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setComponents((prev) => [newItem, ...prev]);
 
     // Ensure category exists
-    if (item.category && !categories.some((c) => c.toLowerCase() === item.category.toLowerCase())) {
-      setCategories((prev) => [...prev, item.category]);
+    if (item.category && item.category.trim()) {
+      addCategory(item.category.trim());
     }
 
     // Ensure unit exists
-    if (item.unit && !units.some((u) => u.toLowerCase() === item.unit.toLowerCase())) {
-      setUnits((prev) => [...prev, item.unit]);
+    if (item.unit && item.unit.trim()) {
+      addUnit(item.unit.trim());
     }
 
     addToast('Componente creado correctamente.', 'success');
@@ -457,13 +490,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
 
     // Ensure category exists in list if updated
-    if (itemData.category && !categories.some((c) => c.toLowerCase() === itemData.category!.toLowerCase())) {
-      setCategories((prev) => [...prev, itemData.category!]);
+    if (itemData.category && itemData.category.trim()) {
+      addCategory(itemData.category.trim());
     }
 
     // Ensure unit exists in list if updated
-    if (itemData.unit && !units.some((u) => u.toLowerCase() === itemData.unit!.toLowerCase())) {
-      setUnits((prev) => [...prev, itemData.unit!]);
+    if (itemData.unit && itemData.unit.trim()) {
+      addUnit(itemData.unit.trim());
     }
 
     addToast('Componente actualizado correctamente.', 'success');

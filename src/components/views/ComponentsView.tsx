@@ -146,12 +146,41 @@ export const ComponentsView: React.FC = () => {
     };
   }, [components]);
 
+  // Unique categories and units to ensure no duplicate keys in UI
+  const uniqueCategories = useMemo(() => {
+    const set = new Set<string>();
+    const res: string[] = [];
+    categories.forEach((c) => {
+      const trimmed = c.trim();
+      const lower = trimmed.toLowerCase();
+      if (trimmed && !set.has(lower)) {
+        set.add(lower);
+        res.push(trimmed);
+      }
+    });
+    return res;
+  }, [categories]);
+
+  const uniqueUnits = useMemo(() => {
+    const set = new Set<string>();
+    const res: string[] = [];
+    units.forEach((u) => {
+      const trimmed = u.trim();
+      const lower = trimmed.toLowerCase();
+      if (trimmed && !set.has(lower)) {
+        set.add(lower);
+        res.push(trimmed);
+      }
+    });
+    return res;
+  }, [units]);
+
   // Open Create Component Modal
   const handleOpenCreate = () => {
     setEditingComponent(null);
     setFormName('');
-    setFormCategory(categories[0] || 'Flores');
-    setFormUnit(units[0] || 'Tallos');
+    setFormCategory(uniqueCategories[0] || 'Flores');
+    setFormUnit(uniqueUnits[0] || 'Tallos');
     setFormPrice(15.0);
     setFormInitialPhysicalStock(25);
     setFormMinStock(10);
@@ -439,8 +468,8 @@ export const ComponentsView: React.FC = () => {
                   className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#FBDAE3] bg-white text-[#3A2D33] focus:outline-none focus:ring-2 focus:ring-[#8E315E]/30 font-medium cursor-pointer"
                 >
                   <option value="Todas">Categoría: Todas</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
+                  {uniqueCategories.map((cat) => (
+                    <option key={`filter-cat-${cat}`} value={cat}>
                       {cat}
                     </option>
                   ))}
@@ -826,12 +855,13 @@ export const ComponentsView: React.FC = () => {
                     />
                   ) : (
                     <select
+                      id="select-comp-category"
                       value={formCategory}
                       onChange={(e) => setFormCategory(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-medium"
                     >
-                      {categories.map((c) => (
-                        <option key={c} value={c}>
+                      {uniqueCategories.map((c) => (
+                        <option key={`modal-cat-${c}`} value={c}>
                           {c}
                         </option>
                       ))}
@@ -872,8 +902,8 @@ export const ComponentsView: React.FC = () => {
                       onChange={(e) => setFormUnit(e.target.value)}
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#FBDAE3] focus:ring-2 focus:ring-[#8E315E]/30 outline-none bg-white font-medium"
                     >
-                      {units.map((u) => (
-                        <option key={u} value={u}>
+                      {uniqueUnits.map((u) => (
+                        <option key={`modal-unit-${u}`} value={u}>
                           {u}
                         </option>
                       ))}
