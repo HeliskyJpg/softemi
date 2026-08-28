@@ -94,20 +94,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
       {/* Sidebar container */}
       <aside
         id="app-main-sidebar"
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-[#FBECEF] flex flex-col justify-between p-5 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-white border-r border-[#F2D6DE] shadow-xs flex flex-col justify-between p-5 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Top: Logo & Navigation */}
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Logo Brand Header */}
           <div
             id="sidebar-brand-header"
             onClick={() => handleNavClick('dashboard')}
-            className="flex items-center gap-3 cursor-pointer select-none group pt-1"
+            className="flex items-center gap-3 cursor-pointer select-none group pb-4 border-b border-[#F2D6DE]/60"
           >
-            <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[#F5B5C8] to-[#E39CB2] flex items-center justify-center text-white shadow-xs border border-white/60">
-              <span className="font-serif text-sm tracking-wider font-semibold italic text-white">
+            <div className="w-11 h-11 rounded-full bg-[#681B2B] flex items-center justify-center text-white shadow-xs">
+              <span className="font-serif text-sm tracking-wider font-bold italic text-[#FBECEF]">
                 EMILA
               </span>
             </div>
@@ -121,51 +121,58 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
             </div>
           </div>
 
-          {/* Navigation Items List */}
-          <nav className="space-y-1.5">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                activeView === item.id ||
-                (item.matchViews && item.matchViews.includes(activeView));
+          {/* Navigation Section Title */}
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#9C858F] px-2 block mb-2">
+              Menú Principal
+            </span>
 
-              return (
-                <button
-                  key={item.id}
-                  id={`sidebar-nav-${item.id}`}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-[#681B2B] text-white shadow-xs'
-                      : 'text-[#4A202A] hover:bg-white/50 hover:text-[#681B2B]'
-                  }`}
-                >
-                  <Icon
-                    className={`w-4 h-4 shrink-0 ${
-                      isActive ? 'text-white' : 'text-[#681B2B]/70'
+            {/* Navigation Items List */}
+            <nav className="space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  activeView === item.id ||
+                  (item.matchViews && item.matchViews.includes(activeView));
+
+                return (
+                  <button
+                    key={item.id}
+                    id={`sidebar-nav-${item.id}`}
+                    onClick={() => handleNavClick(item.id)}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-[#681B2B] text-white shadow-xs font-bold'
+                        : 'text-[#5C3B45] hover:bg-[#FBECEF]/60 hover:text-[#681B2B]'
                     }`}
-                  />
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
+                  >
+                    <Icon
+                      className={`w-4 h-4 shrink-0 ${
+                        isActive ? 'text-white' : 'text-[#681B2B]'
+                      }`}
+                    />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
 
         {/* Bottom Section: New Order Button & User Profile */}
-        <div className="space-y-3 pt-4">
+        <div className="space-y-3 pt-4 border-t border-[#F2D6DE]/60">
           {/* Primary Action Button */}
           <button
             id="btn-sidebar-new-order"
             onClick={() => handleNavClick('order-new')}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-sm shadow-xs transition-all cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             Nuevo pedido
           </button>
 
           {/* Current User Session Card */}
-          <div className="bg-white/80 backdrop-blur-xs rounded-2xl p-2.5 flex items-center justify-between border border-[#F2D6DE]/60">
+          <div className="bg-[#FBECEF]/40 rounded-2xl p-2.5 flex items-center justify-between border border-[#F2D6DE]">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold shrink-0">
                 {currentUser.name.charAt(0)}
@@ -183,7 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
             <button
               id="btn-sidebar-logout"
               onClick={logout}
-              className="p-1.5 rounded-lg text-[#7D6871] hover:text-[#DC2626] hover:bg-[#FBECEF] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-[#7D6871] hover:text-[#DC2626] hover:bg-white transition-colors cursor-pointer"
               title="Cerrar sesión"
             >
               <LogOut className="w-4 h-4" />
