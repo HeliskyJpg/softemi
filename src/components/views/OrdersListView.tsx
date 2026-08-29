@@ -13,7 +13,6 @@ import {
   ShoppingBag,
   Clock,
   Phone,
-  DollarSign,
 } from 'lucide-react';
 import { StatusBadge } from '../common/StatusBadge';
 import { OrderStatus } from '../../types';

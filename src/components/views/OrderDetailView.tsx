@@ -10,7 +10,7 @@ import {
   Calendar,
   Phone,
   MessageCircle,
-  DollarSign,
+  Receipt,
   Layers,
   History,
   CheckCircle2,
@@ -97,12 +97,12 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
     const parsedAmount = parseFloat(paymentAmountInput);
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setPaymentError('Ingrese un monto válido mayor a Q 0.00.');
+      setPaymentError('Ingrese un monto válido mayor a Q0.00.');
       return;
     }
 
     if (parsedAmount > order.balance + 0.001) {
-      setPaymentError(`El monto no puede exceder el saldo pendiente de Q ${order.balance.toFixed(2)}.`);
+      setPaymentError(`El monto no puede superar el saldo pendiente de Q${order.balance.toFixed(2)}.`);
       return;
     }
 
@@ -217,11 +217,11 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
             <button
               id="btn-order-detail-register-payment"
               onClick={handleOpenPaymentModal}
-              className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
               title="Registrar pago o abono a este pedido"
             >
-              <DollarSign className="w-4 h-4 text-emerald-200" />
-              Registrar Pago
+              <Receipt className="w-4 h-4 text-white/80" />
+              <span>Registrar Pago</span>
             </button>
           )}
 
@@ -453,10 +453,10 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                 id="btn-order-card-register-payment"
                 type="button"
                 onClick={handleOpenPaymentModal}
-                className="w-full mt-3 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                className="w-full mt-3 py-2.5 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
               >
-                <DollarSign className="w-4 h-4 text-emerald-200" />
-                Registrar Pago (Saldo: Q {order.balance.toFixed(2)})
+                <Receipt className="w-4 h-4 text-white/80" />
+                <span>Registrar Pago (Saldo: Q{order.balance.toFixed(2)})</span>
               </button>
             )}
 
@@ -509,11 +509,11 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
             <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
               <div className="min-w-0 flex-1 pr-2">
                 <h3 className="text-base sm:text-lg font-bold text-[#681B2B] flex items-center gap-2 leading-snug break-words">
-                  <DollarSign className="w-5 h-5 text-emerald-600 shrink-0" />
-                  <span className="truncate">Registrar Pago de Pedido</span>
+                  <Receipt className="w-5 h-5 text-[#681B2B] shrink-0" />
+                  <span className="truncate">Registrar pago</span>
                 </h3>
                 <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  Pedido <strong className="text-[#2C1E23]">{order.code}</strong> • Cliente:{' '}
+                  Pedido <strong className="text-[#2C1E23]">{order.code}</strong> · Cliente:{' '}
                   <strong className="text-[#2C1E23]">{order.clientName}</strong>
                 </p>
               </div>
@@ -528,133 +528,140 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
             <form onSubmit={handleConfirmPayment} className="flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-                {/* Financial Status Metrics */}
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE]">
-                  <div className="text-center">
-                    <span className="text-[10px] font-semibold text-[#7D6871] uppercase block">
-                      Total Pedido
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-[#2C1E23]">
-                      Q {order.total.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="text-center border-x border-[#F2D6DE]">
-                    <span className="text-[10px] font-semibold text-[#059669] uppercase block">
-                      Total Pagado
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-[#059669]">
-                      Q {order.advancePayment.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="text-center">
-                    <span className="text-[10px] font-semibold text-[#DC2626] uppercase block">
-                      Saldo Pendiente
-                    </span>
-                    <span className="text-xs sm:text-sm font-extrabold text-[#DC2626]">
-                      Q {order.balance.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              {/* Payment Amount Input */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label
-                    htmlFor="input-payment-amount"
-                    className="text-xs font-bold text-[#2C1E23]"
-                  >
-                    Monto a Pagar <span className="text-red-500">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentAmountInput(order.balance.toFixed(2))}
-                    className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900 hover:underline cursor-pointer"
-                  >
-                    Liquidar Saldo Completo (Q {order.balance.toFixed(2)})
-                  </button>
-                </div>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-sm font-bold text-[#7D6871] pointer-events-none">
-                    Q
+                {/* Compact Financial Summary Strip */}
+                <div
+                  id="payment-modal-summary-strip"
+                  className="px-3.5 py-2.5 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE] text-xs flex flex-wrap items-center justify-between sm:justify-center gap-x-2.5 gap-y-1 text-[#7D6871]"
+                >
+                  <span>
+                    Total <strong className="font-bold text-[#2C1E23]">Q{order.total.toFixed(2)}</strong>
                   </span>
+                  <span className="text-[#F2D6DE]">·</span>
+                  <span>
+                    Pagado <strong className="font-bold text-[#2C1E23]">Q{order.advancePayment.toFixed(2)}</strong>
+                  </span>
+                  <span className="text-[#F2D6DE]">·</span>
+                  <span>
+                    Pendiente <strong className="font-bold text-[#681B2B]">Q{order.balance.toFixed(2)}</strong>
+                  </span>
+                </div>
+
+                {/* Payment Amount Input */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label
+                      htmlFor="input-payment-amount"
+                      className="text-xs font-bold text-[#2C1E23]"
+                    >
+                      Monto a pagar <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      id="btn-use-pending-balance"
+                      onClick={() => {
+                        setPaymentAmountInput(order.balance.toFixed(2));
+                        setPaymentError(null);
+                      }}
+                      className="text-[11px] sm:text-xs font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer transition-colors"
+                    >
+                      Usar saldo pendiente Q{order.balance.toFixed(2)}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs sm:text-sm font-bold text-[#7D6871] pointer-events-none">
+                      Q
+                    </span>
+                    <input
+                      id="input-payment-amount"
+                      type="number"
+                      min={0.01}
+                      max={order.balance}
+                      step="0.01"
+                      required
+                      value={paymentAmountInput}
+                      onChange={(e) => {
+                        setPaymentAmountInput(e.target.value);
+                        setPaymentError(null);
+                      }}
+                      placeholder="0.00"
+                      className="w-full pl-8 pr-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] outline-none text-[#2C1E23]"
+                    />
+                  </div>
+                  {paymentError && (
+                    <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      {paymentError}
+                    </p>
+                  )}
+                </div>
+
+                {/* Simplified Calculation Preview */}
+                {currentPayNum > 0 && currentPayNum <= order.balance + 0.001 && (
+                  <div
+                    id="payment-live-preview"
+                    className="px-3.5 py-2 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60 text-xs flex items-center justify-between text-[#7D6871]"
+                  >
+                    <span>Después del pago</span>
+                    <span className="text-[#F2D6DE]">·</span>
+                    <span className="font-medium">
+                      Saldo pendiente{' '}
+                      <strong
+                        className={`font-bold ${
+                          projectedBalance === 0 ? 'text-[#059669]' : 'text-[#681B2B]'
+                        }`}
+                      >
+                        Q{projectedBalance.toFixed(2)}
+                      </strong>
+                      {projectedBalance === 0 && (
+                        <span className="ml-1.5 text-[11px] font-semibold text-[#059669]">
+                          (Liquidado)
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
+
+                {/* Payment Method */}
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
+                    Forma de pago
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => {
+                      const isSelected = paymentMethod === m;
+                      return (
+                        <button
+                          key={m}
+                          id={`btn-payment-method-${m.toLowerCase()}`}
+                          type="button"
+                          onClick={() => setPaymentMethod(m)}
+                          className={`py-2 px-3 rounded-xl text-xs transition-all cursor-pointer ${
+                            isSelected
+                              ? 'border-2 border-[#681B2B] bg-[#FBECEF] text-[#681B2B] font-bold shadow-xs'
+                              : 'border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/30 text-[#7D6871] font-medium'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Note / Reference */}
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
+                    Referencia o nota (opcional)
+                  </label>
                   <input
-                    id="input-payment-amount"
-                    type="number"
-                    min={0.01}
-                    max={order.balance}
-                    step="0.01"
-                    required
-                    value={paymentAmountInput}
-                    onChange={(e) => {
-                      setPaymentAmountInput(e.target.value);
-                      setPaymentError(null);
-                    }}
-                    placeholder="0.00"
-                    className="w-full pl-8 pr-3 py-2.5 text-sm font-bold rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 outline-none"
+                    id="input-payment-note"
+                    type="text"
+                    value={paymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
+                    placeholder="Ej. Comprobante #124567, transferencia bancaria..."
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] outline-none"
                   />
                 </div>
-                {paymentError && (
-                  <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                    {paymentError}
-                  </p>
-                )}
-              </div>
-
-              {/* Live Financial Outcome Preview */}
-              {currentPayNum > 0 && currentPayNum <= order.balance && (
-                <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between text-emerald-900">
-                    <span>Nuevo Total Pagado:</span>
-                    <strong className="font-bold">Q {projectedPaid.toFixed(2)}</strong>
-                  </div>
-                  <div className="flex items-center justify-between text-emerald-950 font-bold border-t border-emerald-200/60 pt-1">
-                    <span>Nuevo Saldo Restante:</span>
-                    <span className={projectedBalance === 0 ? 'text-emerald-700' : 'text-amber-800'}>
-                      Q {projectedBalance.toFixed(2)}
-                      {projectedBalance === 0 && ' (¡Liquidado al 100%!)'}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Payment Method */}
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                  Forma de Pago
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setPaymentMethod(m)}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                        paymentMethod === m
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-900 font-bold shadow-xs'
-                          : 'border-gray-200 hover:border-gray-300 text-[#7D6871]'
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Note / Reference */}
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                  Referencia o Nota (Opcional)
-                </label>
-                <input
-                  id="input-payment-note"
-                  type="text"
-                  value={paymentNote}
-                  onChange={(e) => setPaymentNote(e.target.value)}
-                  placeholder="Ej. Comprobante #124567, pago en sucursal..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                />
-              </div>
-
               </div>
 
               {/* Action Buttons */}
@@ -669,11 +676,11 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                 <button
                   id="btn-confirm-payment-save"
                   type="submit"
-                  disabled={currentPayNum <= 0 || currentPayNum > order.balance}
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px]"
+                  disabled={currentPayNum <= 0 || currentPayNum > order.balance + 0.001}
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px] transition-colors"
                 >
-                  <DollarSign className="w-4 h-4" />
-                  Confirmar Pago
+                  <Receipt className="w-4 h-4" />
+                  <span>Registrar pago</span>
                 </button>
               </div>
             </form>
@@ -753,7 +760,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                         <button
                           type="button"
                           onClick={() => setDeliveryPaymentAmount(order.balance.toFixed(2))}
-                          className="text-[10px] font-semibold text-emerald-800 hover:underline cursor-pointer"
+                          className="text-[10px] font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer"
                         >
                           Pagar Saldo Completo
                         </button>
@@ -860,7 +867,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                     </>
                   ) : newStatus === 'Entregado' && order.balance > 0 && !willDeliver ? (
                     <>
-                      <DollarSign className="w-4 h-4 shrink-0" />
+                      <Receipt className="w-4 h-4 shrink-0" />
                       <span>Registrar Abono</span>
                     </>
                   ) : (

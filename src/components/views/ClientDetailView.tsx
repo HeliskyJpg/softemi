@@ -11,7 +11,6 @@ import {
   ChevronRight,
   Receipt,
   Clock,
-  DollarSign,
   AlertCircle,
   X,
 } from 'lucide-react';

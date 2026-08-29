@@ -9,7 +9,6 @@ import {
   MessageCircle,
   Phone,
   FileText,
-  DollarSign,
   AlertTriangle,
   ArrowLeft,
   Save,
