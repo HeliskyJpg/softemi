@@ -25,6 +25,7 @@ import {
   ComponentItem,
 } from '../../types';
 import { QuantityInput } from '../common/QuantityInput';
+import { OrderComponentsEditor } from '../orders/OrderComponentsEditor';
 
 interface OrderFormViewProps {
   orderIdToEdit?: string | null;
@@ -61,11 +62,6 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
   const [newClientName, setNewClientName] = useState('');
   const [newClientPhone, setNewClientPhone] = useState('');
   const [newClientNotes, setNewClientNotes] = useState('');
-
-  // Add Component Modal State
-  const [showAddComponentModal, setShowAddComponentModal] = useState(false);
-  const [selectedComponentId, setSelectedComponentId] = useState('');
-  const [selectedComponentQty, setSelectedComponentQty] = useState(1);
 
   // Form validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -118,80 +114,69 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     setNewClientNotes('');
   };
 
-  // Add Component Item to Order
-  const handleAddComponentItem = () => {
-    if (!selectedComponentId) return;
-    const comp = components.find((c) => c.id === selectedComponentId);
-    if (!comp) return;
-
-    if (selectedComponentQty <= 0) {
-      addToast('La cantidad debe ser mayor a 0.', 'error');
-      return;
-    }
-
-    // Check availability (factoring in items already in the form)
-    const existingInForm = items.find((it) => it.componentId === comp.id);
-    const existingQty = existingInForm ? existingInForm.quantity : 0;
-    const totalRequested = existingQty + selectedComponentQty;
-
-    // For editing, consider available stock plus what was already allocated to this order
+  // Add Component Item directly from Autocomplete
+  const handleAddItemFromAutocomplete = (comp: ComponentItem) => {
     const baseAvailable = comp.physicalStock - comp.reservedStock;
     let effectiveAvailable = baseAvailable;
     if (existingOrder) {
-      const originalAllocated = existingOrder.items.find((it) => it.componentId === comp.id)?.quantity || 0;
+      const originalAllocated =
+        existingOrder.items.find((it) => it.componentId === comp.id)?.quantity || 0;
       effectiveAvailable += originalAllocated;
     }
 
-    if (totalRequested > effectiveAvailable) {
+    if (effectiveAvailable <= 0) {
       addToast(
-        `Disponibilidad insuficiente para "${comp.name}". Disponible: ${effectiveAvailable}, Solicitado total: ${totalRequested}.`,
+        `Disponibilidad insuficiente para "${comp.name}". No hay existencias disponibles.`,
         'error'
       );
       return;
     }
 
+    const existingInForm = items.find((it) => it.componentId === comp.id);
     if (existingInForm) {
+      if (existingInForm.quantity + 1 > effectiveAvailable) {
+        addToast(
+          `Disponibilidad máxima alcanzada para "${comp.name}" (${effectiveAvailable} ${comp.unit || 'unidades'}).`,
+          'warning'
+        );
+        return;
+      }
       setItems((prev) =>
         prev.map((it) =>
           it.componentId === comp.id
             ? {
                 ...it,
-                quantity: it.quantity + selectedComponentQty,
-                subtotal: (it.quantity + selectedComponentQty) * it.unitPrice,
+                quantity: it.quantity + 1,
+                subtotal: (it.quantity + 1) * it.unitPrice,
               }
             : it
         )
       );
+      addToast(`Se aumentó la cantidad de "${comp.name}" a ${existingInForm.quantity + 1}.`, 'info');
     } else {
       const newItem: OrderItemDetail = {
         componentId: comp.id,
         componentName: comp.name,
         category: comp.category,
-        quantity: selectedComponentQty,
+        quantity: 1,
         unitPrice: comp.price,
-        subtotal: selectedComponentQty * comp.price,
+        subtotal: comp.price,
       };
       setItems((prev) => [...prev, newItem]);
+      addToast(`"${comp.name}" agregado al pedido.`, 'success');
     }
 
-    setShowAddComponentModal(false);
-    setSelectedComponentId('');
-    setSelectedComponentQty(1);
-    addToast(`"${comp.name}" agregado al pedido.`, 'success');
+    if (errors.items) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.items;
+        return copy;
+      });
+    }
   };
 
-  // Update item quantity directly in table
+  // Update item quantity directly
   const handleUpdateItemQuantity = (componentId: string, newQty: number) => {
-    const comp = components.find((c) => c.id === componentId);
-    if (!comp) return;
-
-    const baseAvailable = comp.physicalStock - comp.reservedStock;
-    let effectiveAvailable = baseAvailable;
-    if (existingOrder) {
-      const originalAllocated = existingOrder.items.find((it) => it.componentId === comp.id)?.quantity || 0;
-      effectiveAvailable += originalAllocated;
-    }
-
     setItems((prev) =>
       prev.map((it) =>
         it.componentId === componentId
@@ -203,10 +188,22 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
           : it
       )
     );
+
+    if (errors.items) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.items;
+        return copy;
+      });
+    }
   };
 
   const handleRemoveItem = (componentId: string) => {
+    const item = items.find((it) => it.componentId === componentId);
     setItems((prev) => prev.filter((it) => it.componentId !== componentId));
+    if (item) {
+      addToast(`"${item.componentName}" eliminado del pedido.`, 'info');
+    }
   };
 
   // Form Submission
@@ -532,149 +529,15 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         {/* ============================================================ */}
         {/* SECCIÓN 3 — COMPONENTES */}
         {/* ============================================================ */}
-        <div
-          id="section-order-components"
-          className="bg-white rounded-2xl p-5 sm:p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#F2D6DE]/40 pb-3">
-            <div>
-              <h2 className="text-sm font-bold text-[#2C1E23] uppercase tracking-wider flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold">
-                  3
-                </span>
-                Selección de Componentes y Flores
-              </h2>
-              <p className="text-xs text-[#7D6871] mt-0.5">
-                Personalice el arreglo agregando insumos. El stock se validará en tiempo real.
-              </p>
-            </div>
-
-            <button
-              id="btn-open-add-component-modal"
-              type="button"
-              onClick={() => setShowAddComponentModal(true)}
-              className="px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto"
-            >
-              <Plus className="w-4 h-4" />
-              Agregar Componente
-            </button>
-          </div>
-
-          {errors.items && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-[#DC2626] text-xs font-medium flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              {errors.items}
-            </div>
-          )}
-
-          {/* Components Items Table */}
-          <div className="overflow-x-auto border border-[#F2D6DE]/60 rounded-xl">
-            <table id="table-order-items" className="w-full text-left text-xs">
-              <thead className="bg-[#FBECEF]/40 text-[#8C7A82] uppercase text-[10px] tracking-wider border-b border-[#F2D6DE]/60">
-                <tr>
-                  <th className="py-2.5 px-3 font-semibold">Componente</th>
-                  <th className="py-2.5 px-3 font-semibold">Categoría</th>
-                  <th className="py-2.5 px-3 font-semibold text-center">Stock Actual</th>
-                  <th className="py-2.5 px-3 font-semibold text-right">Precio Unit.</th>
-                  <th className="py-2.5 px-3 font-semibold text-center w-28">Cantidad</th>
-                  <th className="py-2.5 px-3 font-semibold text-right">Subtotal</th>
-                  <th className="py-2.5 px-3 font-semibold text-center w-12">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F2D6DE]/30">
-                {items.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-8 text-center text-[#7D6871]">
-                      <Layers className="w-6 h-6 mx-auto mb-1 text-[#F2D6DE]" />
-                      <p className="font-semibold text-sm text-[#2C1E23]">
-                        No hay componentes agregados
-                      </p>
-                      <p className="text-xs text-[#7D6871]">
-                        Haga clic en "+ Agregar Componente" para incluir rosas, empaques, chocolates,
-                        etc.
-                      </p>
-                    </td>
-                  </tr>
-                ) : (
-                  items.map((it) => {
-                    const comp = components.find((c) => c.id === it.componentId);
-                    const baseAvailable = comp ? comp.physicalStock - comp.reservedStock : 0;
-                    let effectiveAvailable = baseAvailable;
-                    if (existingOrder) {
-                      const originalAllocated =
-                        existingOrder.items.find((x) => x.componentId === it.componentId)?.quantity || 0;
-                      effectiveAvailable += originalAllocated;
-                    }
-
-                    return (
-                      <tr
-                        key={it.componentId}
-                        id={`item-row-${it.componentId}`}
-                        className="hover:bg-[#FBECEF]/30 transition-colors"
-                      >
-                        <td className="py-2.5 px-3 font-semibold text-[#2C1E23]">
-                          <div>{it.componentName}</div>
-                          <div className="text-[10px] text-[#7D6871] font-normal">
-                            Físico: {comp?.physicalStock ?? 0} | Reservado: {comp?.reservedStock ?? 0}
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-[#7D6871]">
-                          <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] font-medium">
-                            {it.category}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              effectiveAvailable <= 0
-                                ? 'bg-red-100 text-red-800'
-                                : effectiveAvailable < 10
-                                ? 'bg-amber-100 text-amber-900'
-                                : 'bg-[#ECFDF5] text-[#047857]'
-                            }`}
-                          >
-                            {effectiveAvailable} {comp?.unit || 'unids.'}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-medium text-[#2C1E23]">
-                          Q {it.unitPrice.toFixed(2)}
-                        </td>
-                        <td className="py-2.5 px-3 text-center w-28">
-                          <div className="w-20 mx-auto">
-                            <QuantityInput
-                              id={`input-item-qty-${it.componentId}`}
-                              value={it.quantity}
-                              max={effectiveAvailable}
-                              unit={comp?.unit}
-                              onChange={(newQty) =>
-                                handleUpdateItemQuantity(it.componentId, newQty)
-                              }
-                              size="sm"
-                              align="center"
-                            />
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-[#681B2B]">
-                          Q {it.subtotal.toFixed(2)}
-                        </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveItem(it.componentId)}
-                            className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Eliminar componente"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <OrderComponentsEditor
+          items={items}
+          components={components}
+          existingOrder={existingOrder}
+          onAddItem={handleAddItemFromAutocomplete}
+          onUpdateQuantity={handleUpdateItemQuantity}
+          onRemoveItem={handleRemoveItem}
+          error={errors.items}
+        />
 
         {/* ============================================================ */}
         {/* SECCIÓN 4 — RESUMEN FINANCIERO */}
@@ -909,153 +772,6 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* MODAL: + AGREGAR COMPONENTE AL PEDIDO */}
-      {/* ============================================================ */}
-      {showAddComponentModal && (
-        <div
-          id="modal-add-component-item"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] leading-snug break-words">
-                  Agregar Componente al Arreglo
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  Seleccione el insumo del catálogo y la cantidad a descontar de inventario.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowAddComponentModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                    Componente / Flor / Empaque
-                  </label>
-                  <select
-                    id="select-add-component"
-                    value={selectedComponentId}
-                    onChange={(e) => setSelectedComponentId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 bg-white font-medium outline-none cursor-pointer"
-                  >
-                    <option value="">-- Seleccionar del catálogo --</option>
-                    {components
-                      .filter((c) => c.active)
-                      .map((comp) => {
-                        const avail = comp.physicalStock - comp.reservedStock;
-                        return (
-                          <option
-                            key={comp.id}
-                            value={comp.id}
-                            disabled={avail <= 0}
-                          >
-                            {comp.name} [{comp.category}] — Q{comp.price.toFixed(2)} (Disponible: {avail} {comp.unit})
-                          </option>
-                        );
-                      })}
-                  </select>
-                </div>
-
-                {selectedComponentId && (
-                  (() => {
-                    const comp = components.find((c) => c.id === selectedComponentId);
-                    if (!comp) return null;
-                    const avail = comp.physicalStock - comp.reservedStock;
-
-                    return (
-                      <div className="p-3.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] text-xs space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-[#681B2B]">{comp.name}</span>
-                          <span className="font-bold text-[#059669]">Q {comp.price.toFixed(2)} / {comp.unit}</span>
-                        </div>
-                        {comp.description && <p className="text-[#7D6871] text-[11px]">{comp.description}</p>}
-                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#F2D6DE]/50 text-center text-[11px]">
-                          <div className="p-1.5 rounded-lg bg-white border border-gray-100">
-                            <span className="text-[#7D6871] block text-[10px]">Físico</span>
-                            <span className="font-bold text-[#2C1E23]">{comp.physicalStock}</span>
-                          </div>
-                          <div className="p-1.5 rounded-lg bg-white border border-gray-100">
-                            <span className="text-[#7D6871] block text-[10px]">Reservado</span>
-                            <span className="font-bold text-amber-700">{comp.reservedStock}</span>
-                          </div>
-                          <div className="p-1.5 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0]">
-                            <span className="text-[#047857] block text-[10px]">Disponible</span>
-                            <span className="font-bold text-[#047857]">{avail}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })()
-                )}
-
-                <div>
-                  <label
-                    htmlFor="input-add-component-qty"
-                    className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-                  >
-                    Cantidad a Incluir{' '}
-                    {selectedComponentId && (
-                      <span className="text-[#7D6871] font-normal">
-                        ({components.find((c) => c.id === selectedComponentId)?.unit || 'unidades'})
-                      </span>
-                    )}
-                  </label>
-                  <QuantityInput
-                    id="input-add-component-qty"
-                    value={selectedComponentQty}
-                    max={
-                      selectedComponentId
-                        ? Math.max(
-                            0,
-                            (components.find((c) => c.id === selectedComponentId)?.physicalStock || 0) -
-                              (components.find((c) => c.id === selectedComponentId)?.reservedStock || 0)
-                          )
-                        : undefined
-                    }
-                    unit={components.find((c) => c.id === selectedComponentId)?.unit}
-                    onChange={(newQty) => setSelectedComponentQty(newQty)}
-                    size="lg"
-                    align="center"
-                    showErrorText
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowAddComponentModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-confirm-add-component"
-                  type="button"
-                  onClick={handleAddComponentItem}
-                  disabled={!selectedComponentId}
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Agregar Línea
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
