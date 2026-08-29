@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '../common/StatusBadge';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { FormFieldError } from '../common/FormFieldError';
+import { SystemAlert } from '../common/SystemAlert';
 import { OrderStatus } from '../../types';
 
 interface OrderDetailViewProps {
@@ -584,15 +586,14 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                         setPaymentError(null);
                       }}
                       placeholder="0.00"
-                      className="w-full pl-8 pr-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] outline-none text-[#2C1E23]"
+                      className={`w-full pl-8 pr-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl border outline-none text-[#2C1E23] ${
+                        paymentError
+                          ? 'border-rose-400 ring-1 ring-rose-200 bg-rose-50/20'
+                          : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B]'
+                      }`}
                     />
                   </div>
-                  {paymentError && (
-                    <p className="text-xs text-red-600 mt-1 font-medium flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                      {paymentError}
-                    </p>
-                  )}
+                  <FormFieldError id="error-payment-amount" error={paymentError} />
                 </div>
 
                 {/* Simplified Calculation Preview */}
@@ -781,14 +782,14 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                             setDeliveryPaymentError(null);
                           }}
                           placeholder="0.00"
-                          className="w-full pl-7 pr-3 py-2 text-xs font-bold rounded-lg border border-amber-300 bg-white focus:ring-2 focus:ring-amber-500/30 outline-none"
+                          className={`w-full pl-7 pr-3 py-2 text-xs font-bold rounded-lg border outline-none ${
+                            deliveryPaymentError
+                              ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200'
+                              : 'border-amber-300 bg-white focus:ring-2 focus:ring-amber-500/30'
+                          }`}
                         />
                       </div>
-                      {deliveryPaymentError && (
-                        <p className="text-[11px] text-red-600 mt-1 font-semibold">
-                          {deliveryPaymentError}
-                        </p>
-                      )}
+                      <FormFieldError id="error-delivery-payment" error={deliveryPaymentError} />
                     </div>
 
                     {/* Payment Method Selector */}

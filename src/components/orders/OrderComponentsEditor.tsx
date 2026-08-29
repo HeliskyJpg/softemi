@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, Trash2, Layers, AlertTriangle, X, Plus, Check } from 'lucide-react';
 import { ComponentItem, Order, OrderItemDetail } from '../../types';
 import { QuantityInput } from '../common/QuantityInput';
+import { SystemAlert } from '../common/SystemAlert';
 
 export interface OrderComponentsEditorProps {
   items: OrderItemDetail[];
@@ -320,10 +321,11 @@ export const OrderComponentsEditor: React.FC<OrderComponentsEditorProps> = ({
 
       {/* Global Section Error message */}
       {error && (
-        <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-[#DC2626] text-xs font-medium flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
+        <SystemAlert
+          id="alert-order-components-error"
+          type="error"
+          message={error}
+        />
       )}
 
       {/* Components Items List */}

@@ -25,6 +25,8 @@ import {
 } from '../../types';
 import { QuantityInput } from '../common/QuantityInput';
 import { OrderComponentsEditor } from '../orders/OrderComponentsEditor';
+import { FormFieldError } from '../common/FormFieldError';
+import { SystemAlert } from '../common/SystemAlert';
 
 interface OrderFormViewProps {
   orderIdToEdit?: string | null;
@@ -392,7 +394,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 value={selectedClientId}
                 onChange={(e) => setSelectedClientId(e.target.value)}
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer ${
-                  errors.client ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
+                  errors.client ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
                 }`}
               >
                 <option value="">-- Buscar o seleccionar cliente --</option>
@@ -402,7 +404,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   </option>
                 ))}
               </select>
-              {errors.client && <p className="text-red-600 text-xs mt-1">{errors.client}</p>}
+              <FormFieldError id="error-order-client" error={errors.client} />
             </div>
 
             {selectedClient && (
@@ -477,12 +479,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 value={deliveryDate}
                 onChange={(e) => setDeliveryDate(e.target.value)}
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
-                  errors.deliveryDate ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
+                  errors.deliveryDate ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
                 }`}
               />
-              {errors.deliveryDate && (
-                <p className="text-red-600 text-xs mt-1">{errors.deliveryDate}</p>
-              )}
+              <FormFieldError id="error-order-date" error={errors.deliveryDate} />
             </div>
 
             <div>
@@ -498,12 +498,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 value={deliveryTime}
                 onChange={(e) => setDeliveryTime(e.target.value)}
                 className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
-                  errors.deliveryTime ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
+                  errors.deliveryTime ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
                 }`}
               />
-              {errors.deliveryTime && (
-                <p className="text-red-600 text-xs mt-1">{errors.deliveryTime}</p>
-              )}
+              <FormFieldError id="error-order-time" error={errors.deliveryTime} />
             </div>
           </div>
 
@@ -521,12 +519,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ej. Arreglo floral de rosas rojas con caja hexagonal y chocolates"
               className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
-                errors.description ? 'border-red-400 bg-red-50/30' : 'border-[#F2D6DE]'
+                errors.description ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
               }`}
             />
-            {errors.description && (
-              <p className="text-red-600 text-xs mt-1">{errors.description}</p>
-            )}
+            <FormFieldError id="error-order-description" error={errors.description} />
           </div>
 
           <div>
@@ -637,12 +633,12 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                       setAdvancePayment(isNaN(val) ? 0 : Math.max(0, val));
                     }}
                     className={`w-full pl-7 pr-3 py-1.5 rounded-lg border text-sm font-bold text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#059669]/30 ${
-                      errors.advancePayment ? 'border-red-400 bg-red-50' : 'border-[#F2D6DE]'
+                      errors.advancePayment ? 'border-rose-400 bg-rose-50/40 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
                     }`}
                   />
                 </div>
                 {errors.advancePayment ? (
-                  <p className="text-red-600 text-[10px] mt-1">{errors.advancePayment}</p>
+                  <FormFieldError id="error-order-advance" error={errors.advancePayment} />
                 ) : (
                   <p className="text-[10px] text-[#7D6871] mt-1">Pago inicial opcional recibido</p>
                 )}

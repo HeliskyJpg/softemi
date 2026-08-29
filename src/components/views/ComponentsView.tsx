@@ -25,6 +25,8 @@ import {
 import { ComponentCategory, ComponentItem, ComponentUnit } from '../../types';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { AutocompleteSelect } from '../common/AutocompleteSelect';
+import { FormFieldError } from '../common/FormFieldError';
+import { SystemAlert } from '../common/SystemAlert';
 import {
   ArrowDownLeft,
 } from 'lucide-react';
@@ -1423,16 +1425,12 @@ export const ComponentsView: React.FC = () => {
                     placeholder="Ej. 10"
                     className={`w-full px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl border bg-white outline-none transition-all ${
                       stockModalErrors.quantity
-                        ? 'border-red-400 ring-2 ring-red-100 text-red-950'
+                        ? 'border-rose-400 ring-2 ring-rose-100 text-rose-950'
                         : 'border-[#F2D6DE] focus:border-[#681B2B] focus:ring-2 focus:ring-[#681B2B]/15 text-[#2C1E23]'
                     }`}
                   />
                 </div>
-                {stockModalErrors.quantity && (
-                  <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
-                    {stockModalErrors.quantity}
-                  </p>
-                )}
+                <FormFieldError id="error-adjustment-quantity" error={stockModalErrors.quantity} />
               </div>
 
               {/* 3. Motivo del Ajuste (Autocomplete) */}
@@ -1543,8 +1541,12 @@ export const ComponentsView: React.FC = () => {
 
               {/* General error message if any */}
               {stockModalErrors.general && (
-                <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-medium">
-                  {stockModalErrors.general}
+                <div className="mt-3">
+                  <SystemAlert
+                    id="alert-stock-general-error"
+                    type="error"
+                    message={stockModalErrors.general}
+                  />
                 </div>
               )}
 

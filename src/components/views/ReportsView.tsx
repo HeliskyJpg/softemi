@@ -9,6 +9,7 @@ import {
   Filter,
   CalendarDays,
 } from 'lucide-react';
+import { SystemAlert } from '../common/SystemAlert';
 import {
   ResponsiveContainer,
   BarChart,
@@ -472,6 +473,16 @@ export const ReportsView: React.FC = () => {
                 className="px-2.5 py-1 rounded-xl border border-[#F2D6DE] text-xs font-semibold text-[#2C1E23] bg-white focus:outline-none focus:ring-1 focus:ring-[#681B2B]"
               />
             </div>
+
+            {customStart && customEnd && customStart > customEnd && (
+              <div className="w-full mt-1">
+                <SystemAlert
+                  id="alert-invalid-date-range"
+                  type="warning"
+                  message="La fecha inicial es posterior a la fecha final. Invierta las fechas para ver las estadísticas correctamente."
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

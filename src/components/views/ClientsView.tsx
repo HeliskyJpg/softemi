@@ -14,6 +14,8 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Client } from '../../types';
+import { FormFieldError } from '../common/FormFieldError';
+import { SystemAlert } from '../common/SystemAlert';
 
 export const ClientsView: React.FC = () => {
   const {
@@ -39,6 +41,7 @@ export const ClientsView: React.FC = () => {
   const [formName, setFormName] = useState('');
   const [formPhone, setFormPhone] = useState('');
   const [formNotes, setFormNotes] = useState('');
+  const [formError, setFormError] = useState('');
 
   // Filter clients
   const filteredClients = useMemo(() => {
@@ -65,6 +68,7 @@ export const ClientsView: React.FC = () => {
     setFormName('');
     setFormPhone('');
     setFormNotes('');
+    setFormError('');
     setShowModal(true);
   };
 
@@ -74,6 +78,7 @@ export const ClientsView: React.FC = () => {
     setFormName(cli.name);
     setFormPhone(cli.phone);
     setFormNotes(cli.notes || '');
+    setFormError('');
     setShowModal(true);
   };
 
@@ -81,7 +86,7 @@ export const ClientsView: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) {
-      addToast('El nombre del cliente es obligatorio.', 'error');
+      setFormError('El nombre del cliente es obligatorio.');
       return;
     }
 
@@ -91,14 +96,12 @@ export const ClientsView: React.FC = () => {
         phone: formPhone.trim() || 'No registrado',
         notes: formNotes.trim(),
       });
-      addToast('Cliente actualizado correctamente.', 'success');
     } else {
       addClient({
         name: formName.trim(),
         phone: formPhone.trim() || 'No registrado',
         notes: formNotes.trim(),
       });
-      addToast('Cliente registrado correctamente.', 'success');
     }
     setShowModal(false);
   };
@@ -356,17 +359,23 @@ export const ClientsView: React.FC = () => {
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5">
                 <div>
                   <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Nombre Completo <span className="text-red-500">*</span>
+                    Nombre Completo <span className="text-rose-500">*</span>
                   </label>
                   <input
                     id="input-client-name"
                     type="text"
                     required
                     value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
+                    onChange={(e) => {
+                      setFormName(e.target.value);
+                      if (formError) setFormError('');
+                    }}
                     placeholder="Ej. Sofía Morales"
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none ${
+                      formError ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
+                    }`}
                   />
+                  <FormFieldError id="error-client-name" error={formError} />
                 </div>
 
                 <div>

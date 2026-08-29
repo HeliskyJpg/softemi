@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronDown, Check, Search, X } from 'lucide-react';
+import { FormFieldError } from './FormFieldError';
 
 export interface AutocompleteOption {
   value: string;
@@ -302,9 +303,7 @@ export const AutocompleteSelect: React.FC<AutocompleteSelectProps> = ({
 
       {/* Error or Helper Message */}
       {hasError ? (
-        <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
-          {errorMessage || 'Campo requerido'}
-        </p>
+        <FormFieldError id={id ? `error-${id}` : undefined} error={errorMessage || 'Campo requerido'} />
       ) : helperText ? (
         <p className="text-[11px] text-[#7D6871] mt-1">{helperText}</p>
       ) : null}

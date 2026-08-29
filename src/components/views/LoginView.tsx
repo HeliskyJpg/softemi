@@ -3,6 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { Shield, User, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { EmilaLogo } from '../common/EmilaLogo';
+import { SystemAlert } from '../common/SystemAlert';
 
 export const LoginView: React.FC = () => {
   const { login, users } = useApp();
@@ -92,15 +93,15 @@ export const LoginView: React.FC = () => {
 
           {/* Error feedback banner */}
           {errorMsg && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              id="login-error-alert"
-              className="mb-6 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2"
-            >
-              <div className="w-2 h-2 rounded-full bg-rose-600 shrink-0" />
-              <span>{errorMsg}</span>
-            </motion.div>
+            <div className="mb-5 animate-in fade-in">
+              <SystemAlert
+                id="login-error-alert"
+                type="error"
+                title="No se pudo iniciar sesión"
+                message={errorMsg}
+                onClose={() => setErrorMsg('')}
+              />
+            </div>
           )}
 
           {/* Form */}

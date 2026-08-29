@@ -546,7 +546,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     setCurrentUser(found);
-    addToast(`¡Bienvenido/a ${found.name}!`, 'success', 'Sesión iniciada');
+    addToast(`¡Bienvenido/a, ${found.name}!`, 'success', 'Sesión iniciada');
     setActiveView('dashboard');
     return true;
   };
@@ -560,7 +560,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const target = users.find((u) => u.role === role && u.active);
     if (target) {
       setCurrentUser(target);
-      addToast(`Cambiado al perfil: ${target.name} (${role})`, 'info', 'Rol actualizado');
+      addToast(`Sesión cambiada a: ${target.name} (${role})`, 'info', 'Rol actualizado');
     } else {
       addToast(`No hay ningún usuario activo disponible con el rol ${role}.`, 'warning');
     }
@@ -667,7 +667,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       prev.map((u) => (u.id === id ? { ...u, active: !u.active } : u))
     );
     const newStatus = !userToToggle.active ? 'activado' : 'desactivado';
-    addToast(`Usuario ${userToToggle.name} ${newStatus} correctamente.`, 'info');
+    addToast(`Usuario "${userToToggle.name}" ${newStatus} correctamente.`, 'info');
   };
 
   // Clients
@@ -681,7 +681,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       totalOrders: 0,
     };
     setClients((prev) => [newClient, ...prev]);
-    addToast(`Cliente ${newClient.name} registrado correctamente.`, 'success');
+    addToast(`Cliente "${newClient.name}" registrado correctamente.`, 'success');
     return newClient;
   };
 
@@ -689,7 +689,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setClients((prev) =>
       prev.map((c) => (c.id === id ? { ...c, ...clientData } : c))
     );
-    addToast('Datos del cliente actualizados.', 'success');
+    addToast('Datos del cliente actualizados correctamente.', 'success');
   };
 
   // Category Management
@@ -743,7 +743,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addUnit(item.unit.trim());
     }
 
-    addToast('Componente creado correctamente.', 'success');
+    addToast('Componente registrado correctamente en el catálogo.', 'success');
   };
 
   const updateComponent = (
@@ -845,7 +845,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setStockAdjustmentLogs((prev) => [newLog, ...prev]);
 
-    addToast('Ajuste de stock aplicado correctamente.', 'success');
+    addToast('Ajuste de inventario aplicado correctamente.', 'success');
     return { success: true };
   };
 
@@ -861,7 +861,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (nextState) {
       addToast(`Componente "${comp.name}" activado correctamente.`, 'success');
     } else {
-      addToast('Componente desactivado correctamente.', 'info');
+      addToast(`Componente "${comp.name}" desactivado correctamente.`, 'info');
     }
   };
 
@@ -1230,7 +1230,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       )
     );
 
-    addToast('Pedido cancelado y stock reservado liberado correctamente.', 'info', 'Pedido cancelado');
+    addToast(`Pedido ${order.code} cancelado y reserva de insumos liberada.`, 'info', 'Pedido cancelado');
     return true;
   };
 
@@ -1376,7 +1376,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setStockAdjustmentLogs(INITIAL_STOCK_LOGS);
     setSelectedOrderId(null);
     setActiveView('components');
-    addToast('Datos del prototipo reiniciados a valores iniciales de prueba.', 'info', 'Reinicio completo');
+    addToast('Datos del sistema restablecidos a los valores iniciales.', 'info', 'Reinicio completo');
   };
 
   return (

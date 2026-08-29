@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { SystemUser, UserRole } from '../../types';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { SystemAlert } from '../common/SystemAlert';
+import { FormFieldError } from '../common/FormFieldError';
 
 export const UsersView: React.FC = () => {
   const { users, currentUser, updateUser, toggleUserActive, addToast, switchUserRole } = useApp();
@@ -497,10 +499,11 @@ export const UsersView: React.FC = () => {
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                 {/* General error message if any */}
                 {formErrors.general && (
-                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
-                    <span>{formErrors.general}</span>
-                  </div>
+                  <SystemAlert
+                    id="alert-user-form-error"
+                    type="warning"
+                    message={formErrors.general}
+                  />
                 )}
 
                 {/* Full name input */}
@@ -516,12 +519,10 @@ export const UsersView: React.FC = () => {
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="Ej. Elena Soto"
                     className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
-                      formErrors.name ? 'border-rose-300 focus:ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
+                      formErrors.name ? 'border-rose-300 focus:ring-rose-200 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
                     }`}
                   />
-                  {formErrors.name && (
-                    <p className="text-[11px] text-rose-600 mt-1">{formErrors.name}</p>
-                  )}
+                  <FormFieldError id="error-edit-user-name" error={formErrors.name} />
                 </div>
 
                 {/* Username input */}
@@ -537,12 +538,10 @@ export const UsersView: React.FC = () => {
                     onChange={(e) => setFormUsername(e.target.value)}
                     placeholder="Ej. admin"
                     className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
-                      formErrors.username ? 'border-rose-300 focus:ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
+                      formErrors.username ? 'border-rose-300 focus:ring-rose-200 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
                     }`}
                   />
-                  {formErrors.username && (
-                    <p className="text-[11px] text-rose-600 mt-1">{formErrors.username}</p>
-                  )}
+                  <FormFieldError id="error-edit-user-username" error={formErrors.username} />
                 </div>
 
                 {/* Email input */}
@@ -583,9 +582,13 @@ export const UsersView: React.FC = () => {
                   </select>
 
                   {isEditingOnlyAdmin && (
-                    <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-1.5 leading-snug">
-                      Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema.
-                    </p>
+                    <div className="mt-2">
+                      <SystemAlert
+                        id="alert-user-only-admin"
+                        type="warning"
+                        message="Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema."
+                      />
+                    </div>
                   )}
                 </div>
 
