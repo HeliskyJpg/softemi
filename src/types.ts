@@ -153,6 +153,7 @@ export interface ComponentsViewState {
 
 export interface ClientsViewState {
   searchTerm: string;
+  currentPage?: number;
 }
 
 export interface NavigationHistoryEntry {

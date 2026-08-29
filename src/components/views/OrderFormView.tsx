@@ -51,7 +51,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
   const existingOrder = isEditing ? orders.find((o) => o.id === orderIdToEdit) : null;
 
   // Form State
-  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedClientId, setSelectedClientId] = useState<string>(() => {
+    if (existingOrder) return existingOrder.clientId;
+    return newOrderInitialData?.clientId || '';
+  });
   const [channel, setChannel] = useState<OrderChannel>('WhatsApp');
   const [deliveryDate, setDeliveryDate] = useState<string>(() => {
     if (existingOrder) return existingOrder.deliveryDate;
@@ -101,7 +104,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
       }
       setDeliveryTime('15:00');
     }
-  }, [existingOrder]);
+  }, [existingOrder, newOrderInitialData]);
 
   // Clean up initial navigation data on unmount
   useEffect(() => {

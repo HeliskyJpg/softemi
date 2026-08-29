@@ -160,7 +160,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId }) 
           <button
             id="btn-create-order-for-client"
             type="button"
-            onClick={() => navigateToOrderNew('client-detail')}
+            onClick={() => navigateToOrderNew('client-detail', { initialClientId: client.id })}
             className="px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -290,7 +290,8 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId }) 
               Cree el primer pedido para este cliente para comenzar a registrar su historial.
             </p>
             <button
-              onClick={() => navigateToOrderNew('client-detail')}
+              id="btn-create-first-order-client"
+              onClick={() => navigateToOrderNew('client-detail', { initialClientId: client.id })}
               className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-bold transition-colors cursor-pointer shadow-2xs"
             >
               <Plus className="w-4 h-4" />

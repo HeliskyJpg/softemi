@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   Users,
@@ -10,12 +10,15 @@ import {
   Eye,
   Heart,
   X,
+  ChevronLeft,
   ChevronRight,
   UserCheck,
 } from 'lucide-react';
 import { Client } from '../../types';
 import { FormFieldError } from '../common/FormFieldError';
 import { SystemAlert } from '../common/SystemAlert';
+
+const CLIENTS_PER_PAGE = 9;
 
 export const ClientsView: React.FC = () => {
   const {
@@ -29,10 +32,15 @@ export const ClientsView: React.FC = () => {
     setClientsViewState,
   } = useApp();
 
-  const { searchTerm } = clientsViewState;
+  const { searchTerm, currentPage: savedPage } = clientsViewState;
+  const currentPage = savedPage || 1;
 
   const setSearchTerm = (term: string) => {
-    setClientsViewState((prev) => ({ ...prev, searchTerm: term }));
+    setClientsViewState((prev) => ({ ...prev, searchTerm: term, currentPage: 1 }));
+  };
+
+  const setCurrentPage = (page: number) => {
+    setClientsViewState((prev) => ({ ...prev, currentPage: page }));
   };
 
   const [showModal, setShowModal] = useState(false);
@@ -43,10 +51,11 @@ export const ClientsView: React.FC = () => {
   const [formNotes, setFormNotes] = useState('');
   const [formError, setFormError] = useState('');
 
-  // Filter clients
+  // Filter clients across full dataset
   const filteredClients = useMemo(() => {
     return clients.filter((cli) => {
-      const q = searchTerm.toLowerCase();
+      const q = searchTerm.toLowerCase().trim();
+      if (!q) return true;
       return (
         cli.name.toLowerCase().includes(q) ||
         cli.phone.toLowerCase().includes(q) ||
@@ -54,6 +63,25 @@ export const ClientsView: React.FC = () => {
       );
     });
   }, [clients, searchTerm]);
+
+  // Pagination calculations
+  const totalFiltered = filteredClients.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / CLIENTS_PER_PAGE));
+
+  // Ensure current page is valid when filter changes
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const startIndex = (currentPage - 1) * CLIENTS_PER_PAGE;
+  const paginatedClients = useMemo(() => {
+    return filteredClients.slice(startIndex, startIndex + CLIENTS_PER_PAGE);
+  }, [filteredClients, startIndex]);
+
+  const fromItem = totalFiltered === 0 ? 0 : startIndex + 1;
+  const toItem = Math.min(startIndex + CLIENTS_PER_PAGE, totalFiltered);
 
   // Overall Statistics for visual hierarchy
   const totalClients = clients.length;
@@ -106,6 +134,23 @@ export const ClientsView: React.FC = () => {
     setShowModal(false);
   };
 
+  // Page Numbers Generator
+  const pageNumbers = useMemo(() => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  }, [totalPages, currentPage]);
+
   return (
     <div id="clients-view-container" className="space-y-6 pb-16">
       {/* Header with Clear Visual Hierarchy & Primary Action */}
@@ -129,59 +174,62 @@ export const ClientsView: React.FC = () => {
           id="btn-new-client"
           type="button"
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto min-h-[42px]"
         >
           <Plus className="w-4 h-4" />
           <span>Nuevo Cliente</span>
         </button>
       </div>
 
-      {/* Summary Metrics Banner */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      {/* Summary Metrics Banner - Responsive 2+1 on mobile, 3 on desktop without text clipping */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        {/* Metric 1: Clientes */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#FBECEF] text-[#681B2B] flex items-center justify-center shrink-0">
             <Users className="w-5 h-5" />
           </div>
-          <div className="min-w-0">
-            <span className="text-[10px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block truncate">
-              Total Clientes
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block leading-tight">
+              Clientes
             </span>
-            <span className="text-base sm:text-xl font-extrabold text-[#2C1E23]">
+            <span className="text-lg sm:text-2xl font-extrabold text-[#2C1E23] mt-0.5 block">
               {totalClients}
             </span>
           </div>
         </div>
 
+        {/* Metric 2: Clientes con pedidos */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0">
             <UserCheck className="w-5 h-5" />
           </div>
-          <div className="min-w-0">
-            <span className="text-[10px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block truncate">
-              Con Pedidos
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block leading-tight">
+              Clientes con pedidos
             </span>
-            <span className="text-base sm:text-xl font-extrabold text-[#059669]">
+            <span className="text-lg sm:text-2xl font-extrabold text-[#059669] mt-0.5 block">
               {clientsWithOrders}
             </span>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex items-center gap-3">
+        {/* Metric 3: Pedidos registrados (full width on mobile 2+1 layout) */}
+        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex items-center gap-3 col-span-2 lg:col-span-1">
           <div className="w-10 h-10 rounded-xl bg-[#FBECEF] text-[#681B2B] flex items-center justify-center shrink-0">
             <ShoppingBag className="w-5 h-5" />
           </div>
-          <div className="min-w-0">
-            <span className="text-[10px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block truncate">
-              Pedidos Totales
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block leading-tight">
+              Pedidos registrados
             </span>
-            <span className="text-base sm:text-xl font-extrabold text-[#681B2B]">
+            <span className="text-lg sm:text-2xl font-extrabold text-[#681B2B] mt-0.5 block">
               {totalOrdersCount}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar & Results Counter */}
       <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
@@ -193,43 +241,60 @@ export const ClientsView: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar por nombre, teléfono o preferencias..."
-            className="w-full pl-10 pr-9 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/20 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20"
+            className="w-full pl-10 pr-9 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/20 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 min-h-[40px]"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#7D6871] hover:text-[#2C1E23]"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#7D6871] hover:text-[#2C1E23] cursor-pointer"
               title="Limpiar búsqueda"
+              aria-label="Limpiar búsqueda"
             >
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
-        <div className="text-xs text-[#7D6871] shrink-0 font-medium px-1">
-          Mostrando <strong className="text-[#2C1E23]">{filteredClients.length}</strong> de{' '}
-          {clients.length} clientes
+        <div id="clients-counter-info" className="text-xs text-[#7D6871] shrink-0 font-medium px-1">
+          {totalFiltered === 0 ? (
+            <span>0 clientes encontrados</span>
+          ) : (
+            <span>
+              Mostrando <strong className="text-[#2C1E23]">{fromItem}–{toItem}</strong> de{' '}
+              <strong className="text-[#2C1E23]">{totalFiltered}</strong> clientes
+              {totalFiltered !== clients.length ? ` (filtrados de ${clients.length} totales)` : ''}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Clients Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredClients.length === 0 ? (
-          <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60">
-            <Users className="w-8 h-8 text-[#F2D6DE] mx-auto mb-2" />
+      {/* Clients Cards Grid - 1 col Mobile, 2 cols Tablet, 3 cols Desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {paginatedClients.length === 0 ? (
+          <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60 p-6">
+            <Users className="w-10 h-10 text-[#F2D6DE] mx-auto mb-2" />
             <p className="font-semibold text-sm text-[#2C1E23]">No se encontraron clientes</p>
-            <p className="text-xs text-[#7D6871] mt-0.5">
+            <p className="text-xs text-[#7D6871] mt-1 max-w-md mx-auto">
               {searchTerm
-                ? 'Intente con otros términos de búsqueda.'
+                ? 'Intente con otros términos de búsqueda o limpie el filtro para ver todos los registros.'
                 : 'Comience registrando su primer cliente con el botón "+ Nuevo Cliente".'}
             </p>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="mt-3 px-3.5 py-1.5 rounded-xl border border-[#F2D6DE] text-xs font-bold text-[#681B2B] hover:bg-[#FBECEF]/40 transition-colors cursor-pointer"
+              >
+                Limpiar búsqueda
+              </button>
+            )}
           </div>
         ) : (
-          filteredClients.map((client) => {
+          paginatedClients.map((client) => {
             const clientTotalOrders = orders.filter((o) => o.clientId === client.id).length;
             const initials = client.name
               .trim()
               .split(' ')
+              .filter(Boolean)
               .slice(0, 2)
               .map((part) => part[0])
               .join('')
@@ -239,7 +304,7 @@ export const ClientsView: React.FC = () => {
               <div
                 key={client.id}
                 id={`client-card-${client.id}`}
-                className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs hover:border-[#F2D6DE] hover:shadow-sm transition-all flex flex-col justify-between"
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F2D6DE]/60 shadow-xs hover:border-[#F2D6DE] hover:shadow-sm transition-all flex flex-col justify-between"
               >
                 <div className="space-y-3.5">
                   {/* Top Row: Name, Initials Avatar & Order Count Badge */}
@@ -303,8 +368,8 @@ export const ClientsView: React.FC = () => {
                   <button
                     id={`btn-view-client-${client.id}`}
                     type="button"
-                    onClick={() => navigateToClientDetail(client.id)}
-                    className="w-full px-3 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                    onClick={() => navigateToClientDetail(client.id, 'clients')}
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer min-h-[38px]"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Ver cliente</span>
@@ -315,7 +380,7 @@ export const ClientsView: React.FC = () => {
                     id={`btn-edit-client-${client.id}`}
                     type="button"
                     onClick={() => handleOpenEdit(client)}
-                    className="w-full px-3 py-2 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer min-h-[38px]"
                   >
                     <Edit2 className="w-3.5 h-3.5 text-[#681B2B]" />
                     <span>Editar</span>
@@ -326,6 +391,78 @@ export const ClientsView: React.FC = () => {
           })
         )}
       </div>
+
+      {/* Real Pagination Controls */}
+      {totalPages > 1 && (
+        <div
+          id="clients-pagination-container"
+          className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#F2D6DE]/40 bg-white rounded-2xl p-4 border border-[#F2D6DE]/60 shadow-xs"
+        >
+          <div className="text-xs text-[#7D6871] font-medium">
+            Página <strong className="text-[#2C1E23]">{currentPage}</strong> de{' '}
+            <strong className="text-[#2C1E23]">{totalPages}</strong>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {/* Anterior */}
+            <button
+              id="btn-clients-prev-page"
+              type="button"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 rounded-xl border border-[#F2D6DE] bg-white text-xs font-semibold text-[#2C1E23] hover:bg-[#FBECEF]/40 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center gap-1 cursor-pointer min-h-[36px]"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span>Anterior</span>
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {pageNumbers.map((page, idx) => {
+                if (typeof page === 'string') {
+                  return (
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="px-2 py-1 text-xs text-[#7D6871] select-none"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+
+                const isActive = page === currentPage;
+                return (
+                  <button
+                    key={`page-${page}`}
+                    id={`btn-clients-page-${page}`}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`min-w-[36px] h-9 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
+                      isActive
+                        ? 'bg-[#681B2B] text-white shadow-xs'
+                        : 'border border-[#F2D6DE] bg-white text-[#2C1E23] hover:bg-[#FBECEF]/40'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Siguiente */}
+            <button
+              id="btn-clients-next-page"
+              type="button"
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 rounded-xl border border-[#F2D6DE] bg-white text-xs font-semibold text-[#2C1E23] hover:bg-[#FBECEF]/40 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center gap-1 cursor-pointer min-h-[36px]"
+            >
+              <span>Siguiente</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ============================================================ */}
       {/* MODAL: CREAR / EDITAR CLIENTE */}
