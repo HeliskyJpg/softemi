@@ -96,7 +96,8 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
   // Calculations
   const calculatedSubtotal = items.reduce((sum, it) => sum + it.quantity * it.unitPrice, 0);
   const calculatedTotal = calculatedSubtotal;
-  const calculatedBalance = Math.max(0, calculatedTotal - (advancePayment || 0));
+  const effectivePaid = isEditing && existingOrder ? existingOrder.advancePayment : (advancePayment || 0);
+  const calculatedBalance = Math.max(0, calculatedTotal - effectivePaid);
 
   // Handle Client Quick Creation
   const handleCreateClientQuick = (e: React.FormEvent) => {
@@ -251,11 +252,13 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         }
       }
     }
-    if (advancePayment < 0) {
-      newErrors.advancePayment = 'El anticipo no puede ser negativo.';
-    }
-    if (advancePayment > calculatedTotal) {
-      newErrors.advancePayment = 'El anticipo no puede exceder el total del pedido.';
+    if (!isEditing) {
+      if (advancePayment < 0) {
+        newErrors.advancePayment = 'El anticipo no puede ser negativo.';
+      }
+      if (advancePayment > calculatedTotal) {
+        newErrors.advancePayment = 'El anticipo no puede exceder el total del pedido.';
+      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -267,6 +270,10 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     setErrors({});
     setIsSubmitting(true);
 
+    const finalAdvancePayment = isEditing && existingOrder
+      ? existingOrder.advancePayment
+      : (Number(advancePayment) || 0);
+
     const payload = {
       clientId: selectedClientId,
       channel,
@@ -275,7 +282,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
       deliveryDate,
       deliveryTime,
       items,
-      advancePayment: Number(advancePayment) || 0,
+      advancePayment: finalAdvancePayment,
     };
 
     setTimeout(() => {
@@ -708,32 +715,55 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               <p className="text-[10px] text-[#7D6871] mt-0.5">Monto total a cobrar</p>
             </div>
 
-            {/* Anticipo Input */}
-            <div className="p-4 rounded-xl bg-white border border-[#F2D6DE]/60">
-              <label
-                htmlFor="input-order-advance"
-                className="block text-[11px] font-bold text-[#059669] uppercase mb-1"
-              >
-                Anticipo Registrado (Q)
-              </label>
-              <input
-                id="input-order-advance"
-                type="number"
-                min={0}
-                max={calculatedTotal}
-                step="any"
-                value={advancePayment}
-                onChange={(e) => setAdvancePayment(parseFloat(e.target.value) || 0)}
-                className={`w-full px-3 py-1.5 rounded-lg border text-sm font-bold text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#059669]/30 ${
-                  errors.advancePayment ? 'border-red-400 bg-red-50' : 'border-[#F2D6DE]'
-                }`}
-              />
-              {errors.advancePayment ? (
-                <p className="text-red-600 text-[10px] mt-1">{errors.advancePayment}</p>
-              ) : (
-                <p className="text-[10px] text-[#7D6871] mt-0.5">Pago inicial recibido</p>
-              )}
-            </div>
+            {/* Anticipo / Pagos Registrados */}
+            {isEditing ? (
+              <div className="p-4 rounded-xl bg-white border border-[#F2D6DE]/60">
+                <span className="block text-[11px] font-bold text-[#059669] uppercase mb-1">
+                  Total Pagado a la Fecha
+                </span>
+                <div className="text-xl font-bold text-[#059669] mt-1">
+                  Q {effectivePaid.toFixed(2)}
+                </div>
+                <p className="text-[10px] text-[#7D6871] mt-1 leading-tight">
+                  Para registrar abonos o pagos, use la acción <strong>"Registrar pago"</strong> en el detalle del pedido.
+                </p>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-white border border-[#F2D6DE]/60">
+                <label
+                  htmlFor="input-order-advance"
+                  className="block text-[11px] font-bold text-[#059669] uppercase mb-1"
+                >
+                  Anticipo Inicial (Opcional)
+                </label>
+                <div className="relative mt-1">
+                  <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-xs font-bold text-[#7D6871] pointer-events-none">
+                    Q
+                  </span>
+                  <input
+                    id="input-order-advance"
+                    type="number"
+                    min={0}
+                    max={calculatedTotal}
+                    step="any"
+                    value={advancePayment === 0 ? '' : advancePayment}
+                    placeholder="0.00"
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setAdvancePayment(isNaN(val) ? 0 : Math.max(0, val));
+                    }}
+                    className={`w-full pl-7 pr-3 py-1.5 rounded-lg border text-sm font-bold text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#059669]/30 ${
+                      errors.advancePayment ? 'border-red-400 bg-red-50' : 'border-[#F2D6DE]'
+                    }`}
+                  />
+                </div>
+                {errors.advancePayment ? (
+                  <p className="text-red-600 text-[10px] mt-1">{errors.advancePayment}</p>
+                ) : (
+                  <p className="text-[10px] text-[#7D6871] mt-1">Pago inicial opcional recibido</p>
+                )}
+              </div>
+            )}
 
             {/* Saldo Pendiente */}
             <div className="p-4 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60">

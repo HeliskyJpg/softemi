@@ -92,6 +92,21 @@ interface AppContextType {
   ) => { success: boolean; error?: string };
   changeOrderStatus: (id: string, newStatus: OrderStatus, note?: string) => boolean;
   cancelOrder: (id: string, reason?: string) => boolean;
+  registerOrderPayment: (
+    orderId: string,
+    amount: number,
+    options?: {
+      note?: string;
+      markAsDeliveredIfSettled?: boolean;
+      deliveryNote?: string;
+    }
+  ) => {
+    success: boolean;
+    error?: string;
+    newPaid?: number;
+    newBalance?: number;
+    markedAsDelivered?: boolean;
+  };
 
   // Components & Inventory
   components: ComponentItem[];
@@ -1063,6 +1078,137 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
+  const registerOrderPayment = (
+    orderId: string,
+    amount: number,
+    options?: {
+      note?: string;
+      markAsDeliveredIfSettled?: boolean;
+      deliveryNote?: string;
+    }
+  ): {
+    success: boolean;
+    error?: string;
+    newPaid?: number;
+    newBalance?: number;
+    markedAsDelivered?: boolean;
+  } => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) {
+      addToast('Pedido no encontrado.', 'error');
+      return { success: false, error: 'Pedido no encontrado.' };
+    }
+
+    if (order.status === 'Cancelado') {
+      addToast('No se pueden registrar pagos a un pedido cancelado.', 'error');
+      return { success: false, error: 'No se pueden registrar pagos a un pedido cancelado.' };
+    }
+
+    if (amount <= 0) {
+      addToast('El monto del pago debe ser mayor a 0.', 'error');
+      return { success: false, error: 'El monto debe ser mayor a 0.' };
+    }
+
+    // Round values to 2 decimal places
+    const cleanAmount = Math.round(amount * 100) / 100;
+    const currentBalance = Math.round(order.balance * 100) / 100;
+
+    if (cleanAmount > currentBalance + 0.001) {
+      const errorMsg = `El monto a pagar (Q ${cleanAmount.toFixed(2)}) no puede ser mayor al saldo pendiente (Q ${currentBalance.toFixed(2)}).`;
+      addToast(errorMsg, 'error', 'Monto Excedido');
+      return { success: false, error: errorMsg };
+    }
+
+    const effectiveAmount = Math.min(cleanAmount, currentBalance);
+    const newPaid = Math.round((order.advancePayment + effectiveAmount) * 100) / 100;
+    const newBalance = Math.max(0, Math.round((order.total - newPaid) * 100) / 100);
+
+    const shouldDeliver =
+      options?.markAsDeliveredIfSettled === true &&
+      newBalance === 0 &&
+      order.status !== 'Entregado';
+
+    const historyEntries: OrderHistoryEntry[] = [
+      {
+        id: 'hist-' + Date.now(),
+        timestamp: getFormattedNow(),
+        user: currentUser?.name || 'Usuario',
+        action: newBalance === 0 ? 'Pago completo liquidado' : 'Abono / Pago registrado',
+        details: `Monto recibido: Q ${effectiveAmount.toFixed(2)}. Total pagado: Q ${newPaid.toFixed(2)}. Saldo restante: Q ${newBalance.toFixed(2)}.${options?.note ? ` Detalle: ${options.note}` : ''}`,
+        badgeType: 'success',
+      },
+    ];
+
+    if (shouldDeliver) {
+      // Deduct physical inventory as the order is now fully settled and delivered
+      setComponents((prev) =>
+        prev.map((comp) => {
+          const item = order.items.find((it) => it.componentId === comp.id);
+          if (item) {
+            return {
+              ...comp,
+              physicalStock: Math.max(0, comp.physicalStock - item.quantity),
+              reservedStock: Math.max(0, comp.reservedStock - item.quantity),
+            };
+          }
+          return comp;
+        })
+      );
+
+      historyEntries.push({
+        id: 'hist-' + (Date.now() + 1),
+        timestamp: getFormattedNow(),
+        user: currentUser?.name || 'Usuario',
+        action: 'Estado cambiado a Entregado',
+        details: options?.deliveryNote
+          ? options.deliveryNote.trim()
+          : 'Pedido liquidado y entregado al cliente.',
+        badgeType: 'success',
+      });
+    }
+
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? {
+              ...o,
+              advancePayment: newPaid,
+              balance: newBalance,
+              status: shouldDeliver ? 'Entregado' : o.status,
+              history: [...o.history, ...historyEntries],
+            }
+          : o
+      )
+    );
+
+    if (shouldDeliver) {
+      addToast(
+        `Pago de Q ${effectiveAmount.toFixed(2)} registrado y pedido ${order.code} marcado como Entregado.`,
+        'success',
+        '¡Entrega y Pago Completados!'
+      );
+    } else if (newBalance === 0) {
+      addToast(
+        `Pago de Q ${effectiveAmount.toFixed(2)} registrado. El pedido ${order.code} ha sido liquidado al 100%.`,
+        'success',
+        'Saldo Liquidado'
+      );
+    } else {
+      addToast(
+        `Abono de Q ${effectiveAmount.toFixed(2)} registrado. Saldo pendiente restante: Q ${newBalance.toFixed(2)}.`,
+        'info',
+        'Abono Registrado'
+      );
+    }
+
+    return {
+      success: true,
+      newPaid,
+      newBalance,
+      markedAsDelivered: shouldDeliver,
+    };
+  };
+
   const resetDemoData = () => {
     setUsers(INITIAL_USERS);
     setCurrentUser(INITIAL_USERS[0]); // Elena Soto Admin
@@ -1116,6 +1262,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateOrder,
         changeOrderStatus,
         cancelOrder,
+        registerOrderPayment,
 
         components,
         categories,
