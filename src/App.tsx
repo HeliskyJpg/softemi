@@ -16,6 +16,7 @@ import { ClientsView } from './components/views/ClientsView';
 import { CalendarView } from './components/views/CalendarView';
 import { ReportsView } from './components/views/ReportsView';
 import { UsersView } from './components/views/UsersView';
+import { ProfileView } from './components/views/ProfileView';
 
 const AppContent: React.FC = () => {
   const { currentUser, activeView, selectedOrderId } = useApp();
@@ -54,6 +55,8 @@ const AppContent: React.FC = () => {
         return <ReportsView />;
       case 'users':
         return <UsersView />;
+      case 'profile':
+        return <ProfileView />;
       default:
         return <DashboardView />;
     }

@@ -12,6 +12,8 @@ import {
   ArrowUpDown,
   ShoppingBag,
   Clock,
+  Phone,
+  DollarSign,
 } from 'lucide-react';
 import { StatusBadge } from '../common/StatusBadge';
 import { OrderStatus } from '../../types';
@@ -150,17 +152,18 @@ export const OrdersListView: React.FC = () => {
           onClick={() => navigateToOrderNew('orders')}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
         >
-          <PlusCircle className="w-4 h-4 stroke-[2.2]" />
+          <PlusCircle className="w-4 h-4 stroke-[2.5]" />
           Nuevo Pedido
         </button>
       </div>
 
-      {/* Filter and Search Bar */}
+      {/* Filters Toolbar */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F2D6DE]/60 shadow-xs space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Search input */}
-          <div className="relative lg:col-span-2">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* Search Input */}
+          <div className="relative">
+            <label htmlFor="input-orders-search" className="sr-only">Buscar pedido</label>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7D6871]">
               <Search className="w-4 h-4" />
             </div>
             <input
@@ -171,12 +174,12 @@ export const OrdersListView: React.FC = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Buscar por código (PED-XXXX), cliente o descripción..."
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/30 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] transition-all"
+              placeholder="Buscar por código, cliente o detalle..."
+              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium"
             />
           </div>
 
-          {/* Status filter dropdown */}
+          {/* Status Filter Dropdown */}
           <div className="relative">
             <label htmlFor="select-orders-status-filter" className="sr-only">Filtrar por Estado</label>
             <select
@@ -196,7 +199,7 @@ export const OrdersListView: React.FC = () => {
             </select>
           </div>
 
-          {/* Quick Date Filter */}
+          {/* Date Filter Dropdown */}
           <div className="relative">
             <label htmlFor="select-orders-date-filter" className="sr-only">Filtrar por Fecha</label>
             <select
@@ -217,7 +220,7 @@ export const OrdersListView: React.FC = () => {
         </div>
 
         {/* Active filters pill list */}
-        <div className="flex items-center justify-between text-xs text-[#7D6871] pt-2 border-t border-[#F2D6DE]/40">
+        <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6871] pt-2 border-t border-[#F2D6DE]/40 gap-2">
           <span>
             Mostrando <strong className="text-[#2C1E23]">{sortedOrders.length}</strong> pedidos encontrados
           </span>
@@ -238,9 +241,10 @@ export const OrdersListView: React.FC = () => {
         </div>
       </div>
 
-      {/* Orders Table */}
+      {/* Orders Container (Desktop Table + Mobile Cards) */}
       <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table id="table-orders-list" className="w-full text-left text-xs">
             <thead className="bg-[#FBECEF]/40 border-b border-[#F2D6DE]/60 text-[#8C7A82] uppercase tracking-wider text-[11px]">
               <tr>
@@ -388,9 +392,130 @@ export const OrdersListView: React.FC = () => {
           </table>
         </div>
 
+        {/* Mobile Card List View (Phones & Small screens) */}
+        <div className="block md:hidden divide-y divide-[#F2D6DE]/40 p-3 space-y-3">
+          {paginatedOrders.length === 0 ? (
+            <div className="py-10 text-center text-[#7D6871] space-y-2">
+              <ShoppingBag className="w-8 h-8 mx-auto text-[#F2D6DE]" />
+              <p className="font-semibold text-[#2C1E23]">No se encontraron pedidos</p>
+              <p className="text-xs text-[#7D6871]">
+                Ajuste los filtros o registre un nuevo pedido.
+              </p>
+            </div>
+          ) : (
+            paginatedOrders.map((order) => {
+              const isToday = order.deliveryDate === todayStr;
+              const isLate =
+                order.deliveryDate < todayStr &&
+                (order.status === 'Pendiente' || order.status === 'En preparación');
+
+              return (
+                <div
+                  key={order.id}
+                  id={`mobile-card-order-${order.code}`}
+                  className="bg-white rounded-xl p-4 border border-[#F2D6DE]/60 shadow-2xs space-y-3"
+                >
+                  {/* Card Header: Code + Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-sm text-[#681B2B]">
+                        {order.code}
+                      </span>
+                      <span className="text-[10px] text-[#7D6871] bg-gray-100 px-2 py-0.5 rounded-md">
+                        {order.channel}
+                      </span>
+                    </div>
+                    <StatusBadge status={order.status} size="sm" />
+                  </div>
+
+                  {/* Client & Description */}
+                  <div>
+                    <h3 className="font-bold text-[#2C1E23] text-sm">{order.clientName}</h3>
+                    <p className="text-xs text-[#7D6871] flex items-center gap-1 mt-0.5">
+                      <Phone className="w-3 h-3 text-[#681B2B]" />
+                      {order.clientPhone}
+                    </p>
+                    <p className="text-xs text-[#2C1E23] mt-1.5 line-clamp-2 bg-[#FBECEF]/20 p-2 rounded-lg border border-[#F2D6DE]/40">
+                      {order.description}
+                    </p>
+                  </div>
+
+                  {/* Delivery date & time */}
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-[#F2D6DE]/30">
+                    <div className="flex items-center gap-1 text-[#7D6871]">
+                      <Calendar className="w-3.5 h-3.5 text-[#681B2B]" />
+                      <span
+                        className={`font-semibold ${
+                          isToday
+                            ? 'text-[#2563EB]'
+                            : isLate
+                            ? 'text-[#DC2626]'
+                            : 'text-[#2C1E23]'
+                        }`}
+                      >
+                        {order.deliveryDate}
+                      </span>
+                      <span className="text-[11px] text-[#7D6871]">
+                        ({order.deliveryTime || '--:--'})
+                      </span>
+                    </div>
+                    {isToday && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 bg-[#DBEAFE] text-[#2563EB] rounded">
+                        Hoy
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Financials Row */}
+                  <div className="grid grid-cols-3 gap-2 bg-[#FBECEF]/30 p-2.5 rounded-xl text-center text-xs">
+                    <div>
+                      <span className="text-[10px] font-semibold text-[#7D6871] uppercase block">Total</span>
+                      <span className="font-bold text-[#2C1E23]">Q {order.total.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-semibold text-[#059669] uppercase block">Pagado</span>
+                      <span className="font-semibold text-[#059669]">Q {order.advancePayment.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-semibold text-[#7D6871] uppercase block">Saldo</span>
+                      <span className={`font-bold ${order.balance > 0 ? 'text-[#DC2626]' : 'text-emerald-700'}`}>
+                        Q {order.balance.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Actions (Touch targets at least 44px) */}
+                  <div className="flex items-center gap-2 pt-1 border-t border-[#F2D6DE]/30">
+                    <button
+                      id={`btn-mobile-view-${order.code}`}
+                      onClick={() => navigateToOrderDetail(order.id, 'orders')}
+                      className="flex-1 min-h-[40px] py-2 px-3 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Ver Detalle
+                    </button>
+
+                    {order.status !== 'Cancelado' && order.status !== 'Entregado' && (
+                      <button
+                        id={`btn-mobile-edit-${order.code}`}
+                        onClick={() => navigateToOrderEdit(order.id, 'orders')}
+                        className="min-h-[40px] py-2 px-3 rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] hover:bg-gray-50 font-semibold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                        title="Editar Pedido"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                        Editar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
         {/* Pagination Bar */}
         <div className="p-4 border-t border-[#F2D6DE]/60 bg-[#FBECEF]/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <span className="text-[#7D6871]">
+          <span className="text-[#7D6871] text-center sm:text-left">
             Página <strong className="text-[#2C1E23]">{currentPage}</strong> de{' '}
             <strong className="text-[#2C1E23]">{totalPages}</strong> (
             {sortedOrders.length} pedidos totales)
@@ -401,31 +526,33 @@ export const OrdersListView: React.FC = () => {
               id="btn-pagination-prev"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-lg border border-[#F2D6DE] bg-white text-[#2C1E23] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBECEF]/40 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+              className="px-3 py-2 rounded-lg border border-[#F2D6DE] bg-white text-[#2C1E23] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBECEF]/40 transition-colors font-medium flex items-center gap-1 cursor-pointer min-h-[36px]"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               Anterior
             </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  currentPage === pageNum
-                    ? 'bg-[#681B2B] text-white shadow-xs'
-                    : 'bg-white text-[#7D6871] hover:bg-[#FBECEF]/40 border border-[#F2D6DE]'
-                }`}
-              >
-                {pageNum}
-              </button>
-            ))}
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    currentPage === pageNum
+                      ? 'bg-[#681B2B] text-white shadow-xs'
+                      : 'bg-white text-[#7D6871] hover:bg-[#FBECEF]/40 border border-[#F2D6DE]'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+            </div>
 
             <button
               id="btn-pagination-next"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-lg border border-[#F2D6DE] bg-white text-[#2C1E23] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBECEF]/40 transition-colors font-medium flex items-center gap-1 cursor-pointer"
+              className="px-3 py-2 rounded-lg border border-[#F2D6DE] bg-white text-[#2C1E23] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#FBECEF]/40 transition-colors font-medium flex items-center gap-1 cursor-pointer min-h-[36px]"
             >
               Siguiente
               <ChevronRight className="w-3.5 h-3.5" />
@@ -435,5 +562,4 @@ export const OrdersListView: React.FC = () => {
       </div>
     </div>
   );
-
 };

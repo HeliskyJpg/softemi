@@ -562,9 +562,10 @@ export const ComponentsView: React.FC = () => {
             </div>
           </div>
 
-          {/* Components Table */}
+          {/* Components List (Desktop Table + Mobile Cards) */}
           <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table id="table-components" className="w-full text-left text-xs">
                 <thead className="bg-[#FBECEF]/40 border-b border-[#F2D6DE]/60 text-[#8C7A82] uppercase text-[10px] tracking-wider">
                   <tr>
@@ -746,11 +747,135 @@ export const ComponentsView: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card List (Phones & Small screens) */}
+            <div className="block md:hidden divide-y divide-[#F2D6DE]/40 p-3 space-y-3">
+              {filteredComponents.length === 0 ? (
+                <div className="py-10 text-center text-[#7D6871] space-y-2">
+                  <Layers className="w-8 h-8 mx-auto text-[#F2D6DE]" />
+                  <p className="font-semibold text-[#2C1E23]">No se encontraron componentes</p>
+                  <p className="text-xs text-[#7D6871]">Ajuste los filtros o registre un nuevo insumo.</p>
+                </div>
+              ) : (
+                filteredComponents.map((comp) => {
+                  const available = getAvailableStock(comp);
+                  const isOutOfStock = available <= 0;
+                  const isLowStock = available > 0 && available <= comp.minStockAlert;
+
+                  return (
+                    <div
+                      key={comp.id}
+                      id={`mobile-card-comp-${comp.id}`}
+                      className={`bg-white rounded-xl p-4 border border-[#F2D6DE]/60 shadow-2xs space-y-3 ${
+                        !comp.active ? 'bg-gray-50/80 opacity-80' : ''
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="font-bold text-[#2C1E23] text-sm">{comp.name}</h3>
+                            {!comp.active && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-gray-200 text-gray-700">
+                                Inactivo
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-[#7D6871] bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1 font-medium">
+                            {comp.category}
+                          </span>
+                        </div>
+
+                        {!comp.active ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 shrink-0">
+                            Desactivado
+                          </span>
+                        ) : isOutOfStock ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-[#DC2626] border border-red-200 shrink-0 flex items-center gap-1">
+                            <XCircle className="w-3 h-3" /> Agotado
+                          </span>
+                        ) : isLowStock ? (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200 shrink-0 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" /> Bajo stock
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0] shrink-0 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Disponible
+                          </span>
+                        )}
+                      </div>
+
+                      {comp.description && (
+                        <p className="text-xs text-[#7D6871] bg-[#FBECEF]/20 p-2 rounded-lg border border-[#F2D6DE]/30">
+                          {comp.description}
+                        </p>
+                      )}
+
+                      {/* Stock Counts Grid */}
+                      <div className="grid grid-cols-3 gap-2 bg-[#FBECEF]/30 p-2.5 rounded-xl text-center text-xs">
+                        <div>
+                          <span className="text-[10px] font-semibold text-[#7D6871] uppercase block">Físico</span>
+                          <span className="font-bold text-[#2C1E23]">{comp.physicalStock} {comp.unit}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-amber-800 uppercase block">Reservado</span>
+                          <span className="font-bold text-amber-800">{comp.reservedStock} {comp.unit}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-semibold text-[#047857] uppercase block">Disponible</span>
+                          <span className={`font-extrabold ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-amber-700' : 'text-[#047857]'}`}>
+                            {available} {comp.unit}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Price & Actions Row */}
+                      <div className="flex items-center justify-between pt-2 border-t border-[#F2D6DE]/30">
+                        <div className="font-extrabold text-sm text-[#681B2B]">
+                          Q {comp.price.toFixed(2)} <span className="text-[10px] font-normal text-[#7D6871]">/{comp.unit}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenEdit(comp)}
+                            className="min-h-[38px] px-3 py-1.5 rounded-xl border border-[#F2D6DE] bg-white text-[#681B2B] hover:bg-[#FBECEF] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                            Editar
+                          </button>
+
+                          <button
+                            onClick={() => handleOpenStockAdjust(comp)}
+                            className="min-h-[38px] px-3 py-1.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <SlidersHorizontal className="w-3.5 h-3.5" />
+                            Ajustar
+                          </button>
+
+                          {isAdmin && (
+                            <button
+                              onClick={() => handlePromptToggleActive(comp)}
+                              className={`min-h-[38px] p-2 rounded-xl border transition-colors cursor-pointer ${
+                                comp.active
+                                  ? 'border-gray-200 text-[#7D6871] hover:bg-red-50 hover:text-red-600'
+                                  : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                              }`}
+                              title={comp.active ? 'Desactivar' : 'Reactivar'}
+                            >
+                              <Power className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </>
       ) : (
-        /* Stock Adjustment Audit Logs Tab */
-        <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden p-5 space-y-4">
+        /* Stock Adjustment Audit Logs Tab (Desktop Table + Mobile Cards) */
+        <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden p-4 sm:p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#F2D6DE]/40 pb-3">
             <div>
               <h3 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
@@ -761,12 +886,13 @@ export const ComponentsView: React.FC = () => {
                 Auditoría histórica de entradas, salidas y motivos de ajuste manual.
               </p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-[#FBECEF] text-[#681B2B] rounded-full border border-[#F2D6DE]">
+            <span className="text-xs font-semibold px-2.5 py-1 bg-[#FBECEF] text-[#681B2B] rounded-full border border-[#F2D6DE] self-start sm:self-auto">
               {stockAdjustmentLogs.length} movimientos registrados
             </span>
           </div>
 
-          <div className="overflow-x-auto border border-[#F2D6DE]/60 rounded-xl">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto border border-[#F2D6DE]/60 rounded-xl">
             <table id="table-stock-logs" className="w-full text-left text-xs">
               <thead className="bg-[#FBECEF]/40 text-[#8C7A82] uppercase text-[10px] tracking-wider border-b border-[#F2D6DE]/60">
                 <tr>
@@ -839,6 +965,61 @@ export const ComponentsView: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards for Stock Adjustment Logs */}
+          <div className="block md:hidden divide-y divide-[#F2D6DE]/40 space-y-3">
+            {stockAdjustmentLogs.length === 0 ? (
+              <div className="py-6 text-center text-[#7D6871] text-xs">
+                No hay registros de ajustes de stock aún.
+              </div>
+            ) : (
+              stockAdjustmentLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="bg-white rounded-xl p-3.5 border border-[#F2D6DE]/60 shadow-2xs space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#2C1E23] text-sm">{log.componentName}</span>
+                    <span
+                      className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full text-[10px] ${
+                        log.type === 'Entrada'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {log.type === 'Entrada' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                      {log.type} ({log.type === 'Entrada' ? `+${log.quantity}` : `-${log.quantity}`})
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1 bg-[#FBECEF]/20 p-2 rounded-lg text-center text-[11px]">
+                    <div>
+                      <span className="text-[#7D6871] block text-[10px]">Previo</span>
+                      <span className="font-bold text-[#2C1E23]">{log.previousPhysicalStock}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#681B2B] block text-[10px]">Nuevo</span>
+                      <span className="font-extrabold text-[#681B2B]">{log.newPhysicalStock}</span>
+                    </div>
+                    <div>
+                      <span className="text-amber-800 block text-[10px]">Reservado</span>
+                      <span className="font-semibold text-amber-800">{log.reservedStock}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-[#2C1E23] bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <span className="font-bold text-[#681B2B]">Motivo:</span> {log.reason}
+                    {log.observation && <p className="text-[#7D6871] italic mt-0.5">{log.observation}</p>}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-[#7D6871] pt-1">
+                    <span>{log.timestamp}</span>
+                    <span className="font-medium text-[#2C1E23]">Por: {log.user}</span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

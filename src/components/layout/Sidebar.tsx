@@ -174,25 +174,53 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
           </button>
 
           {/* Current User Session Card */}
-          <div className="bg-[#FBECEF]/40 rounded-2xl p-2.5 flex items-center justify-between border border-[#F2D6DE]">
+          <div
+            id="sidebar-user-card"
+            onClick={() => handleNavClick('profile')}
+            className={`rounded-2xl p-2.5 flex items-center justify-between border transition-all cursor-pointer ${
+              activeView === 'profile'
+                ? 'bg-[#681B2B] text-white border-[#681B2B] shadow-xs'
+                : 'bg-[#FBECEF]/40 border-[#F2D6DE] hover:bg-[#FBECEF]'
+            }`}
+            title="Ver mi perfil y permisos"
+          >
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold shrink-0">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                  activeView === 'profile' ? 'bg-white text-[#681B2B]' : 'bg-[#681B2B] text-white'
+                }`}
+              >
                 {currentUser.name.charAt(0)}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-[#2C1E23] truncate leading-tight">
+                <p
+                  className={`text-xs font-bold truncate leading-tight ${
+                    activeView === 'profile' ? 'text-white' : 'text-[#2C1E23]'
+                  }`}
+                >
                   {currentUser.name}
                 </p>
-                <p className="text-[10px] text-[#7D6871] font-medium leading-tight mt-0.5">
-                  {currentUser.role === 'Administrador' ? 'Admin' : 'Colaborador'}
+                <p
+                  className={`text-[10px] font-medium leading-tight mt-0.5 ${
+                    activeView === 'profile' ? 'text-white/80' : 'text-[#7D6871]'
+                  }`}
+                >
+                  {currentUser.role === 'Administrador' ? 'Admin' : 'Colaborador'} &bull; Mi Perfil
                 </p>
               </div>
             </div>
 
             <button
               id="btn-sidebar-logout"
-              onClick={logout}
-              className="p-1.5 rounded-lg text-[#7D6871] hover:text-[#DC2626] hover:bg-white transition-colors cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                logout();
+              }}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                activeView === 'profile'
+                  ? 'text-white/80 hover:text-white hover:bg-white/20'
+                  : 'text-[#7D6871] hover:text-[#DC2626] hover:bg-white'
+              }`}
               title="Cerrar sesión"
             >
               <LogOut className="w-4 h-4" />

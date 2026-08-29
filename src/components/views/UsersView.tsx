@@ -8,11 +8,15 @@ import {
   CheckCircle2,
   XCircle,
   X,
+  Lock,
+  Mail,
+  Power,
+  Info,
 } from 'lucide-react';
 import { SystemUser, UserRole } from '../../types';
 
 export const UsersView: React.FC = () => {
-  const { users, currentUser, addUser, updateUser, addToast, switchUserRole } = useApp();
+  const { users, currentUser, addUser, updateUser, toggleUserActive, addToast, switchUserRole } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
 
@@ -21,7 +25,7 @@ export const UsersView: React.FC = () => {
 
   const [formName, setFormName] = useState('');
   const [formUsername, setFormUsername] = useState('');
-  const [formPassword, setFormPassword] = useState('');
+  const [formEmail, setFormEmail] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('Colaborador');
   const [formActive, setFormActive] = useState(true);
 
@@ -34,17 +38,17 @@ export const UsersView: React.FC = () => {
         <div>
           <h2 className="text-lg font-bold text-[#2C1E23]">Módulo de Usuarios y Roles</h2>
           <p className="text-xs text-[#7D6871] mt-1 max-w-md mx-auto">
-            Este módulo requiere privilegios de <strong>Administrador</strong> para gestionar cuentas, credenciales y permisos del personal. Tu usuario actual tiene rol <strong>Colaborador</strong>.
+            Este módulo requiere privilegios de <strong>Administrador</strong> para gestionar cuentas, personal y control de acceso en EMILA Floristería. Tu usuario actual tiene rol <strong>Colaborador</strong>.
           </p>
         </div>
 
         <div className="pt-2">
           <button
             onClick={() => switchUserRole('Administrador')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-medium text-xs shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
           >
             <Shield className="w-3.5 h-3.5" />
-            Cambiar a Administrador (Modo Demo)
+            Cambiar a Administrador (Modo Demostración)
           </button>
         </div>
       </div>
@@ -55,7 +59,7 @@ export const UsersView: React.FC = () => {
     setEditingUser(null);
     setFormName('');
     setFormUsername('');
-    setFormPassword('');
+    setFormEmail('');
     setFormRole('Colaborador');
     setFormActive(true);
     setShowModal(true);
@@ -65,7 +69,7 @@ export const UsersView: React.FC = () => {
     setEditingUser(user);
     setFormName(user.name);
     setFormUsername(user.username);
-    setFormPassword(user.password || 'demo123');
+    setFormEmail(user.email || '');
     setFormRole(user.role);
     setFormActive(user.active);
     setShowModal(true);
@@ -73,8 +77,8 @@ export const UsersView: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName.trim() || !formUsername.trim() || !formPassword.trim()) {
-      addToast('Todos los campos son obligatorios.', 'error');
+    if (!formName.trim() || !formUsername.trim()) {
+      addToast('El nombre y el usuario son obligatorios.', 'error');
       return;
     }
 
@@ -82,7 +86,7 @@ export const UsersView: React.FC = () => {
       updateUser(editingUser.id, {
         name: formName.trim(),
         username: formUsername.trim(),
-        password: formPassword.trim(),
+        email: formEmail.trim(),
         role: formRole,
         active: formActive,
       });
@@ -90,7 +94,7 @@ export const UsersView: React.FC = () => {
       addUser({
         name: formName.trim(),
         username: formUsername.trim(),
-        password: formPassword.trim(),
+        email: formEmail.trim(),
         role: formRole,
         active: formActive,
       });
@@ -107,7 +111,7 @@ export const UsersView: React.FC = () => {
             <UserCheck className="w-6 h-6 text-[#681B2B]" />
             Control de Usuarios y Roles
           </h1>
-          <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5">
+          <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5 font-medium">
             Gestión de cuentas del personal, asignación de permisos y control de acceso.
           </p>
         </div>
@@ -115,76 +119,196 @@ export const UsersView: React.FC = () => {
         <button
           id="btn-new-user"
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-medium text-xs shadow-xs transition-colors cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-bold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
         >
-          <Plus className="w-4 h-4" />
-          + Nuevo Usuario
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          Nuevo Usuario
         </button>
       </div>
 
-      {/* Users Table */}
+      {/* Users List Container */}
       <div className="bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View (md and up) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-[#FBECEF]/30 border-b border-[#F2D6DE]/60 text-[#7D6871] uppercase text-[11px] tracking-wider">
               <tr>
                 <th className="py-3.5 px-4 font-bold">Nombre Completo</th>
-                <th className="py-3.5 px-4 font-bold">Usuario</th>
+                <th className="py-3.5 px-4 font-bold">Usuario / Correo</th>
                 <th className="py-3.5 px-4 font-bold">Rol Asignado</th>
                 <th className="py-3.5 px-4 font-bold text-center">Estado</th>
                 <th className="py-3.5 px-4 font-bold text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#F2D6DE]/30">
-              {users.map((u) => (
-                <tr key={u.id} className="hover:bg-[#FBECEF]/20 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-[#2C1E23]">{u.name}</div>
-                    {u.id === currentUser?.id && (
-                      <span className="text-[10px] text-[#681B2B] font-semibold">
-                        (Tu sesión actual)
+              {users.map((u) => {
+                const isCurrent = u.id === currentUser?.id;
+                return (
+                  <tr key={u.id} className="hover:bg-[#FBECEF]/20 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                          {u.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-bold text-[#2C1E23]">{u.name}</div>
+                          {isCurrent && (
+                            <span className="text-[10px] text-[#681B2B] font-bold">
+                              (Tu sesión actual)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="font-semibold text-[#2C1E23]">@{u.username}</div>
+                      {u.email && <div className="text-[11px] text-[#7D6871]">{u.email}</div>}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                          u.role === 'Administrador'
+                            ? 'bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE]'
+                            : 'bg-gray-100 text-[#4A202A]'
+                        }`}
+                      >
+                        <Shield className="w-3 h-3" />
+                        {u.role}
                       </span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 font-medium text-[#7D6871]">@{u.username}</td>
-                  <td className="py-3.5 px-4">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                        u.role === 'Administrador'
-                          ? 'bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE]'
-                          : 'bg-[#F2D6DE]/30 text-[#2C1E23]'
-                      }`}
-                    >
-                      <Shield className="w-3 h-3" />
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-4 text-center">
-                    {u.active ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Activo
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                        <XCircle className="w-3.5 h-3.5" />
-                        Inactivo
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-4 text-right">
-                    <button
-                      onClick={() => handleOpenEdit(u)}
-                      className="px-2.5 py-1.5 rounded-lg border border-[#F2D6DE]/60 bg-white text-[#681B2B] hover:bg-[#681B2B] hover:text-white font-medium text-xs transition-colors inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                      Editar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      {u.active ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Activo
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                          <XCircle className="w-3 h-3" />
+                          Inactivo
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          id={`btn-edit-user-${u.id}`}
+                          onClick={() => handleOpenEdit(u)}
+                          className="px-3 py-1.5 rounded-lg border border-[#F2D6DE] bg-white text-[#681B2B] hover:bg-[#681B2B] hover:text-white font-semibold text-xs transition-colors inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          Editar
+                        </button>
+
+                        {!isCurrent && (
+                          <button
+                            id={`btn-toggle-active-user-${u.id}`}
+                            onClick={() => toggleUserActive(u.id)}
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                              u.active
+                                ? 'border-gray-200 text-[#7D6871] hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200'
+                                : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                            }`}
+                            title={u.active ? 'Desactivar acceso' : 'Reactivar acceso'}
+                          >
+                            <Power className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Card List View (Phones & Small screens) */}
+        <div className="block md:hidden divide-y divide-[#F2D6DE]/40 p-3 space-y-3">
+          {users.map((u) => {
+            const isCurrent = u.id === currentUser?.id;
+            return (
+              <div
+                key={u.id}
+                id={`card-user-${u.id}`}
+                className="bg-white rounded-xl p-4 border border-[#F2D6DE]/60 shadow-2xs space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-[#681B2B] text-white flex items-center justify-center text-sm font-bold shrink-0">
+                      {u.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-[#2C1E23] text-sm leading-tight">{u.name}</h3>
+                      <p className="text-xs text-[#7D6871] font-medium">@{u.username}</p>
+                    </div>
+                  </div>
+
+                  {u.active ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Activo
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 shrink-0">
+                      <XCircle className="w-3 h-3" />
+                      Inactivo
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs pt-1 border-t border-[#F2D6DE]/30">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                      u.role === 'Administrador'
+                        ? 'bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE]'
+                        : 'bg-gray-100 text-[#4A202A]'
+                    }`}
+                  >
+                    <Shield className="w-3 h-3" />
+                    {u.role}
+                  </span>
+
+                  {isCurrent && (
+                    <span className="text-[11px] text-[#681B2B] font-bold">
+                      (Tu sesión actual)
+                    </span>
+                  )}
+                </div>
+
+                {u.email && (
+                  <p className="text-xs text-[#7D6871] flex items-center gap-1">
+                    <Mail className="w-3.5 h-3.5 text-[#681B2B]" />
+                    {u.email}
+                  </p>
+                )}
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F2D6DE]/30">
+                  <button
+                    onClick={() => handleOpenEdit(u)}
+                    className="flex-1 py-2 px-3 rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/30 hover:bg-[#FBECEF] text-[#681B2B] font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    Editar Datos
+                  </button>
+
+                  {!isCurrent && (
+                    <button
+                      onClick={() => toggleUserActive(u.id)}
+                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
+                        u.active
+                          ? 'border-gray-200 text-[#7D6871] hover:bg-rose-50 hover:text-rose-600'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      }`}
+                    >
+                      <Power className="w-3.5 h-3.5" />
+                      {u.active ? 'Desactivar' : 'Activar'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -196,7 +320,7 @@ export const UsersView: React.FC = () => {
         </h3>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border border-[#F2D6DE]/40 rounded-xl overflow-hidden">
+          <table className="w-full text-left text-xs border border-[#F2D6DE]/40 rounded-xl overflow-hidden min-w-[340px]">
             <thead className="bg-[#FBECEF]/30 text-[#7D6871] uppercase text-[10px]">
               <tr>
                 <th className="py-2.5 px-3">Módulo / Acción</th>
@@ -236,29 +360,30 @@ export const UsersView: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL: CREAR / EDITAR USUARIO */}
+      {/* MODAL: CREAR / EDITAR USUARIO (SIN EXPOSICIÓN DE PASSWORD) */}
       {/* ============================================================ */}
       {showModal && (
         <div
           id="modal-user-form"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE]/60 relative animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE]/60 relative animate-in fade-in max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
+            <h3 className="text-base font-bold text-[#2C1E23] mb-0.5 flex items-center gap-2">
+              <UserCheck className="w-5 h-5 text-[#681B2B]" />
               {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
             </h3>
             <p className="text-xs text-[#7D6871] mb-4">
-              Configure credenciales y rol en el sistema EMILA.
+              Configure los datos de identificación y nivel de acceso en EMILA.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-3.5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Nombre Completo <span className="text-rose-500">*</span>
@@ -270,7 +395,7 @@ export const UsersView: React.FC = () => {
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="Ej. Sofía Valenzuela"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
                 />
               </div>
 
@@ -285,47 +410,60 @@ export const UsersView: React.FC = () => {
                   value={formUsername}
                   onChange={(e) => setFormUsername(e.target.value)}
                   placeholder="Ej. svalenzuela"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Contraseña <span className="text-rose-500">*</span>
+                  Correo Electrónico
                 </label>
-                <input
-                  id="input-user-password"
-                  type="text"
-                  required
-                  value={formPassword}
-                  onChange={(e) => setFormPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none font-mono"
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7D6871]">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="input-user-email"
+                    type="email"
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                    placeholder="usuario@emila.com"
+                    className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-[#2C1E23] mb-1">Rol Asignado</label>
                 <select
+                  id="select-user-role"
                   value={formRole}
                   onChange={(e) => setFormRole(e.target.value as UserRole)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE]/60 focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium text-[#2C1E23]"
+                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium text-[#2C1E23] cursor-pointer"
                 >
                   <option value="Colaborador">Colaborador (Recepción y Taller)</option>
                   <option value="Administrador">Administrador (Acceso Total)</option>
                 </select>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
+              {/* Security info banner instead of password fields */}
+              <div className="p-3 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE] text-xs text-[#681B2B] flex items-start gap-2">
+                <Lock className="w-4 h-4 shrink-0 mt-0.5 text-[#681B2B]" />
+                <p className="text-[11px] leading-relaxed">
+                  Las credenciales de acceso se gestionan de forma cifrada e independiente. Ninguna contraseña es expuesta ni precargada en el navegador.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
                 <input
                   id="checkbox-user-active"
                   type="checkbox"
                   checked={formActive}
                   onChange={(e) => setFormActive(e.target.checked)}
-                  className="w-4 h-4 text-[#681B2B] rounded border-[#F2D6DE] focus:ring-[#681B2B]"
+                  className="w-4 h-4 text-[#681B2B] rounded border-[#F2D6DE] focus:ring-[#681B2B] cursor-pointer"
                 />
-                <label htmlFor="checkbox-user-active" className="text-xs font-medium text-[#2C1E23]">
-                  Usuario Activo (permite iniciar sesión)
+                <label htmlFor="checkbox-user-active" className="text-xs font-medium text-[#2C1E23] cursor-pointer">
+                  Usuario Activo (permite iniciar sesión en el sistema)
                 </label>
               </div>
 
@@ -333,14 +471,14 @@ export const UsersView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-[#FBECEF]/40 rounded-xl"
+                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-user-form"
                   type="submit"
-                  className="px-5 py-2 text-xs font-medium bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer"
                 >
                   Guardar Usuario
                 </button>
@@ -352,4 +490,3 @@ export const UsersView: React.FC = () => {
     </div>
   );
 };
-

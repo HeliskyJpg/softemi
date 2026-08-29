@@ -340,8 +340,8 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
             )}
           </div>
 
-          {/* Components Table Card */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4">
+          {/* Components Table Card (Desktop Table + Mobile Cards) */}
+          <div className="bg-white rounded-2xl p-4 sm:p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-[#F2D6DE]/40 pb-2.5">
               <h2 className="text-xs font-bold text-[#8C7A82] uppercase tracking-wider flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#681B2B]" />
@@ -352,7 +352,8 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop View */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-[#F2D6DE]/40 text-[#8C7A82] text-[11px] uppercase">
@@ -381,6 +382,23 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile View */}
+            <div className="block sm:hidden divide-y divide-[#F2D6DE]/40 space-y-2.5">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="pt-2.5 first:pt-0 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-[#2C1E23] block">{item.componentName}</span>
+                    <span className="text-[11px] text-[#7D6871]">
+                      {item.quantity} × Q {item.unitPrice.toFixed(2)} &bull; {item.category}
+                    </span>
+                  </div>
+                  <div className="font-extrabold text-[#681B2B] text-sm">
+                    Q {item.subtotal.toFixed(2)}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

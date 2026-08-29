@@ -6,8 +6,8 @@ export interface User {
   name: string;
   role: UserRole;
   active: boolean;
-  password?: string;
   email?: string;
+  password?: string; // Optional internal auth token only, never exposed in UI
 }
 
 export type SystemUser = User;

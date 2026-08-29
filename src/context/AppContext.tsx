@@ -34,7 +34,7 @@ interface AppContextType {
   login: (username: string, password?: string) => boolean;
   logout: () => void;
   switchUserRole: (role: 'Administrador' | 'Colaborador') => void;
-  updateUserProfile: (name: string) => void;
+  updateUserProfile: (name: string, email?: string) => void;
   addUser: (userData: Omit<User, 'id'>) => void;
   updateUser: (id: string, userData: Partial<User>) => void;
   toggleUserActive: (id: string) => void;
@@ -472,17 +472,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const updateUserProfile = (name: string) => {
+  const updateUserProfile = (name: string, email?: string) => {
     if (!currentUser) return;
-    const updatedUser = { ...currentUser, name: name.trim() };
+    const updatedUser: User = {
+      ...currentUser,
+      name: name.trim(),
+      ...(email !== undefined ? { email: email.trim() } : {}),
+    };
     setCurrentUser(updatedUser);
     setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updatedUser : u)));
     addToast('Perfil actualizado correctamente.', 'success');
   };
 
   const addUser = (userData: Omit<User, 'id'>) => {
+    if (currentUser?.role !== 'Administrador') {
+      addToast('Acceso denegado: Solo los administradores pueden registrar nuevos usuarios.', 'error', 'No autorizado');
+      return;
+    }
+
     const newUser: User = {
-      ...userData,
+      name: userData.name.trim(),
+      username: userData.username.trim().toLowerCase().replace(/\s+/g, ''),
+      role: userData.role,
+      active: userData.active ?? true,
+      email: userData.email?.trim() || '',
       id: 'usr-' + Date.now(),
     };
     setUsers((prev) => [...prev, newUser]);
@@ -490,10 +503,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = (id: string, userData: Partial<User>) => {
+    if (currentUser?.role !== 'Administrador') {
+      addToast('Acceso denegado: Solo los administradores pueden modificar usuarios.', 'error', 'No autorizado');
+      return;
+    }
+
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === id) {
-          const updated = { ...u, ...userData };
+          // Whitelist allowed editable fields only (never overwrite with insecure password)
+          const updated: User = {
+            ...u,
+            ...(userData.name !== undefined ? { name: userData.name.trim() } : {}),
+            ...(userData.username !== undefined ? { username: userData.username.trim().toLowerCase().replace(/\s+/g, '') } : {}),
+            ...(userData.email !== undefined ? { email: userData.email.trim() } : {}),
+            ...(userData.role !== undefined ? { role: userData.role } : {}),
+            ...(userData.active !== undefined ? { active: userData.active } : {}),
+          };
           if (currentUser?.id === id) {
             setCurrentUser(updated);
           }
@@ -506,6 +532,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const toggleUserActive = (id: string) => {
+    if (currentUser?.role !== 'Administrador') {
+      addToast('Acceso denegado: Solo los administradores pueden cambiar el estado de usuarios.', 'error', 'No autorizado');
+      return;
+    }
+
     const userToToggle = users.find((u) => u.id === id);
     if (!userToToggle) return;
     if (userToToggle.id === currentUser?.id) {
@@ -640,6 +671,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       observation?: string;
     }
   ): { success: boolean; error?: string } => {
+    if (currentUser?.role !== 'Administrador') {
+      const errorMsg = 'Acceso denegado: Solo los administradores pueden realizar ajustes manuales de stock.';
+      addToast(errorMsg, 'error', 'No autorizado');
+      return { success: false, error: errorMsg };
+    }
+
     const comp = components.find((c) => c.id === id);
     if (!comp) {
       return { success: false, error: 'Componente no encontrado.' };
