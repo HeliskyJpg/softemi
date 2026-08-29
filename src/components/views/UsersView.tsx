@@ -7,11 +7,9 @@ import {
   CheckCircle2,
   XCircle,
   X,
-  Lock,
   Mail,
   Power,
   AlertTriangle,
-  Info,
 } from 'lucide-react';
 import { SystemUser, UserRole } from '../../types';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -589,14 +587,6 @@ export const UsersView: React.FC = () => {
                       Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema.
                     </p>
                   )}
-                </div>
-
-                {/* Security text (No password exposed or simulated) */}
-                <div className="p-3 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE] text-xs text-[#681B2B] flex items-start gap-2">
-                  <Lock className="w-4 h-4 shrink-0 mt-0.5 text-[#681B2B]" />
-                  <p className="text-[11px] leading-relaxed">
-                    Por seguridad, las contraseñas nunca se muestran, recuperan ni precargan en este formulario.
-                  </p>
                 </div>
 
                 {/* Active status checkbox */}

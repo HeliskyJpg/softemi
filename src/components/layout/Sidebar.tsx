@@ -73,8 +73,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
       label: 'Usuarios y roles',
       icon: UserCheck,
       matchViews: ['users'],
+      adminOnly: true,
     },
   ];
+
+  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin);
 
   const handleNavClick = (viewId: ActiveView) => {
     setActiveView(viewId, { clearHistory: true });
@@ -131,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
 
             {/* Navigation Items List */}
             <nav className="space-y-1">
-              {navItems.map((item) => {
+              {visibleNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive =
                   activeView === item.id ||
@@ -205,7 +208,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
                     activeView === 'profile' ? 'text-white/80' : 'text-[#7D6871]'
                   }`}
                 >
-                  {currentUser.role === 'Administrador' ? 'Admin' : 'Colaborador'} &bull; Mi Perfil
+                  {currentUser.role === 'Administrador' ? 'Admin' : 'Colaborador'} &bull; Mi perfil
                 </p>
               </div>
             </div>

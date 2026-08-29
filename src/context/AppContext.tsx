@@ -303,6 +303,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     view: ActiveView,
     options?: { clearHistory?: boolean; origin?: ActiveView }
   ) => {
+    // RBAC guard: 'users' view is strictly reserved for Administrators
+    if (view === 'users' && currentUser?.role !== 'Administrador') {
+      addToast('Acceso restringido: Se requieren permisos de Administrador para gestionar usuarios.', 'warning', 'No autorizado');
+      setActiveViewRaw('dashboard');
+      return;
+    }
+
     if (options?.clearHistory) {
       setNavigationHistory([]);
     } else if (
@@ -323,6 +330,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     view: ActiveView,
     options?: { orderId?: string | null; clientId?: string | null; origin?: ActiveView; clearHistory?: boolean }
   ) => {
+    // RBAC guard: 'users' view is strictly reserved for Administrators
+    if (view === 'users' && currentUser?.role !== 'Administrador') {
+      addToast('Acceso restringido: Se requieren permisos de Administrador para gestionar usuarios.', 'warning', 'No autorizado');
+      setActiveViewRaw('dashboard');
+      return;
+    }
+
     if (options?.clearHistory) {
       setNavigationHistory([]);
     } else {

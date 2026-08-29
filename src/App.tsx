@@ -57,7 +57,7 @@ const AppContent: React.FC = () => {
       case 'reports':
         return <ReportsView />;
       case 'users':
-        return <UsersView />;
+        return currentUser.role === 'Administrador' ? <UsersView /> : <DashboardView />;
       case 'profile':
         return <ProfileView />;
       default:
