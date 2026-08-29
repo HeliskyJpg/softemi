@@ -12,9 +12,23 @@ import {
 import { Client } from '../../types';
 
 export const ClientsView: React.FC = () => {
-  const { clients, orders, addClient, updateClient, navigateToOrderDetail, addToast } = useApp();
+  const {
+    clients,
+    orders,
+    addClient,
+    updateClient,
+    navigateToOrderDetail,
+    addToast,
+    clientsViewState,
+    setClientsViewState,
+  } = useApp();
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const { searchTerm } = clientsViewState;
+
+  const setSearchTerm = (term: string) => {
+    setClientsViewState((prev) => ({ ...prev, searchTerm: term }));
+  };
+
   const [showModal, setShowModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
@@ -338,7 +352,7 @@ export const ClientsView: React.FC = () => {
                       <button
                         onClick={() => {
                           setClientForHistory(null);
-                          navigateToOrderDetail(o.id);
+                          navigateToOrderDetail(o.id, 'clients');
                         }}
                         className="px-2.5 py-1 rounded-lg bg-white border border-[#F2D6DE] text-[#681B2B] font-bold text-[11px] hover:bg-[#681B2B] hover:text-white transition-colors cursor-pointer"
                       >

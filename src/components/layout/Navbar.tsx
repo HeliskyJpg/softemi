@@ -109,7 +109,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
               {currentUser.role === 'Administrador' && (
                 <button
                   onClick={() => {
-                    setActiveView('users');
+                    setActiveView('users', { clearHistory: true });
                     setShowUserDropdown(false);
                   }}
                   className="w-full px-4 py-2 text-left text-xs text-[#2C1E23] hover:text-[#681B2B] hover:bg-[#FBECEF]/50 flex items-center gap-2 font-medium cursor-pointer"

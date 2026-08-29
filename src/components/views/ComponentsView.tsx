@@ -48,17 +48,29 @@ export const ComponentsView: React.FC = () => {
     toggleComponentActive,
     stockAdjustmentLogs,
     addToast,
+    componentsViewState,
+    setComponentsViewState,
   } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
 
-  // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'catalog' | 'logs'>('catalog');
+  const { activeTab, searchTerm, categoryFilter, statusFilter } = componentsViewState;
 
-  // Search & Filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('Todas');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'low_stock' | 'out_of_stock' | 'inactive'>('all');
+  const setActiveTab = (tab: 'catalog' | 'logs') => {
+    setComponentsViewState((prev) => ({ ...prev, activeTab: tab }));
+  };
+
+  const setSearchTerm = (term: string) => {
+    setComponentsViewState((prev) => ({ ...prev, searchTerm: term }));
+  };
+
+  const setCategoryFilter = (cat: string) => {
+    setComponentsViewState((prev) => ({ ...prev, categoryFilter: cat }));
+  };
+
+  const setStatusFilter = (status: 'all' | 'available' | 'low_stock' | 'out_of_stock' | 'inactive') => {
+    setComponentsViewState((prev) => ({ ...prev, statusFilter: status }));
+  };
 
   // New/Edit Component Modal State
   const [showEditModal, setShowEditModal] = useState(false);

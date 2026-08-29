@@ -30,7 +30,7 @@ interface OrderDetailViewProps {
 export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => {
   const {
     orders,
-    setActiveView,
+    goBack,
     navigateToOrderEdit,
     changeOrderStatus,
     cancelOrder,
@@ -56,10 +56,10 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
         <h2 className="text-lg font-bold text-[#2C1E23]">Pedido no encontrado</h2>
         <p className="text-xs text-[#7D6871] mt-1">El pedido seleccionado no existe o fue eliminado.</p>
         <button
-          onClick={() => setActiveView('orders')}
+          onClick={() => goBack('orders')}
           className="mt-4 px-4 py-2 bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-bold rounded-xl cursor-pointer"
         >
-          Volver a Pedidos
+          Volver
         </button>
       </div>
     );
@@ -96,9 +96,9 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
         <div className="flex items-center gap-3">
           <button
             id="btn-order-detail-back"
-            onClick={() => setActiveView('orders')}
+            onClick={() => goBack('orders')}
             className="p-2 rounded-xl bg-white border border-[#F2D6DE] text-[#7D6871] hover:text-[#681B2B] hover:bg-[#FBECEF]/40 transition-colors cursor-pointer"
-            title="Volver a la lista"
+            title="Volver"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>

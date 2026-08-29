@@ -13,7 +13,7 @@ import { StatusBadge } from '../common/StatusBadge';
 import { OrderStatus } from '../../types';
 
 export const DashboardView: React.FC = () => {
-  const { orders, setActiveView, navigateToOrderDetail } = useApp();
+  const { orders, setActiveView, navigateToOrderDetail, navigateToOrderNew } = useApp();
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -151,7 +151,7 @@ export const DashboardView: React.FC = () => {
 
         <button
           id="btn-dashboard-new-order"
-          onClick={() => setActiveView('order-new')}
+          onClick={() => navigateToOrderNew('dashboard')}
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -255,7 +255,7 @@ export const DashboardView: React.FC = () => {
                       <td className="py-3.5 pr-1 text-right whitespace-nowrap">
                         <button
                           id={`btn-dashboard-view-${order.id}`}
-                          onClick={() => navigateToOrderDetail(order.id)}
+                          onClick={() => navigateToOrderDetail(order.id, 'dashboard')}
                           className="text-[#681B2B] hover:underline font-semibold text-xs cursor-pointer inline-flex items-center gap-1"
                         >
                           Ver

@@ -17,14 +17,54 @@ import { StatusBadge } from '../common/StatusBadge';
 import { OrderStatus } from '../../types';
 
 export const OrdersListView: React.FC = () => {
-  const { orders, setActiveView, navigateToOrderDetail, navigateToOrderEdit } = useApp();
+  const {
+    orders,
+    navigateToOrderNew,
+    navigateToOrderDetail,
+    navigateToOrderEdit,
+    ordersViewState,
+    setOrdersViewState,
+  } = useApp();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('Todos');
-  const [dateFilter, setDateFilter] = useState<string>('todos');
-  const [sortField, setSortField] = useState<'deliveryDate' | 'code' | 'total'>('deliveryDate');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [currentPage, setCurrentPage] = useState(1);
+  const {
+    searchTerm,
+    statusFilter,
+    dateFilter,
+    sortField,
+    sortDirection,
+    currentPage,
+  } = ordersViewState;
+
+  const setSearchTerm = (term: string) => {
+    setOrdersViewState((prev) => ({ ...prev, searchTerm: term }));
+  };
+
+  const setStatusFilter = (status: string) => {
+    setOrdersViewState((prev) => ({ ...prev, statusFilter: status }));
+  };
+
+  const setDateFilter = (date: string) => {
+    setOrdersViewState((prev) => ({ ...prev, dateFilter: date }));
+  };
+
+  const setSortField = (field: 'deliveryDate' | 'code' | 'total') => {
+    setOrdersViewState((prev) => ({ ...prev, sortField: field }));
+  };
+
+  const setSortDirection = (updater: 'asc' | 'desc' | ((prev: 'asc' | 'desc') => 'asc' | 'desc')) => {
+    setOrdersViewState((prev) => ({
+      ...prev,
+      sortDirection: typeof updater === 'function' ? updater(prev.sortDirection) : updater,
+    }));
+  };
+
+  const setCurrentPage = (updater: number | ((prev: number) => number)) => {
+    setOrdersViewState((prev) => ({
+      ...prev,
+      currentPage: typeof updater === 'function' ? updater(prev.currentPage) : updater,
+    }));
+  };
+
   const itemsPerPage = 6;
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -107,7 +147,7 @@ export const OrdersListView: React.FC = () => {
 
         <button
           id="btn-orders-new"
-          onClick={() => setActiveView('order-new')}
+          onClick={() => navigateToOrderNew('orders')}
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
         >
           <PlusCircle className="w-4 h-4 stroke-[2.2]" />
@@ -322,7 +362,7 @@ export const OrdersListView: React.FC = () => {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             id={`btn-view-order-${order.code}`}
-                            onClick={() => navigateToOrderDetail(order.id)}
+                            onClick={() => navigateToOrderDetail(order.id, 'orders')}
                             className="p-1.5 rounded-lg bg-[#FBECEF]/60 hover:bg-[#681B2B] hover:text-white text-[#681B2B] border border-[#F2D6DE] transition-colors cursor-pointer"
                             title="Ver Detalle del Pedido"
                           >
@@ -331,7 +371,7 @@ export const OrdersListView: React.FC = () => {
                           {order.status !== 'Cancelado' && order.status !== 'Entregado' && (
                             <button
                               id={`btn-edit-order-${order.code}`}
-                              onClick={() => navigateToOrderEdit(order.id)}
+                              onClick={() => navigateToOrderEdit(order.id, 'orders')}
                               className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-200 text-[#2C1E23] border border-gray-200 transition-colors cursor-pointer"
                               title="Editar Pedido"
                             >

@@ -10,11 +10,35 @@ import {
 import { StatusBadge } from '../common/StatusBadge';
 
 export const CalendarView: React.FC = () => {
-  const { orders, navigateToOrderDetail } = useApp();
+  const {
+    orders,
+    navigateToOrderDetail,
+    calendarViewState,
+    setCalendarViewState,
+  } = useApp();
 
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedDateFilter, setSelectedDateFilter] = useState<string>('');
+  const { selectedMonth, selectedYear, selectedDateFilter } = calendarViewState;
+
+  const setSelectedMonth = (updater: number | ((m: number) => number)) => {
+    setCalendarViewState((prev) => ({
+      ...prev,
+      selectedMonth: typeof updater === 'function' ? updater(prev.selectedMonth) : updater,
+    }));
+  };
+
+  const setSelectedYear = (updater: number | ((y: number) => number)) => {
+    setCalendarViewState((prev) => ({
+      ...prev,
+      selectedYear: typeof updater === 'function' ? updater(prev.selectedYear) : updater,
+    }));
+  };
+
+  const setSelectedDateFilter = (filter: string) => {
+    setCalendarViewState((prev) => ({
+      ...prev,
+      selectedDateFilter: filter,
+    }));
+  };
 
   const months = [
     'Enero',
@@ -179,7 +203,7 @@ export const CalendarView: React.FC = () => {
                         key={ord.id}
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigateToOrderDetail(ord.id);
+                          navigateToOrderDetail(ord.id, 'calendar');
                         }}
                         className="text-[9px] font-semibold truncate px-1.5 py-0.5 rounded bg-[#FBECEF]/40 text-[#681B2B] border border-[#F2D6DE]/60 hover:bg-[#681B2B] hover:text-white transition-colors"
                         title={`${ord.code} - ${ord.clientName}`}
@@ -246,7 +270,7 @@ export const CalendarView: React.FC = () => {
                         {order.deliveryDate} ({order.deliveryTime || '--:--'})
                       </span>
                       <button
-                        onClick={() => navigateToOrderDetail(order.id)}
+                        onClick={() => navigateToOrderDetail(order.id, 'calendar')}
                         className="font-bold text-[#681B2B] hover:underline flex items-center gap-0.5 cursor-pointer"
                       >
                         <Eye className="w-3 h-3" />

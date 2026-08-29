@@ -11,6 +11,11 @@ import {
   ToastMessage,
   StockAdjustmentLog,
   OrderHistoryEntry,
+  OrdersViewState,
+  CalendarViewState,
+  ComponentsViewState,
+  ClientsViewState,
+  NavigationHistoryEntry,
 } from '../types';
 import {
   INITIAL_USERS,
@@ -36,11 +41,29 @@ interface AppContextType {
 
   // Navigation
   activeView: ActiveView;
-  setActiveView: (view: ActiveView) => void;
+  setActiveView: (view: ActiveView, options?: { clearHistory?: boolean; origin?: ActiveView }) => void;
   selectedOrderId: string | null;
   setSelectedOrderId: (id: string | null) => void;
-  navigateToOrderDetail: (orderId: string) => void;
-  navigateToOrderEdit: (orderId: string) => void;
+  navigationHistory: NavigationHistoryEntry[];
+  navigateToView: (
+    view: ActiveView,
+    options?: { orderId?: string | null; origin?: ActiveView; clearHistory?: boolean }
+  ) => void;
+  navigateToOrderDetail: (orderId: string, origin?: ActiveView) => void;
+  navigateToOrderEdit: (orderId: string, origin?: ActiveView) => void;
+  navigateToOrderNew: (origin?: ActiveView) => void;
+  goBack: (fallbackView?: ActiveView) => void;
+  canGoBack: boolean;
+
+  // View States Preservation
+  ordersViewState: OrdersViewState;
+  setOrdersViewState: React.Dispatch<React.SetStateAction<OrdersViewState>>;
+  calendarViewState: CalendarViewState;
+  setCalendarViewState: React.Dispatch<React.SetStateAction<CalendarViewState>>;
+  componentsViewState: ComponentsViewState;
+  setComponentsViewState: React.Dispatch<React.SetStateAction<ComponentsViewState>>;
+  clientsViewState: ClientsViewState;
+  setClientsViewState: React.Dispatch<React.SetStateAction<ClientsViewState>>;
 
   // Orders
   orders: Order[];
@@ -213,9 +236,111 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   });
 
-  // Navigation State
-  const [activeView, setActiveView] = useState<ActiveView>('components');
+  // Navigation & History State
+  const [activeView, setActiveViewRaw] = useState<ActiveView>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [navigationHistory, setNavigationHistory] = useState<NavigationHistoryEntry[]>([]);
+
+  // Persistent View States across tab/view switches & returns
+  const [ordersViewState, setOrdersViewState] = useState<OrdersViewState>({
+    searchTerm: '',
+    statusFilter: 'Todos',
+    dateFilter: 'todos',
+    sortField: 'deliveryDate',
+    sortDirection: 'asc',
+    currentPage: 1,
+  });
+
+  const [calendarViewState, setCalendarViewState] = useState<CalendarViewState>({
+    selectedMonth: new Date().getMonth(),
+    selectedYear: new Date().getFullYear(),
+    selectedDateFilter: '',
+  });
+
+  const [componentsViewState, setComponentsViewState] = useState<ComponentsViewState>({
+    activeTab: 'catalog',
+    searchTerm: '',
+    categoryFilter: 'Todas',
+    statusFilter: 'all',
+  });
+
+  const [clientsViewState, setClientsViewState] = useState<ClientsViewState>({
+    searchTerm: '',
+  });
+
+  // Navigation Methods
+  const setActiveView = (
+    view: ActiveView,
+    options?: { clearHistory?: boolean; origin?: ActiveView }
+  ) => {
+    if (options?.clearHistory) {
+      setNavigationHistory([]);
+    } else if (options?.origin || (activeView !== view && view !== 'order-detail' && view !== 'order-edit' && view !== 'order-new')) {
+      // Direct menu navigation switches base module
+      setNavigationHistory([]);
+    }
+    setActiveViewRaw(view);
+  };
+
+  const navigateToView = (
+    view: ActiveView,
+    options?: { orderId?: string | null; origin?: ActiveView; clearHistory?: boolean }
+  ) => {
+    if (options?.clearHistory) {
+      setNavigationHistory([]);
+    } else {
+      const sourceView = options?.origin || activeView;
+      setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+    }
+    setSelectedOrderId(options?.orderId ?? null);
+    setActiveViewRaw(view);
+  };
+
+  const navigateToOrderDetail = (orderId: string, origin?: ActiveView) => {
+    const sourceView = origin || activeView;
+    setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+    setSelectedOrderId(orderId);
+    setActiveViewRaw('order-detail');
+  };
+
+  const navigateToOrderEdit = (orderId: string, origin?: ActiveView) => {
+    const sourceView = origin || activeView;
+    setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+    setSelectedOrderId(orderId);
+    setActiveViewRaw('order-edit');
+  };
+
+  const navigateToOrderNew = (origin?: ActiveView) => {
+    const sourceView = origin || activeView;
+    setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+    setSelectedOrderId(null);
+    setActiveViewRaw('order-new');
+  };
+
+  const goBack = (fallbackView: ActiveView = 'orders') => {
+    if (navigationHistory.length > 0) {
+      const historyCopy = [...navigationHistory];
+      let prev = historyCopy.pop();
+      // Avoid looping if popped entry is identical to current active view
+      while (prev && prev.view === activeView && historyCopy.length > 0) {
+        prev = historyCopy.pop();
+      }
+
+      if (prev && prev.view !== activeView) {
+        setNavigationHistory(historyCopy);
+        setSelectedOrderId(prev.orderId ?? null);
+        setActiveViewRaw(prev.view);
+        return;
+      }
+    }
+
+    // Fallback when no history exists
+    setNavigationHistory([]);
+    setSelectedOrderId(null);
+    setActiveViewRaw(fallbackView);
+  };
+
+  const canGoBack = navigationHistory.length > 0;
 
   // Toast System State
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -378,17 +503,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     );
     const newStatus = !userToToggle.active ? 'activado' : 'desactivado';
     addToast(`Usuario ${userToToggle.name} ${newStatus} correctamente.`, 'info');
-  };
-
-  // Navigation Helpers
-  const navigateToOrderDetail = (orderId: string) => {
-    setSelectedOrderId(orderId);
-    setActiveView('order-detail');
-  };
-
-  const navigateToOrderEdit = (orderId: string) => {
-    setSelectedOrderId(orderId);
-    setActiveView('order-edit');
   };
 
   // Clients
@@ -691,7 +805,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     addToast(`Pedido ${code} guardado correctamente y componentes reservados.`, 'success', '¡Éxito!');
     setSelectedOrderId(orderId);
-    setActiveView('order-detail');
+    setActiveViewRaw('order-detail');
 
     return { success: true, orderId };
   };
@@ -806,7 +920,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setOrders((prev) => prev.map((o) => (o.id === id ? updatedOrder : o)));
     addToast(`Pedido ${existingOrder.code} actualizado y reserva ajustada correctamente.`, 'success', 'Actualización exitosa');
     setSelectedOrderId(id);
-    setActiveView('order-detail');
+    
+    // Pop the 'order-detail' entry if it was pushed when clicking edit, so back from detail returns to the origin view
+    setNavigationHistory((prev) => {
+      const copy = [...prev];
+      if (copy.length > 0 && copy[copy.length - 1].view === 'order-detail') {
+        copy.pop();
+      }
+      return copy;
+    });
+    setActiveViewRaw('order-detail');
 
     return { success: true };
   };
@@ -971,8 +1094,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setActiveView,
         selectedOrderId,
         setSelectedOrderId,
+        navigationHistory,
+        navigateToView,
         navigateToOrderDetail,
         navigateToOrderEdit,
+        navigateToOrderNew,
+        goBack,
+        canGoBack,
+
+        ordersViewState,
+        setOrdersViewState,
+        calendarViewState,
+        setCalendarViewState,
+        componentsViewState,
+        setComponentsViewState,
+        clientsViewState,
+        setClientsViewState,
 
         orders,
         createOrder,

@@ -127,3 +127,34 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'warning' | 'info';
   timestamp: number;
 }
+
+export interface OrdersViewState {
+  searchTerm: string;
+  statusFilter: string;
+  dateFilter: string;
+  sortField: 'deliveryDate' | 'code' | 'total';
+  sortDirection: 'asc' | 'desc';
+  currentPage: number;
+}
+
+export interface CalendarViewState {
+  selectedMonth: number;
+  selectedYear: number;
+  selectedDateFilter: string;
+}
+
+export interface ComponentsViewState {
+  activeTab: 'catalog' | 'logs';
+  searchTerm: string;
+  categoryFilter: string;
+  statusFilter: 'all' | 'available' | 'low_stock' | 'out_of_stock' | 'inactive';
+}
+
+export interface ClientsViewState {
+  searchTerm: string;
+}
+
+export interface NavigationHistoryEntry {
+  view: ActiveView;
+  orderId?: string | null;
+}

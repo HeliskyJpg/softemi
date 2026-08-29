@@ -37,7 +37,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     createOrder,
     updateOrder,
     addClient,
-    setActiveView,
+    goBack,
     navigateToOrderDetail,
     addToast,
   } = useApp();
@@ -288,7 +288,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
         <div className="flex items-center gap-3">
           <button
             id="btn-order-form-back"
-            onClick={() => setActiveView(isEditing ? 'order-detail' : 'orders')}
+            onClick={() => goBack(isEditing ? 'order-detail' : 'orders')}
             className="p-2 rounded-xl bg-white border border-[#F2D6DE] text-[#7D6871] hover:text-[#681B2B] hover:bg-[#FBECEF]/40 transition-colors cursor-pointer"
             title="Volver"
           >
@@ -744,7 +744,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
             <button
               id="btn-order-form-cancel"
               type="button"
-              onClick={() => setActiveView(isEditing ? 'order-detail' : 'orders')}
+              onClick={() => goBack(isEditing ? 'order-detail' : 'orders')}
               disabled={isSubmitting}
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-50 text-sm font-medium transition-colors cursor-pointer"
             >

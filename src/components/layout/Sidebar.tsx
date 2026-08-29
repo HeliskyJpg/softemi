@@ -20,7 +20,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
-  const { activeView, setActiveView, currentUser, logout } = useApp();
+  const { activeView, setActiveView, navigateToOrderNew, currentUser, logout } = useApp();
 
   if (!currentUser) return null;
 
@@ -77,7 +77,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
   ];
 
   const handleNavClick = (viewId: ActiveView) => {
-    setActiveView(viewId);
+    setActiveView(viewId, { clearHistory: true });
+    onCloseMobile();
+  };
+
+  const handleNewOrderClick = () => {
+    navigateToOrderNew(activeView);
     onCloseMobile();
   };
 
@@ -161,7 +166,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
           {/* Primary Action Button */}
           <button
             id="btn-sidebar-new-order"
-            onClick={() => handleNavClick('order-new')}
+            onClick={handleNewOrderClick}
             className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
