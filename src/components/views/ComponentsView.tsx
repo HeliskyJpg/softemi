@@ -24,6 +24,35 @@ import {
 } from 'lucide-react';
 import { ComponentCategory, ComponentItem, ComponentUnit } from '../../types';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { AutocompleteSelect } from '../common/AutocompleteSelect';
+import {
+  ArrowDownLeft,
+} from 'lucide-react';
+
+export const formatUnitCount = (count: number, unit?: string): string => {
+  const normalized = (unit || 'unidad').trim();
+  const lower = normalized.toLowerCase();
+
+  if (lower === 'unidad' || lower === 'unidades') {
+    return count === 1 ? '1 unidad' : `${count} unidades`;
+  }
+  if (lower === 'tallo' || lower === 'tallos') {
+    return count === 1 ? '1 tallo' : `${count} tallos`;
+  }
+  if (lower === 'rollo' || lower === 'rollos') {
+    return count === 1 ? '1 rollo' : `${count} rollos`;
+  }
+  if (lower === 'paquete' || lower === 'paquetes') {
+    return count === 1 ? '1 paquete' : `${count} paquetes`;
+  }
+  if (lower === 'docena' || lower === 'docenas') {
+    return count === 1 ? '1 docena' : `${count} docenas`;
+  }
+  if (lower === 'metro' || lower === 'metros') {
+    return count === 1 ? '1 metro' : `${count} metros`;
+  }
+  return count === 1 ? `1 ${normalized}` : `${count} ${normalized}`;
+};
 
 const PRESET_ADJUSTMENT_REASONS = [
   'Reabastecimiento / Compra de insumos',
@@ -88,13 +117,19 @@ export const ComponentsView: React.FC = () => {
   const [formDescription, setFormDescription] = useState('');
   const [formActive, setFormActive] = useState(true);
 
-  // Stock Adjustment Modal State (Independent Action)
+  // Stock Adjustment Modal State (Refined UI / UX)
   const [showStockModal, setShowStockModal] = useState(false);
   const [stockComponent, setStockComponent] = useState<ComponentItem | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<'Entrada' | 'Salida'>('Entrada');
-  const [adjustmentQty, setAdjustmentQty] = useState<number>(10);
+  const [adjustmentQtyStr, setAdjustmentQtyStr] = useState<string>('10');
   const [adjustmentReason, setAdjustmentReason] = useState<string>(PRESET_ADJUSTMENT_REASONS[0]);
   const [adjustmentObservation, setAdjustmentObservation] = useState<string>('');
+  const [stockModalErrors, setStockModalErrors] = useState<{
+    quantity?: string;
+    reason?: string;
+    observation?: string;
+    general?: string;
+  }>({});
 
   // Deactivate/Activate Confirm Modal State
   const [showConfirmToggleModal, setShowConfirmToggleModal] = useState(false);
@@ -285,9 +320,10 @@ export const ComponentsView: React.FC = () => {
   const handleOpenStockAdjust = (comp: ComponentItem) => {
     setStockComponent(comp);
     setAdjustmentType('Entrada');
-    setAdjustmentQty(10);
+    setAdjustmentQtyStr('10');
     setAdjustmentReason(PRESET_ADJUSTMENT_REASONS[0]);
     setAdjustmentObservation('');
+    setStockModalErrors({});
     setShowStockModal(true);
   };
 
@@ -295,30 +331,50 @@ export const ComponentsView: React.FC = () => {
   const handleConfirmStockAdjust = (e: React.FormEvent) => {
     e.preventDefault();
     if (!stockComponent) return;
-    if (adjustmentQty <= 0) {
-      addToast('La cantidad a ajustar debe ser mayor a 0.', 'error');
+
+    const errors: { quantity?: string; reason?: string; observation?: string; general?: string } = {};
+
+    const qty = parseInt(adjustmentQtyStr, 10);
+    if (!adjustmentQtyStr.trim() || isNaN(qty) || qty <= 0) {
+      errors.quantity = 'Ingrese una cantidad válida mayor a 0.';
+    } else if (adjustmentType === 'Salida') {
+      const available = getAvailableStock(stockComponent);
+      if (qty > available) {
+        const availableText = formatUnitCount(available, stockComponent.unit);
+        const reservedText =
+          stockComponent.reservedStock > 0
+            ? ` (${formatUnitCount(stockComponent.reservedStock, stockComponent.unit)} están reservadas en pedidos).`
+            : '.';
+        errors.quantity = `No puede retirar más de ${availableText} disponibles${reservedText}`;
+      }
+    }
+
+    if (!adjustmentReason.trim()) {
+      errors.reason = 'Seleccione un motivo.';
+    }
+
+    if (adjustmentObservation.length > 250) {
+      errors.observation = 'El detalle no puede superar los 250 caracteres.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setStockModalErrors(errors);
       return;
     }
 
-    const available = getAvailableStock(stockComponent);
-    if (adjustmentType === 'Salida' && adjustmentQty > available) {
-      addToast(
-        `No es posible descontar ${adjustmentQty} ${stockComponent.unit}. Solo hay ${available} disponibles (existen ${stockComponent.reservedStock} reservadas para pedidos).`,
-        'error',
-        'Ajuste rechazado'
-      );
-      return;
-    }
+    setStockModalErrors({});
 
     const res = adjustComponentStock(stockComponent.id, {
       type: adjustmentType,
-      quantity: Number(adjustmentQty),
-      reason: adjustmentReason,
+      quantity: qty,
+      reason: adjustmentReason.trim(),
       observation: adjustmentObservation.trim(),
     });
 
     if (res.success) {
       setShowStockModal(false);
+    } else {
+      setStockModalErrors({ general: res.error || 'No fue posible guardar el ajuste. Intente nuevamente.' });
     }
   };
 
@@ -1030,185 +1086,306 @@ export const ComponentsView: React.FC = () => {
       )}
 
       {/* ============================================================ */}
-      {/* MODAL 2: AJUSTAR STOCK (INDEPENDENT ACTION) */}
+      {/* MODAL 2: AJUSTAR STOCK (REFINED MODAL) */}
       {/* ============================================================ */}
       {showStockModal && stockComponent && (
         <div
           id="modal-adjust-stock"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90vh] overflow-y-auto">
+            {/* Close button */}
             <button
+              id="btn-close-adjust-stock-modal"
               onClick={() => setShowStockModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
+              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+              title="Cerrar modal"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 mb-1">
-              <div className="p-2 rounded-xl bg-[#FBECEF] text-[#681B2B]">
-                <SlidersHorizontal className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-[#2C1E23]">Ajustar Stock de Insumo</h3>
-                <p className="text-xs text-[#7D6871]">{stockComponent.name} ({stockComponent.category})</p>
-              </div>
+            {/* Modal Header */}
+            <div className="pr-8 mb-3.5">
+              <h3 className="text-lg font-bold text-[#2C1E23] tracking-tight">
+                Ajustar stock
+              </h3>
+              <p className="text-xs text-[#7D6871] mt-0.5 font-medium truncate">
+                {stockComponent.name} · {stockComponent.category}
+              </p>
             </div>
 
-            {/* Current Stock Indicators */}
-            <div className="grid grid-cols-3 gap-2 my-4 text-center text-xs">
-              <div className="p-2 rounded-xl bg-gray-50 border border-gray-200">
-                <span className="text-[#7D6871] block text-[10px] font-medium">Físico Actual</span>
-                <span className="text-sm font-extrabold text-[#2C1E23]">
-                  {stockComponent.physicalStock} {stockComponent.unit}
+            {/* Stock Actual Context Row (Compact without independent cards) */}
+            <div className="bg-[#FBECEF]/40 border border-[#F2D6DE]/70 rounded-xl px-3.5 py-2.5 text-xs flex flex-wrap items-center justify-between gap-y-1 mb-4">
+              <span className="text-[#7D6871] font-semibold text-xs">Stock actual</span>
+              <div className="flex items-center gap-2 sm:gap-2.5 font-medium text-xs text-[#2C1E23]">
+                <span>
+                  Total <strong className="font-bold text-[#2C1E23]">{stockComponent.physicalStock}</strong>
                 </span>
-              </div>
-              <div className="p-2 rounded-xl bg-amber-50 border border-amber-200">
-                <span className="text-amber-800 block text-[10px] font-medium">Reservado</span>
-                <span className="text-sm font-extrabold text-amber-800">
-                  {stockComponent.reservedStock} {stockComponent.unit}
+                <span className="text-[#D9A3B5] font-bold">·</span>
+                <span>
+                  Reservado <strong className="font-bold text-amber-800">{stockComponent.reservedStock}</strong>
                 </span>
-              </div>
-              <div className="p-2 rounded-xl bg-[#ECFDF5] border border-[#A7F3D0]">
-                <span className="text-[#047857] block text-[10px] font-medium">Disponible</span>
-                <span className="text-sm font-extrabold text-[#047857]">
-                  {getAvailableStock(stockComponent)} {stockComponent.unit}
+                <span className="text-[#D9A3B5] font-bold">·</span>
+                <span>
+                  Disponible <strong className="font-bold text-emerald-800">{getAvailableStock(stockComponent)}</strong>
                 </span>
               </div>
             </div>
 
             <form onSubmit={handleConfirmStockAdjust} className="space-y-4">
-              {/* Type: Entrada vs Salida */}
+              {/* 1. Tipo de Movimiento */}
               <div>
                 <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                  Tipo de Movimiento <span className="text-red-500">*</span>
+                  Tipo de movimiento <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2.5">
+                  {/* Entrada */}
                   <button
                     type="button"
-                    onClick={() => setAdjustmentType('Entrada')}
-                    className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    id="btn-type-entrada"
+                    onClick={() => {
+                      setAdjustmentType('Entrada');
+                      setStockModalErrors((prev) => ({ ...prev, quantity: undefined }));
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                       adjustmentType === 'Entrada'
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                        : 'bg-white text-[#7D6871] border-gray-200 hover:bg-gray-50'
+                        ? 'bg-emerald-50/70 border-emerald-600 ring-1 ring-emerald-600/30 shadow-2xs'
+                        : 'bg-white border-[#F2D6DE] hover:border-[#D9A3B5] hover:bg-[#FBECEF]/20'
                     }`}
                   >
-                    <ArrowUpRight className="w-4 h-4" />
-                    Entrada (+)
+                    <div className="min-w-0 pr-1.5">
+                      <span
+                        className={`block text-xs sm:text-sm font-bold ${
+                          adjustmentType === 'Entrada' ? 'text-emerald-950' : 'text-[#2C1E23]'
+                        }`}
+                      >
+                        Entrada
+                      </span>
+                      <span className="block text-[11px] text-[#7D6871] mt-0.5 font-normal">
+                        Aumenta existencias
+                      </span>
+                    </div>
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                        adjustmentType === 'Entrada'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-gray-100 text-[#7D6871]'
+                      }`}
+                    >
+                      <ArrowDownLeft className="w-3.5 h-3.5" />
+                    </div>
                   </button>
 
+                  {/* Salida */}
                   <button
                     type="button"
-                    onClick={() => setAdjustmentType('Salida')}
-                    className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition-all cursor-pointer ${
+                    id="btn-type-salida"
+                    onClick={() => {
+                      setAdjustmentType('Salida');
+                      setStockModalErrors((prev) => ({ ...prev, quantity: undefined }));
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                       adjustmentType === 'Salida'
-                        ? 'bg-[#DC2626] text-white border-[#DC2626] shadow-xs'
-                        : 'bg-white text-[#7D6871] border-gray-200 hover:bg-gray-50'
+                        ? 'bg-red-50/70 border-red-500 ring-1 ring-red-500/30 shadow-2xs'
+                        : 'bg-white border-[#F2D6DE] hover:border-[#D9A3B5] hover:bg-[#FBECEF]/20'
                     }`}
                   >
-                    <ArrowDownRight className="w-4 h-4" />
-                    Salida (−)
+                    <div className="min-w-0 pr-1.5">
+                      <span
+                        className={`block text-xs sm:text-sm font-bold ${
+                          adjustmentType === 'Salida' ? 'text-red-950' : 'text-[#2C1E23]'
+                        }`}
+                      >
+                        Salida
+                      </span>
+                      <span className="block text-[11px] text-[#7D6871] mt-0.5 font-normal">
+                        Reduce existencias
+                      </span>
+                    </div>
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                        adjustmentType === 'Salida'
+                          ? 'bg-[#DC2626] text-white'
+                          : 'bg-gray-100 text-[#7D6871]'
+                      }`}
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </div>
                   </button>
                 </div>
               </div>
 
-              {/* Quantity */}
+              {/* 2. Cantidad */}
               <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Cantidad a {adjustmentType === 'Entrada' ? 'Ingresar' : 'Retirar'} ({stockComponent.unit}) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="input-adjustment-quantity"
-                  type="number"
-                  min={1}
-                  required
-                  value={adjustmentQty}
-                  onChange={(e) => setAdjustmentQty(parseInt(e.target.value) || 1)}
-                  className="w-full px-3.5 py-2.5 text-base font-extrabold text-center rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
-                />
-              </div>
-
-              {/* Reason */}
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Motivo del Ajuste <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={adjustmentReason}
-                  onChange={(e) => setAdjustmentReason(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium cursor-pointer"
+                <label
+                  htmlFor="input-adjustment-quantity"
+                  className="block text-xs font-bold text-[#2C1E23] mb-1"
                 >
-                  {PRESET_ADJUSTMENT_REASONS.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
+                  Cantidad ({stockComponent.unit || 'unidades'}) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="input-adjustment-quantity"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={adjustmentQtyStr}
+                    onKeyDown={(e) => {
+                      if (['-', '+', '.', ',', 'e', 'E'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const sanitized = e.target.value.replace(/[^0-9]/g, '');
+                      setAdjustmentQtyStr(sanitized);
+                      if (stockModalErrors.quantity) {
+                        setStockModalErrors((prev) => ({ ...prev, quantity: undefined }));
+                      }
+                    }}
+                    placeholder="Ej. 10"
+                    className={`w-full px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl border bg-white outline-none transition-all ${
+                      stockModalErrors.quantity
+                        ? 'border-red-400 ring-2 ring-red-100 text-red-950'
+                        : 'border-[#F2D6DE] focus:border-[#681B2B] focus:ring-2 focus:ring-[#681B2B]/15 text-[#2C1E23]'
+                    }`}
+                  />
+                </div>
+                {stockModalErrors.quantity && (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1.5 flex items-center gap-1">
+                    {stockModalErrors.quantity}
+                  </p>
+                )}
               </div>
 
-              {/* Additional Observation */}
+              {/* 3. Motivo del Ajuste (Autocomplete) */}
               <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Detalle / Nota adicional (Opcional)
-                </label>
-                <input
-                  type="text"
-                  value={adjustmentObservation}
-                  onChange={(e) => setAdjustmentObservation(e.target.value)}
-                  placeholder="Ej. Factura #412, lote de Rosas rojas premium..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                <AutocompleteSelect
+                  id="select-adjustment-reason"
+                  label="Motivo del ajuste"
+                  required
+                  options={PRESET_ADJUSTMENT_REASONS}
+                  value={adjustmentReason}
+                  onChange={(val) => {
+                    setAdjustmentReason(val);
+                    if (stockModalErrors.reason) {
+                      setStockModalErrors((prev) => ({ ...prev, reason: undefined }));
+                    }
+                  }}
+                  error={!!stockModalErrors.reason}
+                  errorMessage={stockModalErrors.reason}
+                  placeholder="Seleccione o busque un motivo..."
                 />
               </div>
 
-              {/* Live Preview Card */}
-              {(() => {
-                const currentPhysical = stockComponent.physicalStock;
-                const reserved = stockComponent.reservedStock;
-                const newPhysical =
-                  adjustmentType === 'Entrada'
-                    ? currentPhysical + (adjustmentQty || 0)
-                    : currentPhysical - (adjustmentQty || 0);
-                const newAvailable = Math.max(0, newPhysical - reserved);
-                const isInvalidSalida = adjustmentType === 'Salida' && (adjustmentQty || 0) > getAvailableStock(stockComponent);
-
-                return (
-                  <div
-                    className={`p-3.5 rounded-xl border text-xs space-y-1.5 ${
-                      isInvalidSalida
-                        ? 'bg-red-50 border-red-200 text-red-900'
-                        : 'bg-[#FBECEF]/30 border-[#F2D6DE]'
+              {/* 4. Detalle adicional (Textarea + Character Counter) */}
+              <div>
+                <label
+                  htmlFor="textarea-adjustment-observation"
+                  className="block text-xs font-bold text-[#2C1E23] mb-1"
+                >
+                  Detalle adicional (opcional)
+                </label>
+                <textarea
+                  id="textarea-adjustment-observation"
+                  rows={3}
+                  maxLength={250}
+                  value={adjustmentObservation}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAdjustmentObservation(val);
+                    if (val.length <= 250 && stockModalErrors.observation) {
+                      setStockModalErrors((prev) => ({ ...prev, observation: undefined }));
+                    }
+                  }}
+                  placeholder="Explicación del ajuste, referencia, observaciones o incidencias..."
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border bg-white outline-none transition-all resize-none ${
+                    stockModalErrors.observation
+                      ? 'border-red-400 ring-2 ring-red-100'
+                      : 'border-[#F2D6DE] focus:border-[#681B2B] focus:ring-2 focus:ring-[#681B2B]/15'
+                  }`}
+                />
+                <div className="flex items-center justify-between mt-1 text-[11px]">
+                  {stockModalErrors.observation ? (
+                    <span className="text-red-600 font-semibold">
+                      {stockModalErrors.observation}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <span
+                    className={`ml-auto font-medium transition-colors ${
+                      adjustmentObservation.length >= 250
+                        ? 'text-red-600 font-bold'
+                        : adjustmentObservation.length >= 230
+                        ? 'text-amber-700 font-semibold'
+                        : 'text-[#7D6871]'
                     }`}
                   >
-                    <div className="flex items-center justify-between font-bold">
-                      <span>Resultado proyectado:</span>
-                      <span className={isInvalidSalida ? 'text-red-700' : 'text-[#681B2B]'}>
-                        Físico: {newPhysical} | Disponible: {newAvailable} {stockComponent.unit}
+                    {adjustmentObservation.length} / 250 caracteres
+                  </span>
+                </div>
+              </div>
+
+              {/* 5. Compact Result Preview (Clean without large cards) */}
+              {(() => {
+                const qty = parseInt(adjustmentQtyStr, 10);
+                const available = getAvailableStock(stockComponent);
+                const isValidNumber = !isNaN(qty) && qty > 0;
+                const isExceedingSalida =
+                  adjustmentType === 'Salida' && isValidNumber && qty > available;
+
+                if (!isValidNumber || isExceedingSalida) {
+                  return null;
+                }
+
+                const newPhysical =
+                  adjustmentType === 'Entrada'
+                    ? stockComponent.physicalStock + qty
+                    : stockComponent.physicalStock - qty;
+                const newAvailable = Math.max(0, newPhysical - stockComponent.reservedStock);
+
+                return (
+                  <div className="px-3.5 py-2.5 rounded-xl bg-gray-50/90 border border-gray-200/80 flex items-center justify-between text-xs text-[#2C1E23]">
+                    <span className="text-[#7D6871] font-medium">
+                      Resultado después del ajuste
+                    </span>
+                    <div className="flex items-center gap-2.5 text-xs font-semibold">
+                      <span>
+                        Total <strong className="font-bold text-[#681B2B]">{newPhysical}</strong>
+                      </span>
+                      <span className="text-gray-300 font-bold">·</span>
+                      <span>
+                        Disponible{' '}
+                        <strong className="font-bold text-emerald-800">{newAvailable}</strong>
                       </span>
                     </div>
-                    {isInvalidSalida && (
-                      <p className="text-[11px] text-red-700 font-semibold">
-                        ⚠️ Error: No se pueden retirar {adjustmentQty} {stockComponent.unit} porque existen {reserved} unidades reservadas para pedidos.
-                      </p>
-                    )}
                   </div>
                 );
               })()}
 
-              {/* Actions */}
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#F2D6DE]/40">
+              {/* General error message if any */}
+              {stockModalErrors.general && (
+                <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-medium">
+                  {stockModalErrors.general}
+                </div>
+              )}
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F2D6DE]/40">
                 <button
                   type="button"
+                  id="btn-cancel-stock-adjust"
                   onClick={() => setShowStockModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-100 rounded-xl cursor-pointer transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-confirm-stock-adjust"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer transition-all"
                 >
-                  Confirmar y Guardar Ajuste
+                  Guardar ajuste
                 </button>
               </div>
             </form>
