@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
       id: 'clients',
       label: 'Clientes',
       icon: Users,
-      matchViews: ['clients'],
+      matchViews: ['clients', 'client-detail'],
     },
     {
       id: 'components',

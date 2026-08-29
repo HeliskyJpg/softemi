@@ -7,7 +7,11 @@ import {
   Edit2,
   Phone,
   ShoppingBag,
+  Eye,
+  Heart,
   X,
+  ChevronRight,
+  UserCheck,
 } from 'lucide-react';
 import { Client } from '../../types';
 
@@ -17,7 +21,7 @@ export const ClientsView: React.FC = () => {
     orders,
     addClient,
     updateClient,
-    navigateToOrderDetail,
+    navigateToClientDetail,
     addToast,
     clientsViewState,
     setClientsViewState,
@@ -36,9 +40,6 @@ export const ClientsView: React.FC = () => {
   const [formPhone, setFormPhone] = useState('');
   const [formNotes, setFormNotes] = useState('');
 
-  // Selected client for order history modal
-  const [clientForHistory, setClientForHistory] = useState<Client | null>(null);
-
   // Filter clients
   const filteredClients = useMemo(() => {
     return clients.filter((cli) => {
@@ -50,6 +51,13 @@ export const ClientsView: React.FC = () => {
       );
     });
   }, [clients, searchTerm]);
+
+  // Overall Statistics for visual hierarchy
+  const totalClients = clients.length;
+  const clientsWithOrders = useMemo(() => {
+    return clients.filter((c) => orders.some((o) => o.clientId === c.id)).length;
+  }, [clients, orders]);
+  const totalOrdersCount = orders.length;
 
   // Open Create Modal
   const handleOpenCreate = () => {
@@ -83,49 +91,96 @@ export const ClientsView: React.FC = () => {
         phone: formPhone.trim() || 'No registrado',
         notes: formNotes.trim(),
       });
+      addToast('Cliente actualizado correctamente.', 'success');
     } else {
       addClient({
         name: formName.trim(),
         phone: formPhone.trim() || 'No registrado',
         notes: formNotes.trim(),
       });
+      addToast('Cliente registrado correctamente.', 'success');
     }
     setShowModal(false);
   };
 
-  // Get orders of a client
-  const clientOrders = useMemo(() => {
-    if (!clientForHistory) return [];
-    return orders.filter((o) => o.clientId === clientForHistory.id);
-  }, [orders, clientForHistory]);
-
   return (
     <div id="clients-view-container" className="space-y-6 pb-16">
-      {/* Header */}
+      {/* Header with Clear Visual Hierarchy & Primary Action */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight flex items-center gap-2">
-            <Users className="w-6 h-6 text-[#681B2B]" />
-            Directorio de Clientes
-          </h1>
-          <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5">
-            Registro de contactos frecuentes, preferencias florales e historial de pedidos.
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#681B2B] text-white flex items-center justify-center shadow-xs">
+              <Users className="w-4 h-4" />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-[#2C1E23] tracking-tight">
+              Directorio de Clientes
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-[#7D6871] mt-1">
+            Gestione información de contacto, notas y acceda a la ficha detallada de cada cliente.
           </p>
         </div>
 
+        {/* Primary Action Button */}
         <button
           id="btn-new-client"
+          type="button"
           onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-sm shadow-xs transition-all cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
-          Nuevo Cliente
+          <span>Nuevo Cliente</span>
         </button>
       </div>
 
+      {/* Summary Metrics Banner */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#FBECEF] text-[#681B2B] flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block truncate">
+              Total Clientes
+            </span>
+            <span className="text-base sm:text-xl font-extrabold text-[#2C1E23]">
+              {totalClients}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#ECFDF5] text-[#059669] flex items-center justify-center shrink-0">
+            <UserCheck className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block truncate">
+              Con Pedidos
+            </span>
+            <span className="text-base sm:text-xl font-extrabold text-[#059669]">
+              {clientsWithOrders}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#FBECEF] text-[#681B2B] flex items-center justify-center shrink-0">
+            <ShoppingBag className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-xs font-semibold text-[#7D6871] uppercase tracking-wider block truncate">
+              Pedidos Totales
+            </span>
+            <span className="text-base sm:text-xl font-extrabold text-[#681B2B]">
+              {totalOrdersCount}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-[#F2D6DE]/60 shadow-xs">
-        <div className="relative">
+      <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-[#F2D6DE]/60 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
             <Search className="w-4 h-4" />
           </div>
@@ -134,9 +189,23 @@ export const ClientsView: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por nombre de cliente, teléfono o preferencias..."
-            className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/20 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20"
+            placeholder="Buscar por nombre, teléfono o preferencias..."
+            className="w-full pl-10 pr-9 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/20 focus:bg-white text-[#2C1E23] placeholder-[#7D6871]/60 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20"
           />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#7D6871] hover:text-[#2C1E23]"
+              title="Limpiar búsqueda"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        <div className="text-xs text-[#7D6871] shrink-0 font-medium px-1">
+          Mostrando <strong className="text-[#2C1E23]">{filteredClients.length}</strong> de{' '}
+          {clients.length} clientes
         </div>
       </div>
 
@@ -146,64 +215,107 @@ export const ClientsView: React.FC = () => {
           <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60">
             <Users className="w-8 h-8 text-[#F2D6DE] mx-auto mb-2" />
             <p className="font-semibold text-sm text-[#2C1E23]">No se encontraron clientes</p>
-            <p className="text-xs text-[#7D6871]">Intente con otros términos de búsqueda.</p>
+            <p className="text-xs text-[#7D6871] mt-0.5">
+              {searchTerm
+                ? 'Intente con otros términos de búsqueda.'
+                : 'Comience registrando su primer cliente con el botón "+ Nuevo Cliente".'}
+            </p>
           </div>
         ) : (
           filteredClients.map((client) => {
             const clientTotalOrders = orders.filter((o) => o.clientId === client.id).length;
+            const initials = client.name
+              .trim()
+              .split(' ')
+              .slice(0, 2)
+              .map((part) => part[0])
+              .join('')
+              .toUpperCase();
 
             return (
               <div
                 key={client.id}
                 id={`client-card-${client.id}`}
-                className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs hover:border-[#F2D6DE] transition-all flex flex-col justify-between"
+                className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs hover:border-[#F2D6DE] hover:shadow-sm transition-all flex flex-col justify-between"
               >
-                <div>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-bold text-sm text-[#2C1E23]">{client.name}</h3>
-                      <div className="flex items-center gap-1.5 text-xs text-[#7D6871] mt-1">
-                        <Phone className="w-3.5 h-3.5 text-[#059669]" />
-                        <span>{client.phone}</span>
+                <div className="space-y-3.5">
+                  {/* Top Row: Name, Initials Avatar & Order Count Badge */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-xl bg-[#FBECEF] text-[#681B2B] font-bold text-sm flex items-center justify-center shrink-0 border border-[#F2D6DE]/40">
+                        {initials || 'CL'}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-bold text-sm sm:text-base text-[#2C1E23] truncate leading-snug">
+                          {client.name}
+                        </h3>
+                        {/* Teléfono */}
+                        <div className="flex items-center gap-1.5 text-xs text-[#7D6871] mt-0.5">
+                          <Phone className="w-3.5 h-3.5 text-[#059669] shrink-0" />
+                          <span className="font-medium text-[#2C1E23] truncate">
+                            {client.phone}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleOpenEdit(client)}
-                      className="p-1.5 rounded-lg border border-[#F2D6DE] bg-[#FBECEF]/40 text-[#681B2B] hover:bg-[#681B2B] hover:text-white transition-colors cursor-pointer"
-                      title="Editar cliente"
+                    {/* Cantidad de Pedidos Badge */}
+                    <span
+                      id={`client-orders-badge-${client.id}`}
+                      className={`px-2.5 py-1 rounded-full text-xs font-bold shrink-0 flex items-center gap-1 ${
+                        clientTotalOrders > 0
+                          ? 'bg-[#FBECEF] text-[#681B2B]'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}
+                      title={`${clientTotalOrders} pedidos en total`}
                     >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
+                      <ShoppingBag className="w-3 h-3" />
+                      <span>{clientTotalOrders}</span>
+                    </span>
                   </div>
 
-                  {client.notes ? (
-                    <div className="mt-3 p-2.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60 text-xs text-[#2C1E23]">
-                      <span className="text-[10px] font-bold text-[#681B2B] uppercase block">
-                        Preferencias:
-                      </span>
-                      <p className="text-[11px] text-[#7D6871] mt-0.5 italic">"{client.notes}"</p>
-                    </div>
-                  ) : (
-                    <p className="mt-3 text-[11px] text-[#7D6871] italic">
-                      Sin observaciones adicionales registradas.
-                    </p>
-                  )}
+                  {/* Preferencias breves */}
+                  <div className="min-h-[44px]">
+                    {client.notes ? (
+                      <div className="p-2.5 rounded-xl bg-[#FBECEF]/25 border border-[#F2D6DE]/60 text-xs">
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-[#681B2B] uppercase tracking-wider mb-0.5">
+                          <Heart className="w-3 h-3" />
+                          <span>Preferencias:</span>
+                        </div>
+                        <p className="text-[11px] text-[#2C1E23] line-clamp-2 leading-relaxed italic">
+                          "{client.notes}"
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-xl bg-gray-50/70 border border-gray-100 text-xs text-[#7D6871]/70 italic flex items-center gap-1.5">
+                        <span>Sin preferencias registradas.</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#F2D6DE]/40 flex items-center justify-between">
-                  <span className="text-xs text-[#7D6871]">
-                    Pedidos:{' '}
-                    <strong className="text-[#681B2B] font-extrabold">{clientTotalOrders}</strong>
-                  </span>
-
+                {/* Clear Actions per Client */}
+                <div className="mt-4 pt-3.5 border-t border-[#F2D6DE]/40 grid grid-cols-2 gap-2">
+                  {/* Action 1: Ver cliente */}
                   <button
-                    id={`btn-view-client-history-${client.id}`}
-                    onClick={() => setClientForHistory(client)}
-                    className="text-xs font-semibold text-[#681B2B] hover:underline flex items-center gap-1 cursor-pointer"
+                    id={`btn-view-client-${client.id}`}
+                    type="button"
+                    onClick={() => navigateToClientDetail(client.id)}
+                    className="w-full px-3 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
                   >
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    Ver historial
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Ver cliente</span>
+                  </button>
+
+                  {/* Action 2: Editar */}
+                  <button
+                    id={`btn-edit-client-${client.id}`}
+                    type="button"
+                    onClick={() => handleOpenEdit(client)}
+                    className="w-full px-3 py-2 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-[#681B2B]" />
+                    <span>Editar</span>
                   </button>
                 </div>
               </div>
@@ -273,7 +385,7 @@ export const ClientsView: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Observaciones / Preferencias
+                    Observaciones / Preferencias Florales
                   </label>
                   <textarea
                     id="input-client-notes"
@@ -304,89 +416,6 @@ export const ClientsView: React.FC = () => {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================ */}
-      {/* MODAL: HISTORIAL DE PEDIDOS DEL CLIENTE */}
-      {/* ============================================================ */}
-      {clientForHistory && (
-        <div
-          id="modal-client-history"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] leading-snug break-words">
-                  Historial de Pedidos de {clientForHistory.name}
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  Teléfono: {clientForHistory.phone || 'Sin registrar'} &bull; {clientOrders.length} pedido{clientOrders.length === 1 ? '' : 's'} registrado{clientOrders.length === 1 ? '' : 's'}
-                </p>
-              </div>
-              <button
-                onClick={() => setClientForHistory(null)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body with internal scroll */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-2.5">
-              {clientOrders.length === 0 ? (
-                <div className="text-center py-8 text-xs text-[#7D6871]">
-                  Este cliente aún no tiene pedidos registrados.
-                </div>
-              ) : (
-                clientOrders.map((o) => (
-                  <div
-                    key={o.id}
-                    className="p-3 sm:p-3.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#681B2B]">{o.code}</span>
-                        <span className="text-[11px] text-[#7D6871]">{o.deliveryDate}</span>
-                      </div>
-                      <p className="text-[11px] text-[#2C1E23] mt-0.5 break-words">
-                        {o.description}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between sm:justify-end gap-3 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-[#F2D6DE]/40 shrink-0">
-                      <div className="text-left sm:text-right">
-                        <span className="font-bold text-[#2C1E23] block text-xs sm:text-sm">Q {o.total.toFixed(2)}</span>
-                        <span className="text-[10px] text-[#059669] font-semibold">{o.status}</span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setClientForHistory(null);
-                          navigateToOrderDetail(o.id, 'clients');
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-white border border-[#F2D6DE] text-[#681B2B] font-bold text-xs hover:bg-[#681B2B] hover:text-white transition-colors cursor-pointer min-h-[32px] flex items-center justify-center shrink-0"
-                      >
-                        Ver Pedido
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex justify-end shrink-0">
-              <button
-                onClick={() => setClientForHistory(null)}
-                className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-              >
-                Cerrar
-              </button>
-            </div>
           </div>
         </div>
       )}

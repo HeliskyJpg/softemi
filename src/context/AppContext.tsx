@@ -44,12 +44,15 @@ interface AppContextType {
   setActiveView: (view: ActiveView, options?: { clearHistory?: boolean; origin?: ActiveView }) => void;
   selectedOrderId: string | null;
   setSelectedOrderId: (id: string | null) => void;
+  selectedClientId: string | null;
+  setSelectedClientId: (id: string | null) => void;
   navigationHistory: NavigationHistoryEntry[];
   navigateToView: (
     view: ActiveView,
-    options?: { orderId?: string | null; origin?: ActiveView; clearHistory?: boolean }
+    options?: { orderId?: string | null; clientId?: string | null; origin?: ActiveView; clearHistory?: boolean }
   ) => void;
   navigateToOrderDetail: (orderId: string, origin?: ActiveView) => void;
+  navigateToClientDetail: (clientId: string, origin?: ActiveView) => void;
   navigateToOrderEdit: (orderId: string, origin?: ActiveView) => void;
   navigateToOrderNew: (origin?: ActiveView) => void;
   goBack: (fallbackView?: ActiveView) => void;
@@ -254,6 +257,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Navigation & History State
   const [activeView, setActiveViewRaw] = useState<ActiveView>('dashboard');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [navigationHistory, setNavigationHistory] = useState<NavigationHistoryEntry[]>([]);
 
   // Persistent View States across tab/view switches & returns
@@ -290,7 +294,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   ) => {
     if (options?.clearHistory) {
       setNavigationHistory([]);
-    } else if (options?.origin || (activeView !== view && view !== 'order-detail' && view !== 'order-edit' && view !== 'order-new')) {
+    } else if (
+      options?.origin ||
+      (activeView !== view &&
+        view !== 'order-detail' &&
+        view !== 'order-edit' &&
+        view !== 'order-new' &&
+        view !== 'client-detail')
+    ) {
       // Direct menu navigation switches base module
       setNavigationHistory([]);
     }
@@ -299,35 +310,58 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const navigateToView = (
     view: ActiveView,
-    options?: { orderId?: string | null; origin?: ActiveView; clearHistory?: boolean }
+    options?: { orderId?: string | null; clientId?: string | null; origin?: ActiveView; clearHistory?: boolean }
   ) => {
     if (options?.clearHistory) {
       setNavigationHistory([]);
     } else {
       const sourceView = options?.origin || activeView;
-      setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+      setNavigationHistory((prev) => [
+        ...prev,
+        { view: sourceView, orderId: selectedOrderId, clientId: selectedClientId },
+      ]);
     }
     setSelectedOrderId(options?.orderId ?? null);
+    setSelectedClientId(options?.clientId ?? null);
     setActiveViewRaw(view);
   };
 
   const navigateToOrderDetail = (orderId: string, origin?: ActiveView) => {
     const sourceView = origin || activeView;
-    setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+    setNavigationHistory((prev) => [
+      ...prev,
+      { view: sourceView, orderId: selectedOrderId, clientId: selectedClientId },
+    ]);
     setSelectedOrderId(orderId);
     setActiveViewRaw('order-detail');
   };
 
+  const navigateToClientDetail = (clientId: string, origin?: ActiveView) => {
+    const sourceView = origin || activeView;
+    setNavigationHistory((prev) => [
+      ...prev,
+      { view: sourceView, orderId: selectedOrderId, clientId: selectedClientId },
+    ]);
+    setSelectedClientId(clientId);
+    setActiveViewRaw('client-detail');
+  };
+
   const navigateToOrderEdit = (orderId: string, origin?: ActiveView) => {
     const sourceView = origin || activeView;
-    setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+    setNavigationHistory((prev) => [
+      ...prev,
+      { view: sourceView, orderId: selectedOrderId, clientId: selectedClientId },
+    ]);
     setSelectedOrderId(orderId);
     setActiveViewRaw('order-edit');
   };
 
   const navigateToOrderNew = (origin?: ActiveView) => {
     const sourceView = origin || activeView;
-    setNavigationHistory((prev) => [...prev, { view: sourceView, orderId: selectedOrderId }]);
+    setNavigationHistory((prev) => [
+      ...prev,
+      { view: sourceView, orderId: selectedOrderId, clientId: selectedClientId },
+    ]);
     setSelectedOrderId(null);
     setActiveViewRaw('order-new');
   };
@@ -344,6 +378,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (prev && prev.view !== activeView) {
         setNavigationHistory(historyCopy);
         setSelectedOrderId(prev.orderId ?? null);
+        setSelectedClientId(prev.clientId ?? null);
         setActiveViewRaw(prev.view);
         return;
       }
@@ -352,6 +387,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Fallback when no history exists
     setNavigationHistory([]);
     setSelectedOrderId(null);
+    setSelectedClientId(null);
     setActiveViewRaw(fallbackView);
   };
 
@@ -1277,9 +1313,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setActiveView,
         selectedOrderId,
         setSelectedOrderId,
+        selectedClientId,
+        setSelectedClientId,
         navigationHistory,
         navigateToView,
         navigateToOrderDetail,
+        navigateToClientDetail,
         navigateToOrderEdit,
         navigateToOrderNew,
         goBack,

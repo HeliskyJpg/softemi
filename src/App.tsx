@@ -13,13 +13,14 @@ import { OrderFormView } from './components/views/OrderFormView';
 import { OrderDetailView } from './components/views/OrderDetailView';
 import { ComponentsView } from './components/views/ComponentsView';
 import { ClientsView } from './components/views/ClientsView';
+import { ClientDetailView } from './components/views/ClientDetailView';
 import { CalendarView } from './components/views/CalendarView';
 import { ReportsView } from './components/views/ReportsView';
 import { UsersView } from './components/views/UsersView';
 import { ProfileView } from './components/views/ProfileView';
 
 const AppContent: React.FC = () => {
-  const { currentUser, activeView, selectedOrderId } = useApp();
+  const { currentUser, activeView, selectedOrderId, selectedClientId } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // If no logged in user, show Login Screen
@@ -49,6 +50,8 @@ const AppContent: React.FC = () => {
         return <ComponentsView />;
       case 'clients':
         return <ClientsView />;
+      case 'client-detail':
+        return <ClientDetailView clientId={selectedClientId || ''} />;
       case 'calendar':
         return <CalendarView />;
       case 'reports':

@@ -115,6 +115,7 @@ export type ActiveView =
   | 'order-edit'
   | 'components'
   | 'clients'
+  | 'client-detail'
   | 'users'
   | 'profile'
   | 'calendar'
@@ -157,4 +158,5 @@ export interface ClientsViewState {
 export interface NavigationHistoryEntry {
   view: ActiveView;
   orderId?: string | null;
+  clientId?: string | null;
 }
