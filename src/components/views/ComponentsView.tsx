@@ -1030,36 +1030,41 @@ export const ComponentsView: React.FC = () => {
       {showEditModal && (
         <div
           id="modal-component-form"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setShowEditModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-lg font-bold text-[#2C1E23] mb-1">
-              {editingComponent ? 'Editar Componente' : 'Nuevo Componente'}
-            </h3>
-            <p className="text-xs text-[#7D6871] mb-4">
-              {editingComponent
-                ? 'Actualice las características generales del insumo. El stock físico se edita exclusivamente con Ajustar stock.'
-                : 'Defina los datos del insumo y su existencia inicial para el taller.'}
-            </p>
-
-            {editingComponent && (
-              <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
-                <Info className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
-                <div>
-                  <span className="font-bold">Regla de inventario:</span> El stock físico actual es de{' '}
-                  <strong>{editingComponent.physicalStock} {editingComponent.unit}</strong> ({editingComponent.reservedStock} reservadas). Para cambiar la existencia física use el botón <strong>"Ajustar stock"</strong>.
-                </div>
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] tracking-tight leading-snug break-words">
+                  {editingComponent ? 'Editar Componente' : 'Nuevo Componente'}
+                </h3>
+                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
+                  {editingComponent
+                    ? 'Actualice las características generales del insumo. El stock físico se edita exclusivamente con Ajustar stock.'
+                    : 'Defina los datos del insumo y su existencia inicial para el taller.'}
+                </p>
               </div>
-            )}
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <form onSubmit={handleSaveComponent} className="space-y-4">
+            <form onSubmit={handleSaveComponent} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                {editingComponent && (
+                  <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                    <Info className="w-4 h-4 shrink-0 text-amber-700 mt-0.5" />
+                    <div className="leading-relaxed">
+                      <span className="font-bold">Regla de inventario:</span> El stock físico actual es de{' '}
+                      <strong>{editingComponent.physicalStock} {editingComponent.unit}</strong> ({editingComponent.reservedStock} reservadas). Para cambiar la existencia física use el botón <strong>"Ajustar stock"</strong>.
+                    </div>
+                  </div>
+                )}
               {/* Name */}
               <div>
                 <label className="block text-xs font-bold text-[#2C1E23] mb-1">
@@ -1244,19 +1249,21 @@ export const ComponentsView: React.FC = () => {
                 </label>
               </div>
 
+              </div>
+
               {/* Action Buttons */}
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
+              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-component"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   {editingComponent ? 'Guardar Cambios' : 'Crear Componente'}
                 </button>
@@ -1272,48 +1279,49 @@ export const ComponentsView: React.FC = () => {
       {showStockModal && stockComponent && (
         <div
           id="modal-adjust-stock"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90vh] overflow-y-auto">
-            {/* Close button */}
-            <button
-              id="btn-close-adjust-stock-modal"
-              onClick={() => setShowStockModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
-              title="Cerrar modal"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
             {/* Modal Header */}
-            <div className="pr-8 mb-3.5">
-              <h3 className="text-lg font-bold text-[#2C1E23] tracking-tight">
-                Ajustar stock
-              </h3>
-              <p className="text-xs text-[#7D6871] mt-0.5 font-medium truncate">
-                {stockComponent.name} · {stockComponent.category}
-              </p>
-            </div>
-
-            {/* Stock Actual Context Row (Compact without independent cards) */}
-            <div className="bg-[#FBECEF]/40 border border-[#F2D6DE]/70 rounded-xl px-3.5 py-2.5 text-xs flex flex-wrap items-center justify-between gap-y-1 mb-4">
-              <span className="text-[#7D6871] font-semibold text-xs">Stock actual</span>
-              <div className="flex items-center gap-2 sm:gap-2.5 font-medium text-xs text-[#2C1E23]">
-                <span>
-                  Total <strong className="font-bold text-[#2C1E23]">{stockComponent.physicalStock}</strong>
-                </span>
-                <span className="text-[#D9A3B5] font-bold">·</span>
-                <span>
-                  Reservado <strong className="font-bold text-amber-800">{stockComponent.reservedStock}</strong>
-                </span>
-                <span className="text-[#D9A3B5] font-bold">·</span>
-                <span>
-                  Disponible <strong className="font-bold text-emerald-800">{getAvailableStock(stockComponent)}</strong>
-                </span>
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] tracking-tight leading-snug break-words">
+                  Ajustar stock
+                </h3>
+                <p className="text-xs text-[#7D6871] mt-0.5 font-medium truncate">
+                  {stockComponent.name} · {stockComponent.category}
+                </p>
               </div>
+              <button
+                id="btn-close-adjust-stock-modal"
+                onClick={() => setShowStockModal(false)}
+                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+                title="Cerrar modal"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleConfirmStockAdjust} className="space-y-4">
+            <form onSubmit={handleConfirmStockAdjust} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                {/* Stock Actual Context Row (Compact without independent cards) */}
+                <div className="bg-[#FBECEF]/40 border border-[#F2D6DE]/70 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <span className="text-[#7D6871] font-semibold text-xs shrink-0">Stock actual</span>
+                  <div className="flex items-center flex-wrap gap-2 sm:gap-2.5 font-medium text-xs text-[#2C1E23]">
+                    <span>
+                      Total <strong className="font-bold text-[#2C1E23]">{stockComponent.physicalStock}</strong>
+                    </span>
+                    <span className="text-[#D9A3B5] font-bold">·</span>
+                    <span>
+                      Reservado <strong className="font-bold text-amber-800">{stockComponent.reservedStock}</strong>
+                    </span>
+                    <span className="text-[#D9A3B5] font-bold">·</span>
+                    <span>
+                      Disponible <strong className="font-bold text-emerald-800">{getAvailableStock(stockComponent)}</strong>
+                    </span>
+                  </div>
+                </div>
               {/* 1. Tipo de Movimiento */}
               <div>
                 <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
@@ -1551,20 +1559,22 @@ export const ComponentsView: React.FC = () => {
                 </div>
               )}
 
+              </div>
+
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F2D6DE]/40">
+              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   id="btn-cancel-stock-adjust"
                   onClick={() => setShowStockModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-100 rounded-xl cursor-pointer transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-100 rounded-xl cursor-pointer transition-colors min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-confirm-stock-adjust"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer transition-all"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer transition-all min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Guardar ajuste
                 </button>

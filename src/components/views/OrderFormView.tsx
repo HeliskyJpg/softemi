@@ -823,77 +823,87 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
       {showClientModal && (
         <div
           id="modal-quick-client"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
-            <button
-              onClick={() => setShowClientModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#681B2B] leading-snug break-words">
+                  Registrar Nuevo Cliente
+                </h3>
+                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
+                  Agregue al cliente para asociarlo de inmediato a este pedido.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowClientModal(false)}
+                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <h3 className="text-base font-bold text-[#681B2B] mb-1">Registrar Nuevo Cliente</h3>
-            <p className="text-xs text-[#7D6871] mb-4">
-              Agregue al cliente para asociarlo de inmediato a este pedido.
-            </p>
+            <form onSubmit={handleCreateClientQuick} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Nombre Completo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="input-quick-client-name"
+                    type="text"
+                    required
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                    placeholder="Ej. Andrea López"
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                  />
+                </div>
 
-            <form onSubmit={handleCreateClientQuick} className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Nombre Completo <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="input-quick-client-name"
-                  type="text"
-                  required
-                  value={newClientName}
-                  onChange={(e) => setNewClientName(e.target.value)}
-                  placeholder="Ej. Andrea López"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                />
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Teléfono / WhatsApp
+                  </label>
+                  <input
+                    id="input-quick-client-phone"
+                    type="text"
+                    value={newClientPhone}
+                    onChange={(e) => setNewClientPhone(e.target.value)}
+                    placeholder="Ej. 5512-3456"
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Observaciones / Preferencias
+                  </label>
+                  <textarea
+                    id="input-quick-client-notes"
+                    rows={3}
+                    value={newClientNotes}
+                    onChange={(e) => setNewClientNotes(e.target.value)}
+                    placeholder="Tonos favoritos, tipo de flores preferidas..."
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Teléfono / WhatsApp
-                </label>
-                <input
-                  id="input-quick-client-phone"
-                  type="text"
-                  value={newClientPhone}
-                  onChange={(e) => setNewClientPhone(e.target.value)}
-                  placeholder="Ej. 5512-3456"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Observaciones / Preferencias
-                </label>
-                <textarea
-                  id="input-quick-client-notes"
-                  rows={2}
-                  value={newClientNotes}
-                  onChange={(e) => setNewClientNotes(e.target.value)}
-                  placeholder="Tonos favoritos, tipo de flores preferidas..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
+              {/* Action Buttons */}
+              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowClientModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-quick-client"
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Guardar y Seleccionar
                 </button>
@@ -909,121 +919,129 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
       {showAddComponentModal && (
         <div
           id="modal-add-component-item"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
-            <button
-              onClick={() => setShowAddComponentModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] leading-snug break-words">
+                  Agregar Componente al Arreglo
+                </h3>
+                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
+                  Seleccione el insumo del catálogo y la cantidad a descontar de inventario.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddComponentModal(false)}
+                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
-              Agregar Componente al Arreglo
-            </h3>
-            <p className="text-xs text-[#7D6871] mb-4">
-              Seleccione el insumo del catálogo y la cantidad a descontar de inventario.
-            </p>
+            <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
+                    Componente / Flor / Empaque
+                  </label>
+                  <select
+                    id="select-add-component"
+                    value={selectedComponentId}
+                    onChange={(e) => setSelectedComponentId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 bg-white font-medium outline-none cursor-pointer"
+                  >
+                    <option value="">-- Seleccionar del catálogo --</option>
+                    {components
+                      .filter((c) => c.active)
+                      .map((comp) => {
+                        const avail = comp.physicalStock - comp.reservedStock;
+                        return (
+                          <option
+                            key={comp.id}
+                            value={comp.id}
+                            disabled={avail <= 0}
+                          >
+                            {comp.name} [{comp.category}] — Q{comp.price.toFixed(2)} (Disponible: {avail} {comp.unit})
+                          </option>
+                        );
+                      })}
+                  </select>
+                </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                  Componente / Flor / Empaque
-                </label>
-                <select
-                  id="select-add-component"
-                  value={selectedComponentId}
-                  onChange={(e) => setSelectedComponentId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 bg-white font-medium outline-none cursor-pointer"
-                >
-                  <option value="">-- Seleccionar del catálogo --</option>
-                  {components
-                    .filter((c) => c.active)
-                    .map((comp) => {
-                      const avail = comp.physicalStock - comp.reservedStock;
-                      return (
-                        <option
-                          key={comp.id}
-                          value={comp.id}
-                          disabled={avail <= 0}
-                        >
-                          {comp.name} [{comp.category}] — Q{comp.price.toFixed(2)} (Disponible: {avail} {comp.unit})
-                        </option>
-                      );
-                    })}
-                </select>
+                {selectedComponentId && (
+                  (() => {
+                    const comp = components.find((c) => c.id === selectedComponentId);
+                    if (!comp) return null;
+                    const avail = comp.physicalStock - comp.reservedStock;
+
+                    return (
+                      <div className="p-3.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-[#681B2B]">{comp.name}</span>
+                          <span className="font-bold text-[#059669]">Q {comp.price.toFixed(2)} / {comp.unit}</span>
+                        </div>
+                        {comp.description && <p className="text-[#7D6871] text-[11px]">{comp.description}</p>}
+                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#F2D6DE]/50 text-center text-[11px]">
+                          <div className="p-1.5 rounded-lg bg-white border border-gray-100">
+                            <span className="text-[#7D6871] block text-[10px]">Físico</span>
+                            <span className="font-bold text-[#2C1E23]">{comp.physicalStock}</span>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-white border border-gray-100">
+                            <span className="text-[#7D6871] block text-[10px]">Reservado</span>
+                            <span className="font-bold text-amber-700">{comp.reservedStock}</span>
+                          </div>
+                          <div className="p-1.5 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0]">
+                            <span className="text-[#047857] block text-[10px]">Disponible</span>
+                            <span className="font-bold text-[#047857]">{avail}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+
+                <div>
+                  <label
+                    htmlFor="input-add-component-qty"
+                    className="block text-xs font-bold text-[#2C1E23] mb-1.5"
+                  >
+                    Cantidad a Incluir{' '}
+                    {selectedComponentId && (
+                      <span className="text-[#7D6871] font-normal">
+                        ({components.find((c) => c.id === selectedComponentId)?.unit || 'unidades'})
+                      </span>
+                    )}
+                  </label>
+                  <QuantityInput
+                    id="input-add-component-qty"
+                    value={selectedComponentQty}
+                    max={
+                      selectedComponentId
+                        ? Math.max(
+                            0,
+                            (components.find((c) => c.id === selectedComponentId)?.physicalStock || 0) -
+                              (components.find((c) => c.id === selectedComponentId)?.reservedStock || 0)
+                          )
+                        : undefined
+                    }
+                    unit={components.find((c) => c.id === selectedComponentId)?.unit}
+                    onChange={(newQty) => setSelectedComponentQty(newQty)}
+                    size="lg"
+                    align="center"
+                    showErrorText
+                  />
+                </div>
               </div>
 
-              {selectedComponentId && (
-                (() => {
-                  const comp = components.find((c) => c.id === selectedComponentId);
-                  if (!comp) return null;
-                  const avail = comp.physicalStock - comp.reservedStock;
-
-                  return (
-                    <div className="p-3.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] text-xs space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-[#681B2B]">{comp.name}</span>
-                        <span className="font-bold text-[#059669]">Q {comp.price.toFixed(2)} / {comp.unit}</span>
-                      </div>
-                      {comp.description && <p className="text-[#7D6871] text-[11px]">{comp.description}</p>}
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#F2D6DE]/50 text-center text-[11px]">
-                        <div className="p-1.5 rounded-lg bg-white border border-gray-100">
-                          <span className="text-[#7D6871] block text-[10px]">Físico</span>
-                          <span className="font-bold text-[#2C1E23]">{comp.physicalStock}</span>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-white border border-gray-100">
-                          <span className="text-[#7D6871] block text-[10px]">Reservado</span>
-                          <span className="font-bold text-amber-700">{comp.reservedStock}</span>
-                        </div>
-                        <div className="p-1.5 rounded-lg bg-[#ECFDF5] border border-[#A7F3D0]">
-                          <span className="text-[#047857] block text-[10px]">Disponible</span>
-                          <span className="font-bold text-[#047857]">{avail}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()
-              )}
-
-              <div>
-                <label
-                  htmlFor="input-add-component-qty"
-                  className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-                >
-                  Cantidad a Incluir{' '}
-                  {selectedComponentId && (
-                    <span className="text-[#7D6871] font-normal">
-                      ({components.find((c) => c.id === selectedComponentId)?.unit || 'unidades'})
-                    </span>
-                  )}
-                </label>
-                <QuantityInput
-                  id="input-add-component-qty"
-                  value={selectedComponentQty}
-                  max={
-                    selectedComponentId
-                      ? Math.max(
-                          0,
-                          (components.find((c) => c.id === selectedComponentId)?.physicalStock || 0) -
-                            (components.find((c) => c.id === selectedComponentId)?.reservedStock || 0)
-                        )
-                      : undefined
-                  }
-                  unit={components.find((c) => c.id === selectedComponentId)?.unit}
-                  onChange={(newQty) => setSelectedComponentQty(newQty)}
-                  size="lg"
-                  align="center"
-                  showErrorText
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
+              {/* Action Buttons */}
+              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowAddComponentModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Cancelar
                 </button>
@@ -1032,7 +1050,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   type="button"
                   onClick={handleAddComponentItem}
                   disabled={!selectedComponentId}
-                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Agregar Línea
                 </button>

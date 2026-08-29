@@ -218,79 +218,87 @@ export const ClientsView: React.FC = () => {
       {showModal && (
         <div
           id="modal-client-form"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] leading-snug break-words">
+                  {editingClient ? 'Editar Cliente' : 'Registrar Nuevo Cliente'}
+                </h3>
+                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
+                  Mantenga la información de contacto y gustos florales del cliente.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
-              {editingClient ? 'Editar Cliente' : 'Registrar Nuevo Cliente'}
-            </h3>
-            <p className="text-xs text-[#7D6871] mb-4">
-              Mantenga la información de contacto y gustos florales del cliente.
-            </p>
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Nombre Completo <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="input-client-name"
+                    type="text"
+                    required
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder="Ej. Sofía Morales"
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                  />
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Nombre Completo <span className="text-red-500">*</span>
-                </label>
-                <input
-                  id="input-client-name"
-                  type="text"
-                  required
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Ej. Sofía Morales"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                />
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Teléfono / WhatsApp
+                  </label>
+                  <input
+                    id="input-client-phone"
+                    type="text"
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
+                    placeholder="Ej. 5555-1234"
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Observaciones / Preferencias
+                  </label>
+                  <textarea
+                    id="input-client-notes"
+                    rows={3}
+                    value={formNotes}
+                    onChange={(e) => setFormNotes(e.target.value)}
+                    placeholder="Ej. Prefiere tonos pastel, no le gustan los lirios amarillos..."
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Teléfono / WhatsApp
-                </label>
-                <input
-                  id="input-client-phone"
-                  type="text"
-                  value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value)}
-                  placeholder="Ej. 5555-1234"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Observaciones / Preferencias
-                </label>
-                <textarea
-                  id="input-client-notes"
-                  rows={3}
-                  value={formNotes}
-                  onChange={(e) => setFormNotes(e.target.value)}
-                  placeholder="Ej. Prefiere tonos pastel, no le gustan los lirios amarillos..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
+              {/* Action Buttons */}
+              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-client-form"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Guardar Cliente
                 </button>
@@ -306,47 +314,53 @@ export const ClientsView: React.FC = () => {
       {clientForHistory && (
         <div
           id="modal-client-history"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[85vh] flex flex-col">
-            <button
-              onClick={() => setClientForHistory(null)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1 rounded-lg cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-base font-bold text-[#2C1E23] mb-1">
-              Historial de Pedidos de {clientForHistory.name}
-            </h3>
-            <p className="text-xs text-[#7D6871] mb-4">
-              Teléfono: {clientForHistory.phone} &bull; {clientOrders.length} pedidos registrados
-            </p>
-
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {clientOrders.length === 0 ? (
-                <p className="text-center py-6 text-xs text-[#7D6871]">
-                  Este cliente aún no tiene pedidos registrados.
+          <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] leading-snug break-words">
+                  Historial de Pedidos de {clientForHistory.name}
+                </h3>
+                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
+                  Teléfono: {clientForHistory.phone || 'Sin registrar'} &bull; {clientOrders.length} pedido{clientOrders.length === 1 ? '' : 's'} registrado{clientOrders.length === 1 ? '' : 's'}
                 </p>
+              </div>
+              <button
+                onClick={() => setClientForHistory(null)}
+                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body with internal scroll */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-2.5">
+              {clientOrders.length === 0 ? (
+                <div className="text-center py-8 text-xs text-[#7D6871]">
+                  Este cliente aún no tiene pedidos registrados.
+                </div>
               ) : (
                 clientOrders.map((o) => (
                   <div
                     key={o.id}
-                    className="p-3 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] flex items-center justify-between text-xs"
+                    className="p-3 sm:p-3.5 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE] flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-[#681B2B]">{o.code}</span>
                         <span className="text-[11px] text-[#7D6871]">{o.deliveryDate}</span>
                       </div>
-                      <p className="text-[11px] text-[#2C1E23] mt-0.5 truncate max-w-xs">
+                      <p className="text-[11px] text-[#2C1E23] mt-0.5 break-words">
                         {o.description}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <span className="font-bold text-[#2C1E23] block">Q {o.total.toFixed(2)}</span>
+                    <div className="flex items-center justify-between sm:justify-end gap-3 pt-1.5 sm:pt-0 border-t sm:border-t-0 border-[#F2D6DE]/40 shrink-0">
+                      <div className="text-left sm:text-right">
+                        <span className="font-bold text-[#2C1E23] block text-xs sm:text-sm">Q {o.total.toFixed(2)}</span>
                         <span className="text-[10px] text-[#059669] font-semibold">{o.status}</span>
                       </div>
                       <button
@@ -354,9 +368,9 @@ export const ClientsView: React.FC = () => {
                           setClientForHistory(null);
                           navigateToOrderDetail(o.id, 'clients');
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-white border border-[#F2D6DE] text-[#681B2B] font-bold text-[11px] hover:bg-[#681B2B] hover:text-white transition-colors cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-white border border-[#F2D6DE] text-[#681B2B] font-bold text-xs hover:bg-[#681B2B] hover:text-white transition-colors cursor-pointer min-h-[32px] flex items-center justify-center shrink-0"
                       >
-                        Ver
+                        Ver Pedido
                       </button>
                     </div>
                   </div>
@@ -364,10 +378,11 @@ export const ClientsView: React.FC = () => {
               )}
             </div>
 
-            <div className="pt-3 border-t border-[#F2D6DE]/40 flex justify-end mt-4">
+            {/* Modal Footer */}
+            <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex justify-end shrink-0">
               <button
                 onClick={() => setClientForHistory(null)}
-                className="px-4 py-2 text-xs font-bold bg-[#681B2B] text-white rounded-xl cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
               >
                 Cerrar
               </button>

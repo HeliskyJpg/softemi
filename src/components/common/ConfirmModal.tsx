@@ -31,26 +31,26 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     switch (type) {
       case 'danger':
         return (
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-[#9B2C2C] shrink-0">
-            <AlertTriangle className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 flex items-center justify-center text-[#9B2C2C] shrink-0">
+            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         );
       case 'warning':
         return (
-          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
-            <AlertTriangle className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+            <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         );
       case 'success':
         return (
-          <div className="w-12 h-12 rounded-full bg-[#EBF1DE] flex items-center justify-center text-[#65733D] shrink-0">
-            <CheckCircle2 className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#EBF1DE] flex items-center justify-center text-[#65733D] shrink-0">
+            <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         );
       default:
         return (
-          <div className="w-12 h-12 rounded-full bg-[#FBDAE3] flex items-center justify-center text-[#8E315E] shrink-0">
-            <Info className="w-6 h-6" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#FBDAE3] flex items-center justify-center text-[#8E315E] shrink-0">
+            <Info className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         );
     }
@@ -73,7 +73,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <AnimatePresence>
       <div
         id="modal-confirm-overlay"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -81,37 +81,44 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.15 }}
           id="modal-confirm-content"
-          className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#FBDAE3]/50 relative overflow-hidden"
+          className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-[#FBDAE3]/60 relative overflow-hidden flex flex-col my-auto max-h-[90dvh]"
         >
-          <button
-            id="btn-modal-close-icon"
-            onClick={onClose}
-            disabled={isLoading}
-            className="absolute top-4 right-4 text-[#6D5C64] hover:text-[#3A2D33] p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="Cerrar modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
-
-          <div className="flex items-start gap-4">
-            {getIcon()}
-            <div className="flex-1">
-              <h3 id="modal-confirm-title" className="text-lg font-bold text-[#3A2D33] mb-1.5">
-                {title}
-              </h3>
-              <p id="modal-confirm-description" className="text-sm text-[#6D5C64] leading-relaxed">
-                {message}
-              </p>
+          {/* Header row with icon, title, and close button */}
+          <div className="flex items-start justify-between gap-3 pb-3 border-b border-gray-100/80 shrink-0">
+            <div className="flex items-start gap-3 min-w-0 flex-1 pr-1">
+              {getIcon()}
+              <div className="min-w-0 flex-1 pt-0.5">
+                <h3 id="modal-confirm-title" className="text-base sm:text-lg font-bold text-[#3A2D33] leading-snug break-words">
+                  {title}
+                </h3>
+              </div>
             </div>
+            <button
+              id="btn-modal-close-icon"
+              onClick={onClose}
+              disabled={isLoading}
+              className="text-[#6D5C64] hover:text-[#3A2D33] p-1.5 rounded-lg hover:bg-gray-100 transition-colors shrink-0 cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+              aria-label="Cerrar modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+          {/* Body content with internal scroll if message is long */}
+          <div className="py-3.5 sm:py-4 overflow-y-auto flex-1 text-xs sm:text-sm text-[#6D5C64] leading-relaxed break-words">
+            <p id="modal-confirm-description">
+              {message}
+            </p>
+          </div>
+
+          {/* Action buttons: stacked on mobile, inline on desktop */}
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3 pt-3 border-t border-gray-100 shrink-0">
             <button
               id="btn-modal-cancel"
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 text-sm font-medium text-[#6D5C64] hover:text-[#3A2D33] hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#6D5C64] hover:text-[#3A2D33] hover:bg-gray-100 rounded-xl transition-colors cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
             >
               {cancelText}
             </button>
@@ -122,7 +129,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 onConfirm();
               }}
               disabled={isLoading}
-              className={`px-5 py-2 text-sm font-semibold rounded-xl shadow-sm transition-all focus:ring-2 cursor-pointer flex items-center gap-2 ${getConfirmBtnStyle()}`}
+              className={`w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-all focus:ring-2 cursor-pointer flex items-center justify-center gap-2 min-h-[42px] sm:min-h-[36px] ${getConfirmBtnStyle()}`}
             >
               {isLoading ? (
                 <>

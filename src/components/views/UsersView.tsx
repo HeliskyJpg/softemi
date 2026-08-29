@@ -365,25 +365,31 @@ export const UsersView: React.FC = () => {
       {showModal && (
         <div
           id="modal-user-form"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#F2D6DE]/60 relative animate-in fade-in max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE]/60 relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
+              <div className="min-w-0 flex-1 pr-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] mb-0.5 flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-[#681B2B] shrink-0" />
+                  <span className="truncate">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</span>
+                </h3>
+                <p className="text-xs text-[#7D6871] leading-relaxed break-words">
+                  Configure los datos de identificación y nivel de acceso en EMILA.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
+                aria-label="Cerrar modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <h3 className="text-base font-bold text-[#2C1E23] mb-0.5 flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-[#681B2B]" />
-              {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
-            </h3>
-            <p className="text-xs text-[#7D6871] mb-4">
-              Configure los datos de identificación y nivel de acceso en EMILA.
-            </p>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#2C1E23] mb-1">
                   Nombre Completo <span className="text-rose-500">*</span>
@@ -466,19 +472,21 @@ export const UsersView: React.FC = () => {
                   Usuario Activo (permite iniciar sesión en el sistema)
                 </label>
               </div>
+              </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#F2D6DE]/40">
+              {/* Action Buttons */}
+              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Cancelar
                 </button>
                 <button
                   id="btn-save-user-form"
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Guardar Usuario
                 </button>
