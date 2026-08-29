@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   UserCheck,
   Shield,
-  Plus,
   Edit2,
   CheckCircle2,
   XCircle,
@@ -11,16 +10,19 @@ import {
   Lock,
   Mail,
   Power,
+  AlertTriangle,
   Info,
 } from 'lucide-react';
 import { SystemUser, UserRole } from '../../types';
+import { ConfirmModal } from '../common/ConfirmModal';
 
 export const UsersView: React.FC = () => {
-  const { users, currentUser, addUser, updateUser, toggleUserActive, addToast, switchUserRole } = useApp();
+  const { users, currentUser, updateUser, toggleUserActive, addToast, switchUserRole } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
 
-  const [showModal, setShowModal] = useState(false);
+  // Modal State for Editing Allowed User Info Only (No user creation flow)
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
 
   const [formName, setFormName] = useState('');
@@ -28,22 +30,34 @@ export const UsersView: React.FC = () => {
   const [formEmail, setFormEmail] = useState('');
   const [formRole, setFormRole] = useState<UserRole>('Colaborador');
   const [formActive, setFormActive] = useState(true);
+  const [formErrors, setFormErrors] = useState<{ name?: string; username?: string; general?: string }>({});
 
+  // Confirmation Modal State for User Deactivation (Rule 8)
+  const [userToDeactivate, setUserToDeactivate] = useState<SystemUser | null>(null);
+  const [pendingSavePayload, setPendingSavePayload] = useState<{ id: string; data: Partial<SystemUser> } | null>(null);
+
+  // Active administrators counter for system integrity (Rule 9)
+  const activeAdminsCount = useMemo(() => {
+    return users.filter((u) => u.role === 'Administrador' && u.active).length;
+  }, [users]);
+
+  // Restrict access to administrators only
   if (!isAdmin) {
     return (
-      <div className="max-w-xl mx-auto p-8 sm:p-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs space-y-4">
+      <div id="users-access-restricted" className="max-w-xl mx-auto p-8 sm:p-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60 shadow-xs space-y-4">
         <div className="w-12 h-12 rounded-full bg-[#FBECEF] text-[#681B2B] flex items-center justify-center mx-auto">
           <Shield className="w-6 h-6" />
         </div>
         <div>
           <h2 className="text-lg font-bold text-[#2C1E23]">Módulo de Usuarios y Roles</h2>
-          <p className="text-xs text-[#7D6871] mt-1 max-w-md mx-auto">
-            Este módulo requiere privilegios de <strong>Administrador</strong> para gestionar cuentas, personal y control de acceso en EMILA Floristería. Tu usuario actual tiene rol <strong>Colaborador</strong>.
+          <p className="text-xs text-[#7D6871] mt-1.5 max-w-md mx-auto leading-relaxed">
+            Este módulo requiere privilegios de <strong>Administrador</strong> para gestionar cuentas existentes y niveles de acceso en EMILA Floristería. Tu usuario actual tiene rol <strong>Colaborador</strong>.
           </p>
         </div>
 
         <div className="pt-2">
           <button
+            id="btn-switch-to-admin-mode"
             onClick={() => switchUserRole('Administrador')}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
           >
@@ -55,16 +69,7 @@ export const UsersView: React.FC = () => {
     );
   }
 
-  const handleOpenCreate = () => {
-    setEditingUser(null);
-    setFormName('');
-    setFormUsername('');
-    setFormEmail('');
-    setFormRole('Colaborador');
-    setFormActive(true);
-    setShowModal(true);
-  };
-
+  // Open Edit User Modal
   const handleOpenEdit = (user: SystemUser) => {
     setEditingUser(user);
     setFormName(user.name);
@@ -72,35 +77,103 @@ export const UsersView: React.FC = () => {
     setFormEmail(user.email || '');
     setFormRole(user.role);
     setFormActive(user.active);
-    setShowModal(true);
+    setFormErrors({});
+    setShowEditModal(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formName.trim() || !formUsername.trim()) {
-      addToast('El nombre y el usuario son obligatorios.', 'error');
+  // Trigger Deactivation confirmation for row action (Rule 8 & 9)
+  const handleRequestDeactivation = (user: SystemUser) => {
+    if (user.id === currentUser?.id) {
+      addToast('No puede desactivar el usuario con el que tiene sesión activa.', 'warning', 'Acción no permitida');
       return;
     }
 
-    if (editingUser) {
-      updateUser(editingUser.id, {
-        name: formName.trim(),
-        username: formUsername.trim(),
-        email: formEmail.trim(),
-        role: formRole,
-        active: formActive,
-      });
-    } else {
-      addUser({
-        name: formName.trim(),
-        username: formUsername.trim(),
-        email: formEmail.trim(),
-        role: formRole,
-        active: formActive,
-      });
+    if (user.role === 'Administrador' && user.active && activeAdminsCount <= 1) {
+      addToast('No se puede desactivar al único Administrador activo del sistema.', 'warning', 'Acción no permitida');
+      return;
     }
-    setShowModal(false);
+
+    setPendingSavePayload(null);
+    setUserToDeactivate(user);
   };
+
+  // Toggle user activation directly if inactive (activating does not require deactivation warning)
+  const handleToggleClick = (user: SystemUser) => {
+    if (user.active) {
+      handleRequestDeactivation(user);
+    } else {
+      toggleUserActive(user.id);
+    }
+  };
+
+  // Confirm deactivation from modal
+  const handleConfirmDeactivation = () => {
+    if (pendingSavePayload) {
+      updateUser(pendingSavePayload.id, pendingSavePayload.data);
+      setPendingSavePayload(null);
+      setUserToDeactivate(null);
+      setShowEditModal(false);
+    } else if (userToDeactivate) {
+      toggleUserActive(userToDeactivate.id);
+      setUserToDeactivate(null);
+    }
+  };
+
+  // Handle Edit form submission
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    const errors: { name?: string; username?: string; general?: string } = {};
+
+    if (!formName.trim()) {
+      errors.name = 'El nombre completo es obligatorio.';
+    }
+
+    if (!formUsername.trim()) {
+      errors.username = 'El nombre de usuario es obligatorio.';
+    }
+
+    const isCurrent = editingUser.id === currentUser?.id;
+    const isOnlyActiveAdmin = editingUser.role === 'Administrador' && editingUser.active && activeAdminsCount <= 1;
+
+    // Safety checks (Rule 9)
+    if (!formActive && isCurrent) {
+      errors.general = 'No puede desactivar su propia cuenta de administrador mientras tenga la sesión activa.';
+    } else if (!formActive && isOnlyActiveAdmin) {
+      errors.general = 'No se puede desactivar al único Administrador activo del sistema.';
+    } else if (formRole !== 'Administrador' && isOnlyActiveAdmin) {
+      errors.general = 'No puede cambiar el rol del único Administrador activo. El sistema debe conservar al menos un administrador.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+
+    setFormErrors({});
+
+    const updatedData: Partial<SystemUser> = {
+      name: formName.trim(),
+      username: formUsername.trim().toLowerCase().replace(/\s+/g, ''),
+      email: formEmail.trim(),
+      role: formRole,
+      active: formActive,
+    };
+
+    // If user was active and is being set to inactive, show confirmation modal (Rule 8)
+    if (editingUser.active && !formActive) {
+      setPendingSavePayload({ id: editingUser.id, data: updatedData });
+      setUserToDeactivate(editingUser);
+      return;
+    }
+
+    updateUser(editingUser.id, updatedData);
+    setShowEditModal(false);
+  };
+
+  const isEditingCurrent = editingUser?.id === currentUser?.id;
+  const isEditingOnlyAdmin = editingUser?.role === 'Administrador' && editingUser?.active && activeAdminsCount <= 1;
 
   return (
     <div id="users-view-container" className="space-y-6 pb-16">
@@ -109,21 +182,18 @@ export const UsersView: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-[#2C1E23] tracking-tight flex items-center gap-2">
             <UserCheck className="w-6 h-6 text-[#681B2B]" />
-            Control de Usuarios y Roles
+            Usuarios y roles
           </h1>
           <p className="text-xs sm:text-sm text-[#7D6871] mt-0.5 font-medium">
-            Gestión de cuentas del personal, asignación de permisos y control de acceso.
+            Gestión de cuentas existentes de demostración, asignación de roles y control de acceso.
           </p>
         </div>
 
-        <button
-          id="btn-new-user"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#531422] text-white font-bold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          Nuevo Usuario
-        </button>
+        {/* System Administrators badge */}
+        <div className="flex items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl bg-[#FBECEF]/60 border border-[#F2D6DE]/60 text-xs font-semibold text-[#681B2B]">
+          <Shield className="w-4 h-4" />
+          <span>{activeAdminsCount} {activeAdminsCount === 1 ? 'Administrador activo' : 'Administradores activos'}</span>
+        </div>
       </div>
 
       {/* Users List Container */}
@@ -143,6 +213,8 @@ export const UsersView: React.FC = () => {
             <tbody className="divide-y divide-[#F2D6DE]/30">
               {users.map((u) => {
                 const isCurrent = u.id === currentUser?.id;
+                const isOnlyAdmin = u.role === 'Administrador' && u.active && activeAdminsCount <= 1;
+
                 return (
                   <tr key={u.id} className="hover:bg-[#FBECEF]/20 transition-colors">
                     <td className="py-3.5 px-4">
@@ -200,16 +272,32 @@ export const UsersView: React.FC = () => {
                           Editar
                         </button>
 
-                        {!isCurrent && (
+                        {/* Power button to toggle active/inactive */}
+                        {isCurrent ? (
+                          <span
+                            className="p-1.5 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed inline-flex"
+                            title="No puede desactivar su propia cuenta activa"
+                          >
+                            <Power className="w-3.5 h-3.5" />
+                          </span>
+                        ) : isOnlyAdmin ? (
+                          <span
+                            className="p-1.5 rounded-lg border border-gray-200 text-gray-300 cursor-not-allowed inline-flex"
+                            title="No puede desactivar al único Administrador activo del sistema"
+                          >
+                            <Power className="w-3.5 h-3.5" />
+                          </span>
+                        ) : (
                           <button
                             id={`btn-toggle-active-user-${u.id}`}
-                            onClick={() => toggleUserActive(u.id)}
+                            onClick={() => handleToggleClick(u)}
                             className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
                               u.active
                                 ? 'border-gray-200 text-[#7D6871] hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200'
                                 : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                             }`}
-                            title={u.active ? 'Desactivar acceso' : 'Reactivar acceso'}
+                            title={u.active ? 'Desactivar usuario' : 'Reactivar usuario'}
+                            aria-label={u.active ? `Desactivar a ${u.name}` : `Activar a ${u.name}`}
                           >
                             <Power className="w-3.5 h-3.5" />
                           </button>
@@ -227,6 +315,8 @@ export const UsersView: React.FC = () => {
         <div className="block md:hidden divide-y divide-[#F2D6DE]/40 p-3 space-y-3">
           {users.map((u) => {
             const isCurrent = u.id === currentUser?.id;
+            const isOnlyAdmin = u.role === 'Administrador' && u.active && activeAdminsCount <= 1;
+
             return (
               <div
                 key={u.id}
@@ -292,13 +382,23 @@ export const UsersView: React.FC = () => {
                     Editar Datos
                   </button>
 
-                  {!isCurrent && (
+                  {isCurrent ? (
+                    <span className="py-2 px-3 rounded-xl border border-gray-200 text-gray-300 text-xs font-semibold cursor-not-allowed flex items-center gap-1">
+                      <Power className="w-3.5 h-3.5" />
+                      Sesión activa
+                    </span>
+                  ) : isOnlyAdmin ? (
+                    <span className="py-2 px-3 rounded-xl border border-gray-200 text-gray-300 text-xs font-semibold cursor-not-allowed flex items-center gap-1">
+                      <Power className="w-3.5 h-3.5" />
+                      Único admin
+                    </span>
+                  ) : (
                     <button
-                      onClick={() => toggleUserActive(u.id)}
+                      onClick={() => handleToggleClick(u)}
                       className={`py-2 px-3 rounded-xl border text-xs font-bold transition-colors cursor-pointer flex items-center gap-1 ${
                         u.active
                           ? 'border-gray-200 text-[#7D6871] hover:bg-rose-50 hover:text-rose-600'
-                          : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                       }`}
                     >
                       <Power className="w-3.5 h-3.5" />
@@ -314,17 +414,22 @@ export const UsersView: React.FC = () => {
 
       {/* Permissions Matrix Reference Card */}
       <div className="bg-white rounded-2xl p-5 border border-[#F2D6DE]/60 shadow-xs space-y-3">
-        <h3 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
-          <Shield className="w-4 h-4 text-[#681B2B]" />
-          Matriz de Permisos por Rol en EMILA
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-[#2C1E23] flex items-center gap-2">
+            <Shield className="w-4 h-4 text-[#681B2B]" />
+            Matriz de Permisos por Rol en EMILA
+          </h3>
+          <span className="text-[11px] text-[#7D6871] font-medium hidden sm:inline">
+            Control de acceso basado en roles (RBAC)
+          </span>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border border-[#F2D6DE]/40 rounded-xl overflow-hidden min-w-[340px]">
             <thead className="bg-[#FBECEF]/30 text-[#7D6871] uppercase text-[10px]">
               <tr>
                 <th className="py-2.5 px-3">Módulo / Acción</th>
-                <th className="py-2.5 px-3 text-center">Colaborador (Empleado)</th>
+                <th className="py-2.5 px-3 text-center">Colaborador</th>
                 <th className="py-2.5 px-3 text-center">Administrador</th>
               </tr>
             </thead>
@@ -351,7 +456,7 @@ export const UsersView: React.FC = () => {
               </tr>
               <tr>
                 <td className="py-2 px-3 font-medium">Gestión de Usuarios y Roles</td>
-                <td className="py-2 px-3 text-center text-rose-600 font-bold">✗ Oculto</td>
+                <td className="py-2 px-3 text-center text-rose-600 font-bold">✗ Restringido</td>
                 <td className="py-2 px-3 text-center text-emerald-700 font-bold">✓ Permitido</td>
               </tr>
             </tbody>
@@ -360,11 +465,12 @@ export const UsersView: React.FC = () => {
       </div>
 
       {/* ============================================================ */}
-      {/* MODAL: CREAR / EDITAR USUARIO (SIN EXPOSICIÓN DE PASSWORD) */}
+      {/* MODAL: EDITAR USUARIO (ACCIONES ESTRICTAMENTE PERMITIDAS)     */}
+      {/* NUNCA MOSTRAR, RECUPERAR NI PRECARGAR CONTRASEÑAS            */}
       {/* ============================================================ */}
-      {showModal && (
+      {showEditModal && editingUser && (
         <div
-          id="modal-user-form"
+          id="modal-edit-user"
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
         >
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE]/60 relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
@@ -373,14 +479,15 @@ export const UsersView: React.FC = () => {
               <div className="min-w-0 flex-1 pr-2">
                 <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] mb-0.5 flex items-center gap-2">
                   <UserCheck className="w-5 h-5 text-[#681B2B] shrink-0" />
-                  <span className="truncate">{editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}</span>
+                  <span className="truncate">Editar Usuario</span>
                 </h3>
                 <p className="text-xs text-[#7D6871] leading-relaxed break-words">
-                  Configure los datos de identificación y nivel de acceso en EMILA.
+                  Modifique los datos permitidos, rol y estado de la cuenta en EMILA.
                 </p>
               </div>
               <button
-                onClick={() => setShowModal(false)}
+                id="btn-close-edit-user-modal"
+                onClick={() => setShowEditModal(false)}
                 className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
                 aria-label="Cerrar modal"
               >
@@ -388,113 +495,189 @@ export const UsersView: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <form onSubmit={handleEditSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Nombre Completo <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  id="input-user-name"
-                  type="text"
-                  required
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Ej. Sofía Valenzuela"
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Nombre de Usuario (Login) <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  id="input-user-username"
-                  type="text"
-                  required
-                  value={formUsername}
-                  onChange={(e) => setFormUsername(e.target.value)}
-                  placeholder="Ej. svalenzuela"
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Correo Electrónico
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7D6871]">
-                    <Mail className="w-4 h-4" />
+                {/* General error message if any */}
+                {formErrors.general && (
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                    <span>{formErrors.general}</span>
                   </div>
+                )}
+
+                {/* Full name input */}
+                <div>
+                  <label htmlFor="input-edit-user-name" className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Nombre Completo <span className="text-rose-500">*</span>
+                  </label>
                   <input
-                    id="input-user-email"
-                    type="email"
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    placeholder="usuario@emila.com"
-                    className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
+                    id="input-edit-user-name"
+                    type="text"
+                    required
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder="Ej. Elena Soto"
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
+                      formErrors.name ? 'border-rose-300 focus:ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
+                    }`}
                   />
+                  {formErrors.name && (
+                    <p className="text-[11px] text-rose-600 mt-1">{formErrors.name}</p>
+                  )}
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">Rol Asignado</label>
-                <select
-                  id="select-user-role"
-                  value={formRole}
-                  onChange={(e) => setFormRole(e.target.value as UserRole)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium text-[#2C1E23] cursor-pointer"
-                >
-                  <option value="Colaborador">Colaborador (Recepción y Taller)</option>
-                  <option value="Administrador">Administrador (Acceso Total)</option>
-                </select>
-              </div>
+                {/* Username input */}
+                <div>
+                  <label htmlFor="input-edit-user-username" className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Nombre de Usuario (Identificador de acceso) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="input-edit-user-username"
+                    type="text"
+                    required
+                    value={formUsername}
+                    onChange={(e) => setFormUsername(e.target.value)}
+                    placeholder="Ej. admin"
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
+                      formErrors.username ? 'border-rose-300 focus:ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
+                    }`}
+                  />
+                  {formErrors.username && (
+                    <p className="text-[11px] text-rose-600 mt-1">{formErrors.username}</p>
+                  )}
+                </div>
 
-              {/* Security info banner instead of password fields */}
-              <div className="p-3 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE] text-xs text-[#681B2B] flex items-start gap-2">
-                <Lock className="w-4 h-4 shrink-0 mt-0.5 text-[#681B2B]" />
-                <p className="text-[11px] leading-relaxed">
-                  Las credenciales de acceso se gestionan de forma cifrada e independiente. Ninguna contraseña es expuesta ni precargada en el navegador.
-                </p>
-              </div>
+                {/* Email input */}
+                <div>
+                  <label htmlFor="input-edit-user-email" className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Correo Electrónico (Contacto)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7D6871]">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input
+                      id="input-edit-user-email"
+                      type="email"
+                      value={formEmail}
+                      onChange={(e) => setFormEmail(e.target.value)}
+                      placeholder="usuario@emila.com"
+                      className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
+                    />
+                  </div>
+                </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  id="checkbox-user-active"
-                  type="checkbox"
-                  checked={formActive}
-                  onChange={(e) => setFormActive(e.target.checked)}
-                  className="w-4 h-4 text-[#681B2B] rounded border-[#F2D6DE] focus:ring-[#681B2B] cursor-pointer"
-                />
-                <label htmlFor="checkbox-user-active" className="text-xs font-medium text-[#2C1E23] cursor-pointer">
-                  Usuario Activo (permite iniciar sesión en el sistema)
-                </label>
-              </div>
+                {/* Role selection */}
+                <div>
+                  <label htmlFor="select-edit-user-role" className="block text-xs font-bold text-[#2C1E23] mb-1">
+                    Rol Asignado
+                  </label>
+                  <select
+                    id="select-edit-user-role"
+                    value={formRole}
+                    onChange={(e) => setFormRole(e.target.value as UserRole)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium text-[#2C1E23] cursor-pointer"
+                  >
+                    <option value="Colaborador" disabled={isEditingOnlyAdmin}>
+                      Colaborador (Recepción, agenda y taller)
+                    </option>
+                    <option value="Administrador">Administrador (Acceso total y configuración)</option>
+                  </select>
+
+                  {isEditingOnlyAdmin && (
+                    <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-1.5 leading-snug">
+                      Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema.
+                    </p>
+                  )}
+                </div>
+
+                {/* Security text (No password exposed or simulated) */}
+                <div className="p-3 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE] text-xs text-[#681B2B] flex items-start gap-2">
+                  <Lock className="w-4 h-4 shrink-0 mt-0.5 text-[#681B2B]" />
+                  <p className="text-[11px] leading-relaxed">
+                    Por seguridad, las contraseñas nunca se muestran, recuperan ni precargan en este formulario.
+                  </p>
+                </div>
+
+                {/* Active status checkbox */}
+                <div className="pt-1">
+                  <label
+                    htmlFor="checkbox-edit-user-active"
+                    className={`flex items-start gap-2.5 p-3 rounded-xl border transition-colors ${
+                      isEditingCurrent || isEditingOnlyAdmin
+                        ? 'bg-gray-50 border-gray-200 opacity-80 cursor-not-allowed'
+                        : 'bg-white border-[#F2D6DE] hover:bg-[#FBECEF]/20 cursor-pointer'
+                    }`}
+                  >
+                    <input
+                      id="checkbox-edit-user-active"
+                      type="checkbox"
+                      checked={formActive}
+                      disabled={isEditingCurrent || isEditingOnlyAdmin}
+                      onChange={(e) => setFormActive(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 text-[#681B2B] rounded border-[#F2D6DE] focus:ring-[#681B2B] cursor-pointer disabled:cursor-not-allowed"
+                    />
+                    <div>
+                      <span className="text-xs font-bold text-[#2C1E23] block">
+                        Usuario Activo
+                      </span>
+                      <span className="text-[11px] text-[#7D6871] block leading-snug">
+                        {isEditingCurrent
+                          ? 'No puede desactivar su propia cuenta activa de administrador.'
+                          : isEditingOnlyAdmin
+                          ? 'No puede desactivar al único Administrador activo del sistema.'
+                          : 'Al estar inactivo, se impedirá inmediatamente su inicio de sesión en el sistema.'}
+                      </span>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               {/* Action Buttons */}
               <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  id="btn-cancel-edit-user"
+                  onClick={() => setShowEditModal(false)}
                   className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
                   Cancelar
                 </button>
                 <button
-                  id="btn-save-user-form"
+                  id="btn-save-edit-user"
                   type="submit"
                   className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
                 >
-                  Guardar Usuario
+                  Guardar Cambios
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* ============================================================ */}
+      {/* CONFIRM MODAL: DESACTIVACIÓN DE USUARIO (REQUERIMIENTO 8)    */}
+      {/* “¿Desea desactivar a [nombre]? Ya no podrá iniciar sesión      */}
+      {/*  hasta que vuelva a activarse.”                              */}
+      {/* ============================================================ */}
+      <ConfirmModal
+        isOpen={Boolean(userToDeactivate)}
+        onClose={() => {
+          setUserToDeactivate(null);
+          setPendingSavePayload(null);
+        }}
+        onConfirm={handleConfirmDeactivation}
+        title="Desactivar usuario"
+        message={
+          userToDeactivate
+            ? `¿Desea desactivar a ${userToDeactivate.name}? Ya no podrá iniciar sesión hasta que vuelva a activarse.`
+            : ''
+        }
+        confirmText="Desactivar"
+        cancelText="Cancelar"
+        type="warning"
+      />
     </div>
   );
 };

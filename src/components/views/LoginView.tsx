@@ -5,11 +5,14 @@ import { motion } from 'motion/react';
 import { EmilaLogo } from '../common/EmilaLogo';
 
 export const LoginView: React.FC = () => {
-  const { login } = useApp();
+  const { login, users } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const empleadoUser = users.find((u) => u.username === 'empleado');
+  const adminUser = users.find((u) => u.username === 'admin');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +32,12 @@ export const LoginView: React.FC = () => {
     setTimeout(() => {
       const ok = login(username, password);
       if (!ok) {
-        setErrorMsg('Credenciales inválidas. Revise su usuario o contraseña.');
+        const target = users.find((x) => x.username.toLowerCase() === username.trim().toLowerCase());
+        if (target && !target.active) {
+          setErrorMsg(`La cuenta de "${target.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`);
+        } else {
+          setErrorMsg('Credenciales inválidas. Revise su usuario o contraseña.');
+        }
       }
       setIsSubmitting(false);
     }, 350);
@@ -41,7 +49,15 @@ export const LoginView: React.FC = () => {
     setErrorMsg('');
     setIsSubmitting(true);
     setTimeout(() => {
-      login(user, pass);
+      const ok = login(user, pass);
+      if (!ok) {
+        const target = users.find((x) => x.username.toLowerCase() === user.toLowerCase());
+        if (target && !target.active) {
+          setErrorMsg(`La cuenta de "${target.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`);
+        } else {
+          setErrorMsg('Credenciales inválidas. Revise su usuario o contraseña.');
+        }
+      }
       setIsSubmitting(false);
     }, 250);
   };
@@ -167,13 +183,23 @@ export const LoginView: React.FC = () => {
                 id="btn-quick-login-colaborador"
                 type="button"
                 onClick={() => handleQuickLogin('empleado', 'demo123')}
-                className="p-3 rounded-xl border border-[#F2D6DE]/60 bg-[#FBECEF]/20 hover:bg-[#FBECEF]/50 text-left transition-colors cursor-pointer"
+                className={`p-3 rounded-xl border transition-colors cursor-pointer text-left ${
+                  empleadoUser?.active === false
+                    ? 'border-rose-200 bg-rose-50/50 hover:bg-rose-50 opacity-85'
+                    : 'border-[#F2D6DE]/60 bg-[#FBECEF]/20 hover:bg-[#FBECEF]/50'
+                }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold text-[#681B2B]">Colaborador</span>
-                  <span className="text-[10px] bg-[#681B2B] text-white px-1.5 py-0.2 rounded font-medium">
-                    Demo Principal
-                  </span>
+                  {empleadoUser?.active === false ? (
+                    <span className="text-[10px] bg-rose-600 text-white px-1.5 py-0.2 rounded font-bold">
+                      Inactivo
+                    </span>
+                  ) : (
+                    <span className="text-[10px] bg-[#681B2B] text-white px-1.5 py-0.2 rounded font-medium">
+                      Demo Principal
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-[#7D6871]">
                   user: <strong className="text-[#2C1E23]">empleado</strong>
@@ -187,11 +213,21 @@ export const LoginView: React.FC = () => {
                 id="btn-quick-login-admin"
                 type="button"
                 onClick={() => handleQuickLogin('admin', 'admin123')}
-                className="p-3 rounded-xl border border-[#F2D6DE]/60 bg-[#FBECEF]/20 hover:bg-[#FBECEF]/50 text-left transition-colors cursor-pointer"
+                className={`p-3 rounded-xl border transition-colors cursor-pointer text-left ${
+                  adminUser?.active === false
+                    ? 'border-rose-200 bg-rose-50/50 hover:bg-rose-50 opacity-85'
+                    : 'border-[#F2D6DE]/60 bg-[#FBECEF]/20 hover:bg-[#FBECEF]/50'
+                }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-bold text-[#681B2B]">Administrador</span>
-                  <Shield className="w-3.5 h-3.5 text-[#681B2B]" />
+                  {adminUser?.active === false ? (
+                    <span className="text-[10px] bg-rose-600 text-white px-1.5 py-0.2 rounded font-bold">
+                      Inactivo
+                    </span>
+                  ) : (
+                    <Shield className="w-3.5 h-3.5 text-[#681B2B]" />
+                  )}
                 </div>
                 <p className="text-[11px] text-[#7D6871]">
                   user: <strong className="text-[#2C1E23]">admin</strong>

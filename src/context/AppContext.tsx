@@ -35,7 +35,6 @@ interface AppContextType {
   logout: () => void;
   switchUserRole: (role: 'Administrador' | 'Colaborador') => void;
   updateUserProfile: (name: string, email?: string) => void;
-  addUser: (userData: Omit<User, 'id'>) => void;
   updateUser: (id: string, userData: Partial<User>) => void;
   toggleUserActive: (id: string) => void;
 
@@ -424,6 +423,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
   }, [users]);
 
+  // Keep currentUser synchronized with the users store & enforce deactivation immediately
+  useEffect(() => {
+    if (currentUser) {
+      const live = users.find((u) => u.id === currentUser.id);
+      if (live) {
+        if (!live.active) {
+          setCurrentUser(null);
+          addToast('Tu sesión ha finalizado porque tu cuenta fue desactivada.', 'warning', 'Acceso denegado');
+        } else if (
+          live.role !== currentUser.role ||
+          live.name !== currentUser.name ||
+          live.username !== currentUser.username ||
+          live.email !== currentUser.email
+        ) {
+          setCurrentUser(live);
+        }
+      }
+    }
+  }, [users]);
+
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(currentUser));
@@ -497,7 +516,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return false;
     }
     if (!found.active) {
-      addToast('Este usuario se encuentra inactivo. Contacte a la administración.', 'error', 'Acceso denegado');
+      addToast(`La cuenta de ${found.name} está inactiva. Ya no tiene acceso al sistema.`, 'error', 'Acceso denegado');
       return false;
     }
 
@@ -527,7 +546,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const target = users.find((u) => u.role === role && u.active);
     if (target) {
       setCurrentUser(target);
-      addToast(`Cambiado al perfil simulado: ${target.name} (${role})`, 'info', 'Rol actualizado');
+      addToast(`Cambiado al perfil: ${target.name} (${role})`, 'info', 'Rol actualizado');
+    } else {
+      addToast(`No hay ningún usuario activo disponible con el rol ${role}.`, 'warning');
     }
   };
 
@@ -543,34 +564,48 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addToast('Perfil actualizado correctamente.', 'success');
   };
 
-  const addUser = (userData: Omit<User, 'id'>) => {
-    if (currentUser?.role !== 'Administrador') {
-      addToast('Acceso denegado: Solo los administradores pueden registrar nuevos usuarios.', 'error', 'No autorizado');
-      return;
-    }
-
-    const newUser: User = {
-      name: userData.name.trim(),
-      username: userData.username.trim().toLowerCase().replace(/\s+/g, ''),
-      role: userData.role,
-      active: userData.active ?? true,
-      email: userData.email?.trim() || '',
-      id: 'usr-' + Date.now(),
-    };
-    setUsers((prev) => [...prev, newUser]);
-    addToast(`Usuario ${newUser.name} registrado con éxito.`, 'success');
-  };
-
   const updateUser = (id: string, userData: Partial<User>) => {
     if (currentUser?.role !== 'Administrador') {
       addToast('Acceso denegado: Solo los administradores pueden modificar usuarios.', 'error', 'No autorizado');
       return;
     }
 
+    const targetUser = users.find((u) => u.id === id);
+    if (!targetUser) return;
+
+    // Regla: No permitir que el administrador actual se desactive a sí mismo
+    if (userData.active === false && id === currentUser?.id) {
+      addToast('No puede desactivar su propia cuenta de administrador.', 'warning', 'Acción no permitida');
+      return;
+    }
+
+    // Regla: No dejar el sistema sin un administrador activo al desactivar
+    if (userData.active === false && targetUser.role === 'Administrador' && targetUser.active) {
+      const otherActiveAdmins = users.filter((u) => u.id !== id && u.role === 'Administrador' && u.active);
+      if (otherActiveAdmins.length === 0) {
+        addToast('No se puede desactivar al único Administrador activo del sistema.', 'warning', 'Acción no permitida');
+        return;
+      }
+    }
+
+    // Regla: No dejar el sistema sin un administrador activo al cambiar de rol
+    if (
+      userData.role &&
+      userData.role !== 'Administrador' &&
+      targetUser.role === 'Administrador' &&
+      targetUser.active
+    ) {
+      const otherActiveAdmins = users.filter((u) => u.id !== id && u.role === 'Administrador' && u.active);
+      if (otherActiveAdmins.length === 0) {
+        addToast('No puede quitar el rol de Administrador al único administrador activo del sistema.', 'warning', 'Acción no permitida');
+        return;
+      }
+    }
+
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === id) {
-          // Whitelist allowed editable fields only (never overwrite with insecure password)
+          // Whitelist allowed editable fields only (nunca exponer ni precargar contraseñas)
           const updated: User = {
             ...u,
             ...(userData.name !== undefined ? { name: userData.name.trim() } : {}),
@@ -598,9 +633,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const userToToggle = users.find((u) => u.id === id);
     if (!userToToggle) return;
+
+    // Regla: No permitir que el administrador actual se desactive a sí mismo
     if (userToToggle.id === currentUser?.id) {
-      addToast('No puede desactivar el usuario con el que tiene sesión activa.', 'warning');
+      addToast('No puede desactivar el usuario con el que tiene sesión activa.', 'warning', 'Acción no permitida');
       return;
+    }
+
+    // Regla: No dejar el sistema sin un administrador activo
+    if (userToToggle.active && userToToggle.role === 'Administrador') {
+      const activeAdmins = users.filter((u) => u.role === 'Administrador' && u.active);
+      if (activeAdmins.length <= 1) {
+        addToast('No puede desactivar al único Administrador activo del sistema.', 'warning', 'Acción no permitida');
+        return;
+      }
     }
 
     setUsers((prev) =>
@@ -1328,7 +1374,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         logout,
         switchUserRole,
         updateUserProfile,
-        addUser,
         updateUser,
         toggleUserActive,
 

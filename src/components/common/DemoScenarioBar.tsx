@@ -68,7 +68,7 @@ export const DemoScenarioBar: React.FC = () => {
   const handleTestUsersRoles = () => {
     setActiveView('users');
     addToast(
-      'Módulo de usuarios: creación de cuentas, asignación de roles y matriz de permisos.',
+      'Módulo de usuarios y roles: edición de información, cambio de rol y control de acceso.',
       'info',
       'Guía de Demostración'
     );
