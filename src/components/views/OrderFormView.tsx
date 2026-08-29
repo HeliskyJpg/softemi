@@ -41,6 +41,8 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     goBack,
     navigateToOrderDetail,
     addToast,
+    newOrderInitialData,
+    setNewOrderInitialData,
   } = useApp();
 
   const isEditing = !!orderIdToEdit;
@@ -49,7 +51,13 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
   // Form State
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [channel, setChannel] = useState<OrderChannel>('WhatsApp');
-  const [deliveryDate, setDeliveryDate] = useState<string>('');
+  const [deliveryDate, setDeliveryDate] = useState<string>(() => {
+    if (existingOrder) return existingOrder.deliveryDate;
+    if (newOrderInitialData?.deliveryDate) return newOrderInitialData.deliveryDate;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
   const [deliveryTime, setDeliveryTime] = useState<string>('12:00');
   const [description, setDescription] = useState<string>('');
   const [observations, setObservations] = useState<string>('');
@@ -78,13 +86,27 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
       setItems(existingOrder.items);
       setAdvancePayment(existingOrder.advancePayment);
     } else {
-      // Default to tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      setDeliveryDate(tomorrow.toISOString().split('T')[0]);
+      if (newOrderInitialData?.deliveryDate) {
+        setDeliveryDate(newOrderInitialData.deliveryDate);
+      } else {
+        // Default to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        setDeliveryDate(tomorrow.toISOString().split('T')[0]);
+      }
+      if (newOrderInitialData?.clientId) {
+        setSelectedClientId(newOrderInitialData.clientId);
+      }
       setDeliveryTime('15:00');
     }
   }, [existingOrder]);
+
+  // Clean up initial navigation data on unmount
+  useEffect(() => {
+    return () => {
+      setNewOrderInitialData(null);
+    };
+  }, [setNewOrderInitialData]);
 
   const selectedClient = clients.find((c) => c.id === selectedClientId);
 

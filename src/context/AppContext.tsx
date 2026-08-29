@@ -54,9 +54,17 @@ interface AppContextType {
   navigateToOrderDetail: (orderId: string, origin?: ActiveView) => void;
   navigateToClientDetail: (clientId: string, origin?: ActiveView) => void;
   navigateToOrderEdit: (orderId: string, origin?: ActiveView) => void;
-  navigateToOrderNew: (origin?: ActiveView) => void;
+  navigateToOrderNew: (
+    origin?: ActiveView,
+    initialData?: { initialDeliveryDate?: string; initialClientId?: string | null }
+  ) => void;
   goBack: (fallbackView?: ActiveView) => void;
   canGoBack: boolean;
+
+  newOrderInitialData: { deliveryDate?: string; clientId?: string | null } | null;
+  setNewOrderInitialData: React.Dispatch<
+    React.SetStateAction<{ deliveryDate?: string; clientId?: string | null } | null>
+  >;
 
   // View States Preservation
   ordersViewState: OrdersViewState;
@@ -259,6 +267,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [navigationHistory, setNavigationHistory] = useState<NavigationHistoryEntry[]>([]);
+  const [newOrderInitialData, setNewOrderInitialData] = useState<{
+    deliveryDate?: string;
+    clientId?: string | null;
+  } | null>(null);
 
   // Persistent View States across tab/view switches & returns
   const [ordersViewState, setOrdersViewState] = useState<OrdersViewState>({
@@ -356,13 +368,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setActiveViewRaw('order-edit');
   };
 
-  const navigateToOrderNew = (origin?: ActiveView) => {
+  const navigateToOrderNew = (
+    origin?: ActiveView,
+    initialData?: { initialDeliveryDate?: string; initialClientId?: string | null }
+  ) => {
     const sourceView = origin || activeView;
     setNavigationHistory((prev) => [
       ...prev,
       { view: sourceView, orderId: selectedOrderId, clientId: selectedClientId },
     ]);
     setSelectedOrderId(null);
+    if (initialData?.initialDeliveryDate || initialData?.initialClientId) {
+      setNewOrderInitialData({
+        deliveryDate: initialData.initialDeliveryDate,
+        clientId: initialData.initialClientId,
+      });
+    } else {
+      setNewOrderInitialData(null);
+    }
     setActiveViewRaw('order-new');
   };
 
@@ -1323,6 +1346,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         navigateToOrderNew,
         goBack,
         canGoBack,
+
+        newOrderInitialData,
+        setNewOrderInitialData,
 
         ordersViewState,
         setOrdersViewState,

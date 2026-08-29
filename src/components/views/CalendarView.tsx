@@ -9,7 +9,7 @@ import {
   CalendarDays,
   User,
   PackageCheck,
-  RotateCcw,
+  Plus,
 } from 'lucide-react';
 import { StatusBadge } from '../common/StatusBadge';
 import { Order } from '../../types';
@@ -18,6 +18,7 @@ export const CalendarView: React.FC = () => {
   const {
     orders,
     navigateToOrderDetail,
+    navigateToOrderNew,
     calendarViewState,
     setCalendarViewState,
   } = useApp();
@@ -158,6 +159,10 @@ export const CalendarView: React.FC = () => {
   };
 
   const currentFormatted = formatFriendlyDate(activeDate);
+
+  const handleCreateOrderForDate = () => {
+    navigateToOrderNew('calendar', { initialDeliveryDate: activeDate });
+  };
 
   // Pagination for day orders if many
   const totalPages = Math.ceil(activeOrdersForDate.length / ITEMS_PER_PAGE) || 1;
@@ -369,26 +374,51 @@ export const CalendarView: React.FC = () => {
                 </div>
               </div>
 
-              <h2 className="text-sm sm:text-base font-bold text-[#2C1E23] mt-1 capitalize leading-snug">
-                {currentFormatted.title}
-              </h2>
+              <div className="flex items-center justify-between gap-2 mt-1.5">
+                <h2 className="text-sm sm:text-base font-bold text-[#2C1E23] capitalize leading-snug">
+                  {currentFormatted.title}
+                </h2>
+
+                {/* Desktop: "+ Nuevo pedido" in right panel */}
+                <button
+                  id="btn-calendar-new-order-desktop"
+                  type="button"
+                  onClick={handleCreateOrderForDate}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
+                  title="Crear nuevo pedido con esta fecha de entrega"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Nuevo pedido</span>
+                </button>
+              </div>
             </div>
 
             {/* List / Vertical Cards */}
             <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-0.5">
               {activeOrdersForDate.length === 0 ? (
                 /* Empty State */
-                <div className="text-center py-10 px-4 space-y-2.5">
-                  <div className="w-11 h-11 mx-auto rounded-full bg-[#FBECEF] flex items-center justify-center text-[#681B2B]">
-                    <PackageCheck className="w-5 h-5 opacity-70" />
+                <div className="text-center py-10 px-4 space-y-3">
+                  <div className="w-12 h-12 mx-auto rounded-full bg-[#FBECEF] flex items-center justify-center text-[#681B2B]">
+                    <PackageCheck className="w-6 h-6 opacity-75" />
                   </div>
                   <div>
                     <h4 className="text-xs sm:text-sm font-bold text-[#2C1E23]">
                       Sin pedidos para esta fecha
                     </h4>
-                    <p className="text-[11px] text-[#7D6871] mt-0.5 max-w-[200px] mx-auto">
+                    <p className="text-[11px] text-[#7D6871] mt-0.5 max-w-[220px] mx-auto">
                       No hay entregas programadas en el taller para este día.
                     </p>
+                  </div>
+                  <div className="pt-1.5">
+                    <button
+                      id="btn-calendar-empty-new-order"
+                      type="button"
+                      onClick={handleCreateOrderForDate}
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Crear pedido para esta fecha</span>
+                    </button>
                   </div>
                 </div>
               ) : (
@@ -467,6 +497,21 @@ export const CalendarView: React.FC = () => {
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Mobile: "+ Nuevo pedido" button below the list of orders */}
+            {activeOrdersForDate.length > 0 && (
+              <div className="sm:hidden pt-3 mt-3 border-t border-[#F2D6DE]/50">
+                <button
+                  id="btn-calendar-new-order-mobile"
+                  type="button"
+                  onClick={handleCreateOrderForDate}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Nuevo pedido</span>
+                </button>
               </div>
             )}
           </div>
