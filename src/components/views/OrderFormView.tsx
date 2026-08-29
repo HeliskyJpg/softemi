@@ -24,6 +24,7 @@ import {
   Client,
   ComponentItem,
 } from '../../types';
+import { QuantityInput } from '../common/QuantityInput';
 
 interface OrderFormViewProps {
   orderIdToEdit?: string | null;
@@ -180,8 +181,6 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
 
   // Update item quantity directly in table
   const handleUpdateItemQuantity = (componentId: string, newQty: number) => {
-    if (newQty <= 0) return;
-
     const comp = components.find((c) => c.id === componentId);
     if (!comp) return;
 
@@ -192,21 +191,13 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
       effectiveAvailable += originalAllocated;
     }
 
-    if (newQty > effectiveAvailable) {
-      addToast(
-        `Stock máximo disponible para "${comp.name}" es de ${effectiveAvailable} ${comp.unit || 'unidades'}.`,
-        'warning'
-      );
-      return;
-    }
-
     setItems((prev) =>
       prev.map((it) =>
         it.componentId === componentId
           ? {
               ...it,
               quantity: newQty,
-              subtotal: newQty * it.unitPrice,
+              subtotal: Math.max(0, newQty) * it.unitPrice,
             }
           : it
       )
@@ -236,6 +227,29 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     }
     if (items.length === 0) {
       newErrors.items = 'Debe agregar al menos un componente o detalle al pedido.';
+    } else {
+      const invalidQtyItem = items.find((it) => it.quantity <= 0);
+      if (invalidQtyItem) {
+        newErrors.items = `Ingrese una cantidad mayor a 0 para "${invalidQtyItem.componentName}".`;
+      } else {
+        // Validate stock availability
+        for (const it of items) {
+          const comp = components.find((c) => c.id === it.componentId);
+          if (comp) {
+            const baseAvailable = comp.physicalStock - comp.reservedStock;
+            let effectiveAvailable = baseAvailable;
+            if (existingOrder) {
+              const originalAllocated =
+                existingOrder.items.find((x) => x.componentId === it.componentId)?.quantity || 0;
+              effectiveAvailable += originalAllocated;
+            }
+            if (it.quantity > effectiveAvailable) {
+              newErrors.items = `La cantidad de "${it.componentName}" (${it.quantity}) excede el disponible (${effectiveAvailable} ${comp.unit || 'unidades'}).`;
+              break;
+            }
+          }
+        }
+      }
     }
     if (advancePayment < 0) {
       newErrors.advancePayment = 'El anticipo no puede ser negativo.';
@@ -618,20 +632,20 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                         <td className="py-2.5 px-3 text-right font-medium text-[#2C1E23]">
                           Q {it.unitPrice.toFixed(2)}
                         </td>
-                        <td className="py-2.5 px-3 text-center">
-                          <input
-                            type="number"
-                            min={1}
-                            max={effectiveAvailable}
-                            value={it.quantity}
-                            onChange={(e) =>
-                              handleUpdateItemQuantity(
-                                it.componentId,
-                                parseInt(e.target.value) || 1
-                              )
-                            }
-                            className="w-16 px-2 py-1 rounded-lg border border-[#F2D6DE] text-center font-bold text-xs focus:ring-1 focus:ring-[#681B2B]"
-                          />
+                        <td className="py-2.5 px-3 text-center w-28">
+                          <div className="w-20 mx-auto">
+                            <QuantityInput
+                              id={`input-item-qty-${it.componentId}`}
+                              value={it.quantity}
+                              max={effectiveAvailable}
+                              unit={comp?.unit}
+                              onChange={(newQty) =>
+                                handleUpdateItemQuantity(it.componentId, newQty)
+                              }
+                              size="sm"
+                              align="center"
+                            />
+                          </div>
                         </td>
                         <td className="py-2.5 px-3 text-right font-bold text-[#681B2B]">
                           Q {it.subtotal.toFixed(2)}
@@ -944,21 +958,34 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               )}
 
               <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                  Cantidad a Incluir
+                <label
+                  htmlFor="input-add-component-qty"
+                  className="block text-xs font-bold text-[#2C1E23] mb-1.5"
+                >
+                  Cantidad a Incluir{' '}
+                  {selectedComponentId && (
+                    <span className="text-[#7D6871] font-normal">
+                      ({components.find((c) => c.id === selectedComponentId)?.unit || 'unidades'})
+                    </span>
+                  )}
                 </label>
-                <input
+                <QuantityInput
                   id="input-add-component-qty"
-                  type="number"
-                  min={1}
+                  value={selectedComponentQty}
                   max={
                     selectedComponentId
-                      ? Math.max(1, (components.find((c) => c.id === selectedComponentId)?.physicalStock || 0) - (components.find((c) => c.id === selectedComponentId)?.reservedStock || 0))
-                      : 100
+                      ? Math.max(
+                          0,
+                          (components.find((c) => c.id === selectedComponentId)?.physicalStock || 0) -
+                            (components.find((c) => c.id === selectedComponentId)?.reservedStock || 0)
+                        )
+                      : undefined
                   }
-                  value={selectedComponentQty}
-                  onChange={(e) => setSelectedComponentQty(parseInt(e.target.value) || 1)}
-                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#F2D6DE] font-bold text-center focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+                  unit={components.find((c) => c.id === selectedComponentId)?.unit}
+                  onChange={(newQty) => setSelectedComponentQty(newQty)}
+                  size="lg"
+                  align="center"
+                  showErrorText
                 />
               </div>
 
