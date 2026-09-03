@@ -56,10 +56,10 @@ export const MandatoryPasswordChangeModal: React.FC = () => {
             <Lock className="w-6 h-6 text-[#FBECEF]" />
           </div>
           <h2 className="text-xl font-serif font-bold tracking-tight text-white">
-            Primer Inicio de Sesión
+            Cambio Obligatorio de Contraseña
           </h2>
           <p className="text-xs text-[#FBECEF]/80 mt-1">
-            Cambio obligatorio de contraseña requerido
+            Contraseña temporal detectada &bull; Asigne su clave personal
           </p>
         </div>
 
@@ -72,8 +72,7 @@ export const MandatoryPasswordChangeModal: React.FC = () => {
                 Hola, {currentUser.name} (@{currentUser.username})
               </p>
               <p>
-                Ha ingresado con una contraseña temporal. Por normativas de seguridad de EMILA,
-                debe definir su propia contraseña personal antes de continuar en el sistema.
+                Ha ingresado con una contraseña temporal (asignada por registro inicial o restablecida por un administrador). Por normativas de seguridad de EMILA Floristería, debe definir su propia contraseña personal antes de poder continuar en el sistema.
               </p>
             </div>
           </div>

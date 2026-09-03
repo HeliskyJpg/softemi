@@ -558,7 +558,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           live.role !== currentUser.role ||
           live.name !== currentUser.name ||
           live.username !== currentUser.username ||
-          live.email !== currentUser.email
+          live.email !== currentUser.email ||
+          live.mustChangePassword !== currentUser.mustChangePassword ||
+          live.password !== currentUser.password
         ) {
           setCurrentUser(live);
         }
@@ -926,8 +928,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       module: 'Usuarios',
       entityType: 'User',
       recordId: `@${targetUser.username}`,
+      operationType: 'Seguridad y Usuarios',
       description: `Cambio obligatorio de contraseña completado para @${targetUser.username} (${targetUser.name}). Contraseña personal configurada.`,
-      previousValue: 'Contraseña temporal previa',
+      previousValue: 'Contraseña temporal previa (protegida)',
       newValue: 'Nueva contraseña personal configurada',
       metadata: { targetUserId: targetUser.id, username: targetUser.username },
     });
@@ -998,18 +1001,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const generated = tempPassword?.trim() || `Emila${Math.floor(1000 + Math.random() * 9000)}!`;
 
+    // 1. Actualizar usuario con contraseña temporal y forzar cambio en próximo inicio de sesión
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === id
+          ? {
+              ...u,
+              password: generated,
+              mustChangePassword: true,
+            }
+          : u
+      )
+    );
+
+    if (currentUser?.id === id) {
+      setCurrentUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              password: generated,
+              mustChangePassword: true,
+            }
+          : null
+      );
+    }
+
+    // 2. Registrar en Auditoría SIN registrar el valor de la contraseña
     logAction({
       action: 'restablecer contraseña',
       module: 'Usuarios',
       entityType: 'User',
-      recordId: targetUser.username,
-      description: `Restablecimiento de credenciales para @${targetUser.username} (${targetUser.name})`,
-      previousValue: 'Contraseña previa',
-      newValue: `Contraseña provisional asignada (${generated})`,
-      metadata: { targetUserId: targetUser.id, targetUserName: targetUser.name },
+      recordId: `@${targetUser.username}`,
+      operationType: 'Seguridad y Usuarios',
+      description: `Restablecimiento de contraseña para el usuario @${targetUser.username} (${targetUser.name}). Se asignó una contraseña temporal con requerimiento de cambio obligatorio en el próximo inicio de sesión.`,
+      previousValue: 'Contraseña anterior (protegida)',
+      newValue: 'Contraseña temporal asignada (cambio obligatorio en próximo inicio)',
+      metadata: {
+        targetUserId: targetUser.id,
+        targetUsername: targetUser.username,
+        targetRole: targetUser.role,
+      },
     });
 
-    addToast(`Contraseña temporal asignada para @${targetUser.username}: ${generated}`, 'success', 'Contraseña restablecida');
+    addToast(`Contraseña temporal configurada para @${targetUser.username}. Entréguela directamente al usuario.`, 'success', 'Contraseña restablecida');
     return { success: true, tempPassword: generated };
   };
 
