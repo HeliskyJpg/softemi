@@ -79,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
     },
     {
       id: 'audit',
-      label: 'Bitácora de auditoría',
+      label: 'Auditoría',
       icon: History,
       matchViews: ['audit'],
       adminOnly: true,

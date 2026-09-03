@@ -1,4 +1,100 @@
-import { AuditLogEntry, LogActionParams, User } from '../types';
+import { AuditLogEntry, AuditOperationType, LogActionParams, User } from '../types';
+
+/**
+ * Resolves an operational category from action and module names.
+ */
+export function resolveOperationType(action: string, module?: string): AuditOperationType {
+  const act = (action || '').toLowerCase();
+  if (
+    act.includes('merma') ||
+    act.includes('salida') ||
+    act.includes('cancelar') ||
+    act.includes('desactivar') ||
+    act.includes('inactivar') ||
+    act.includes('eliminar')
+  ) {
+    return 'Salidas y Mermas';
+  }
+  if (
+    act.includes('crear') ||
+    act.includes('entrada') ||
+    act.includes('alta') ||
+    act.includes('nuevo')
+  ) {
+    return 'Creaciones';
+  }
+  if (
+    act.includes('estado') ||
+    act.includes('listo') ||
+    act.includes('entregado') ||
+    act.includes('preparar')
+  ) {
+    return 'Cambios de estado';
+  }
+  if (
+    act.includes('pago') ||
+    act.includes('abono') ||
+    act.includes('anticipo') ||
+    act.includes('liquidar') ||
+    act.includes('cobro')
+  ) {
+    return 'Pagos y Abonos';
+  }
+  if (
+    act.includes('rol') ||
+    act.includes('contraseña') ||
+    act.includes('usuario') ||
+    act.includes('seguridad')
+  ) {
+    return 'Seguridad y Usuarios';
+  }
+  if (
+    act.includes('reporte') ||
+    act.includes('exportar')
+  ) {
+    return 'Reportes y Exportaciones';
+  }
+  return 'Modificaciones';
+}
+
+/**
+ * Formats ISO timestamp into warm human-readable representations.
+ */
+export function formatAuditHumanDate(isoString: string): { relative: string; date: string; time: string; full: string } {
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) {
+      return { relative: isoString, date: isoString, time: '', full: isoString };
+    }
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    
+    const timeStr = d.toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const dateStr = d.toLocaleDateString('es-GT', { day: '2-digit', month: 'short', year: 'numeric' });
+    
+    let relative = dateStr;
+    if (isToday) {
+      relative = `Hoy, ${timeStr}`;
+    } else if (isYesterday) {
+      relative = `Ayer, ${timeStr}`;
+    } else {
+      relative = `${dateStr}, ${timeStr}`;
+    }
+
+    return {
+      relative,
+      date: dateStr,
+      time: timeStr,
+      full: `${dateStr} a las ${timeStr}`,
+    };
+  } catch {
+    return { relative: isoString, date: isoString, time: '', full: isoString };
+  }
+}
 
 /**
  * Serializes any data type into a clean string representation suitable for
@@ -80,6 +176,7 @@ export function createAuditLogEntry(
     entityType: params.entityType,
     recordId: String(params.recordId || '').trim(),
     description: params.description.trim(),
+    operationType: params.operationType || resolveOperationType(params.action, params.module),
     previousValue: serializeAuditValue(params.previousValue),
     newValue: serializeAuditValue(params.newValue),
     metadata: params.metadata,

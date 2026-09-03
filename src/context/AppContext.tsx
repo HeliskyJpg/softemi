@@ -1189,12 +1189,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       ? 'entrada de stock'
       : 'ajustar stock';
 
+    const userDisplayName = currentUser?.name || 'El usuario';
+    const humanDescription = isMerma
+      ? `${userDisplayName} registró una salida de ${adjustment.quantity} unidades por merma.`
+      : adjustment.type === 'Entrada'
+      ? `${userDisplayName} registró una entrada de ${adjustment.quantity} unidades de "${comp.name}".`
+      : `${userDisplayName} registró un ajuste de stock de ${adjustment.quantity} unidades en "${comp.name}".`;
+
     logAction({
       action: actionName,
       module: 'Inventario',
       entityType: 'ComponentItem',
       recordId: comp.name,
-      description: `${actionName.toUpperCase()}: ${adjustment.quantity} ${comp.unit}(s) de "${comp.name}". Motivo: ${adjustment.reason}${adjustment.observation ? ` - ${adjustment.observation}` : ''}`,
+      description: humanDescription,
       previousValue: JSON.stringify({ stockFisico: previousPhysicalStock, stockReservado: comp.reservedStock }),
       newValue: JSON.stringify({
         stockFisico: newPhysicalStock,

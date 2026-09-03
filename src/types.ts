@@ -126,6 +126,16 @@ export type AuditModule =
   | 'Perfil'
   | string;
 
+export type AuditOperationType =
+  | 'Salidas y Mermas'
+  | 'Creaciones'
+  | 'Modificaciones'
+  | 'Cambios de estado'
+  | 'Pagos y Abonos'
+  | 'Seguridad y Usuarios'
+  | 'Reportes y Exportaciones'
+  | string;
+
 export interface AuditLogEntry {
   id: string;                      // Unique ID (compatible with UUID primary key in SQL)
   timestamp: string;               // ISO 8601 string (e.g. 2026-09-03T15:30:00.000Z)
@@ -137,6 +147,7 @@ export interface AuditLogEntry {
   entityType: string;              // Entity type (e.g. "Order", "Client", "ComponentItem", "User")
   recordId: string;                // Target entity ID or code (record_id in SQL)
   description: string;             // Concise human-readable description
+  operationType?: AuditOperationType; // Operational classification for filtering
   previousValue: string | null;    // Serialized/formatted previous value when applicable
   newValue: string | null;         // Serialized/formatted new value when applicable
   metadata?: Record<string, unknown>; // Optional additional JSON payload
@@ -148,6 +159,7 @@ export interface LogActionParams {
   entityType: string;
   recordId: string;
   description: string;
+  operationType?: AuditOperationType;
   previousValue?: unknown;
   newValue?: unknown;
   metadata?: Record<string, unknown>;
