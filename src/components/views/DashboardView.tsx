@@ -21,14 +21,21 @@ import {
   DollarSign,
   Receipt,
   Eye,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 import { StatusBadge } from '../common/StatusBadge';
 import { MoneyFormatter, formatMoney } from '../common/MoneyFormatter';
 import { DateFormatter } from '../common/DateFormatter';
 import { EmptyState } from '../common/EmptyState';
+import {
+  DashboardSnapshotModal,
+  DashboardSnapshotData,
+} from '../modals/DashboardSnapshotModal';
 
 export const DashboardView: React.FC = () => {
   const {
+    currentUser,
     orders,
     components,
     auditLogs,
@@ -40,6 +47,7 @@ export const DashboardView: React.FC = () => {
     setOrdersViewState,
     componentsViewState,
     setComponentsViewState,
+    addToast,
   } = useApp();
 
   // Selected period for DINERO metrics: 'month' (default), '30days', 'all'
@@ -47,6 +55,11 @@ export const DashboardView: React.FC = () => {
 
   // Selected tab for ACTIVIDAD section: 'upcoming' | 'payments' | 'recent'
   const [activityTab, setActivityTab] = useState<'upcoming' | 'payments' | 'recent'>('upcoming');
+
+  // Snapshot simulation states
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
+  const [snapshotData, setSnapshotData] = useState<DashboardSnapshotData | null>(null);
 
   const todayStr = new Date().toISOString().split('T')[0];
   const currentMonthPrefix = todayStr.substring(0, 7); // e.g. "2026-09"
@@ -365,6 +378,55 @@ export const DashboardView: React.FC = () => {
     return [];
   }, [auditLogs]);
 
+  // Handler for dashboard snapshot generation
+  const handleCaptureDashboard = () => {
+    setIsCapturing(true);
+
+    // Simulated rasterization / processing delay (750ms)
+    setTimeout(() => {
+      const data: DashboardSnapshotData = {
+        capturedAt: new Date(),
+        currentUserName: currentUser?.name || 'Administrador',
+        operation: {
+          todayDeliveries: todayOrders.length,
+          todayPending: todayPendingCount,
+          lateOrders: lateOrders.length,
+          inPrepOrders: inPrepOrders.length,
+          readyOrders: readyOrders.length,
+        },
+        money: {
+          periodLabel:
+            moneyPeriod === 'month'
+              ? 'Este mes'
+              : moneyPeriod === '30days'
+              ? 'Últimos 30 días'
+              : 'Histórico',
+          totalSold: periodTotalSold,
+          totalCollected: periodTotalCollected,
+          pendingBalance: periodPendingBalance,
+        },
+        inventory: {
+          lowStockCount: lowStockComponents.length,
+          outOfStockCount: outOfStockComponents.length,
+        },
+        upcomingOrders: upcomingOrders.map((o) => ({
+          code: o.code,
+          clientName: o.clientName,
+          deliveryDate: o.deliveryDate,
+          deliveryTime: o.deliveryTime,
+          status: o.status,
+          total: o.total,
+          balance: o.balance || 0,
+        })),
+      };
+
+      setSnapshotData(data);
+      setIsCapturing(false);
+      setIsSnapshotModalOpen(true);
+      addToast('Captura del dashboard generada con éxito.', 'info', 'Captura lista');
+    }, 750);
+  };
+
   return (
     <div id="dashboard-view-container" className="space-y-7 pb-10">
       {/* Top Header */}
@@ -381,16 +443,39 @@ export const DashboardView: React.FC = () => {
           </p>
         </div>
 
-        {hasPermission('orders.create') && (
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {/* Acción: Capturar dashboard */}
           <button
-            id="btn-dashboard-new-order"
-            onClick={() => navigateToOrderNew('dashboard')}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto hover:shadow-md active:scale-98"
+            id="btn-dashboard-capture"
+            type="button"
+            onClick={handleCaptureDashboard}
+            disabled={isCapturing}
+            className="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/80 text-[#2C1E23] hover:text-[#681B2B] font-bold text-xs sm:text-sm shadow-2xs transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed hover:shadow-xs active:scale-98"
           >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            Nuevo Pedido
+            {isCapturing ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-[#681B2B]" />
+                <span>Generando captura...</span>
+              </>
+            ) : (
+              <>
+                <Camera className="w-4 h-4 stroke-[2.2] text-[#681B2B]" />
+                <span>Capturar dashboard</span>
+              </>
+            )}
           </button>
-        )}
+
+          {hasPermission('orders.create') && (
+            <button
+              id="btn-dashboard-new-order"
+              onClick={() => navigateToOrderNew('dashboard')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto hover:shadow-md active:scale-98"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              Nuevo Pedido
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ========================================================================= */}
@@ -1254,6 +1339,13 @@ export const DashboardView: React.FC = () => {
           </div>
         )}
       </section>
+
+      {/* Modal Captura generada (simulación del prototipo) */}
+      <DashboardSnapshotModal
+        isOpen={isSnapshotModalOpen}
+        onClose={() => setIsSnapshotModalOpen(false)}
+        snapshotData={snapshotData}
+      />
     </div>
   );
 };
