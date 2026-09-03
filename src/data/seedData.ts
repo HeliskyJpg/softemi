@@ -20,6 +20,9 @@ export const INITIAL_USERS: User[] = [
     role: 'Administrador',
     active: true,
     email: 'elena.soto@emila.com',
+    password: 'admin123',
+    mustChangePassword: false,
+    createdAt: '2026-01-01',
   },
   {
     id: 'usr-2',
@@ -28,6 +31,9 @@ export const INITIAL_USERS: User[] = [
     role: 'Colaborador',
     active: true,
     email: 'sofia.aguilar@emila.com',
+    password: 'demo123',
+    mustChangePassword: false,
+    createdAt: '2026-01-10',
   },
 ];
 

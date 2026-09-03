@@ -8,6 +8,17 @@ export interface User {
   active: boolean;
   email?: string;
   password?: string; // Optional internal auth token only, never exposed in UI
+  mustChangePassword?: boolean; // If true, requires mandatory password change on first login
+  createdAt?: string;
+}
+
+export interface CreateUserParams {
+  name: string;
+  username: string;
+  email?: string;
+  role: UserRole;
+  tempPassword?: string;
+  mustChangePassword?: boolean;
 }
 
 export type SystemUser = User;

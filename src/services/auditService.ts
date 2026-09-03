@@ -5,6 +5,17 @@ import { AuditLogEntry, AuditOperationType, LogActionParams, User } from '../typ
  */
 export function resolveOperationType(action: string, module?: string): AuditOperationType {
   const act = (action || '').toLowerCase();
+  const mod = (module || '').toLowerCase();
+
+  if (
+    mod === 'usuarios' ||
+    act.includes('rol') ||
+    act.includes('contraseña') ||
+    act.includes('usuario') ||
+    act.includes('seguridad')
+  ) {
+    return 'Seguridad y Usuarios';
+  }
   if (
     act.includes('merma') ||
     act.includes('salida') ||
@@ -39,14 +50,6 @@ export function resolveOperationType(action: string, module?: string): AuditOper
     act.includes('cobro')
   ) {
     return 'Pagos y Abonos';
-  }
-  if (
-    act.includes('rol') ||
-    act.includes('contraseña') ||
-    act.includes('usuario') ||
-    act.includes('seguridad')
-  ) {
-    return 'Seguridad y Usuarios';
   }
   if (
     act.includes('reporte') ||

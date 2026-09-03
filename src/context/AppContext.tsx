@@ -21,6 +21,7 @@ import {
   AutocompleteOption,
   AuditLogEntry,
   LogActionParams,
+  CreateUserParams,
 } from '../types';
 import {
   CATALOG_DEFINITIONS,
@@ -49,6 +50,8 @@ interface AppContextType {
   switchUserRole: (role: 'Administrador' | 'Colaborador') => void;
   updateUserProfile: (name: string, email?: string) => void;
   updateUser: (id: string, userData: Partial<User>) => void;
+  createUser: (userData: CreateUserParams) => { success: boolean; user?: User; error?: string; tempPassword?: string };
+  changePassword: (newPassword: string, userId?: string) => { success: boolean; error?: string };
   toggleUserActive: (id: string) => void;
   resetUserPassword: (id: string, tempPassword?: string) => { success: boolean; tempPassword?: string; error?: string };
 
@@ -655,24 +658,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return false;
     }
     if (!found.active) {
-      addToast(`La cuenta de ${found.name} está inactiva. Ya no tiene acceso al sistema.`, 'error', 'Acceso denegado');
+      addToast(`La cuenta de "${found.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`, 'error', 'Acceso denegado');
       return false;
     }
 
-    if (password) {
-      if (found.username === 'admin' && password !== 'admin123') {
-        addToast('Contraseña incorrecta para el usuario admin.', 'error', 'Error de autenticación');
-        return false;
-      }
-      if (found.username === 'empleado' && password !== 'demo123') {
-        addToast('Contraseña incorrecta para el usuario colaborador.', 'error', 'Error de autenticación');
+    if (password !== undefined) {
+      const expectedPassword = found.password || (found.username === 'admin' ? 'admin123' : 'demo123');
+      if (password !== expectedPassword) {
+        addToast('Contraseña incorrecta. Verifique sus credenciales.', 'error', 'Error de autenticación');
         return false;
       }
     }
 
     setCurrentUser(found);
-    addToast(`¡Bienvenido/a, ${found.name}!`, 'success', 'Sesión iniciada');
-    setActiveView('dashboard');
+    if (!found.mustChangePassword) {
+      addToast(`¡Bienvenido/a, ${found.name}!`, 'success', 'Sesión iniciada');
+      setActiveView('dashboard');
+    }
     return true;
   };
 
@@ -776,34 +778,162 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Audit Logging
     let actionName = 'editar usuario';
+    let humanDesc = `Edición de datos de usuario: @${targetUser.username} (${targetUser.name})`;
+
     if (userData.role && userData.role !== targetUser.role) {
       actionName = 'cambiar rol';
+      humanDesc = `Cambio de rol para @${targetUser.username} (${targetUser.name}): de ${targetUser.role} a ${userData.role}`;
     } else if (userData.active !== undefined && userData.active !== targetUser.active) {
-      actionName = userData.active ? 'activar usuario' : 'inactivar usuario';
+      actionName = userData.active ? 'activar usuario' : 'desactivar usuario';
+      humanDesc = userData.active
+        ? `Activación de usuario @${targetUser.username} (${targetUser.name})`
+        : `Desactivación de usuario @${targetUser.username} (${targetUser.name})`;
     }
 
     logAction({
       action: actionName,
       module: 'Usuarios',
       entityType: 'User',
-      recordId: targetUser.username,
-      description: `${actionName.toUpperCase()}: Usuario @${targetUser.username} (${targetUser.name})`,
+      recordId: `@${targetUser.username}`,
+      description: humanDesc,
       previousValue: JSON.stringify({
         nombre: targetUser.name,
         usuario: targetUser.username,
+        correo: targetUser.email || '',
         rol: targetUser.role,
         activo: targetUser.active,
       }),
       newValue: JSON.stringify({
         nombre: userData.name ?? targetUser.name,
         usuario: userData.username ?? targetUser.username,
+        correo: userData.email ?? (targetUser.email || ''),
         rol: userData.role ?? targetUser.role,
         activo: userData.active ?? targetUser.active,
       }),
-      metadata: { targetUserId: targetUser.id },
+      metadata: { targetUserId: targetUser.id, username: targetUser.username },
     });
 
     addToast('Usuario actualizado correctamente.', 'success');
+  };
+
+  const createUser = (userData: CreateUserParams): {
+    success: boolean;
+    user?: User;
+    error?: string;
+    tempPassword?: string;
+  } => {
+    if (currentUser?.role !== 'Administrador') {
+      const errorMsg = 'Acceso denegado: Solo los administradores pueden registrar nuevos usuarios.';
+      addToast(errorMsg, 'error', 'No autorizado');
+      return { success: false, error: errorMsg };
+    }
+
+    const trimmedName = userData.name?.trim();
+    if (!trimmedName) {
+      return { success: false, error: 'El nombre completo es obligatorio.' };
+    }
+
+    const cleanUsername = userData.username?.trim().toLowerCase().replace(/\s+/g, '');
+    if (!cleanUsername) {
+      return { success: false, error: 'El nombre de usuario es obligatorio.' };
+    }
+
+    // Uniqueness validation
+    const exists = users.some((u) => u.username.toLowerCase() === cleanUsername);
+    if (exists) {
+      return { success: false, error: `El nombre de usuario "@${cleanUsername}" ya se encuentra registrado.` };
+    }
+
+    // Functional temporary password
+    const tempPass = userData.tempPassword?.trim() || `Emila${Math.floor(1000 + Math.random() * 9000)}!`;
+    if (tempPass.length < 4) {
+      return { success: false, error: 'La contraseña temporal debe tener al menos 4 caracteres.' };
+    }
+
+    const newUser: User = {
+      id: 'usr-' + Date.now(),
+      name: trimmedName,
+      username: cleanUsername,
+      email: userData.email?.trim() || '',
+      role: userData.role || 'Colaborador',
+      active: true,
+      password: tempPass,
+      mustChangePassword: true, // Requerimiento: La contraseña temporal debe requerir cambio al primer inicio de sesión
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+
+    setUsers((prev) => [...prev, newUser]);
+
+    // Registrar en auditoría: creación
+    logAction({
+      action: 'crear usuario',
+      module: 'Usuarios',
+      entityType: 'User',
+      recordId: `@${newUser.username}`,
+      description: `Creación de nuevo usuario: ${newUser.name} (@${newUser.username}) con rol ${newUser.role}. Contraseña temporal funcional asignada con cambio obligatorio al primer inicio.`,
+      previousValue: null,
+      newValue: JSON.stringify({
+        nombre: newUser.name,
+        usuario: newUser.username,
+        correo: newUser.email,
+        rol: newUser.role,
+        activo: true,
+        requiereCambioContrasena: true,
+      }),
+      metadata: { targetUserId: newUser.id, username: newUser.username, role: newUser.role },
+    });
+
+    addToast(`Usuario @${newUser.username} creado exitosamente. Comparta la contraseña temporal directamente con el usuario.`, 'success', 'Usuario creado');
+
+    return {
+      success: true,
+      user: newUser,
+      tempPassword: tempPass,
+    };
+  };
+
+  const changePassword = (newPassword: string, userId?: string): { success: boolean; error?: string } => {
+    const targetId = userId || currentUser?.id;
+    if (!targetId) {
+      return { success: false, error: 'No se especificó el usuario para cambiar la contraseña.' };
+    }
+
+    const trimmed = newPassword.trim();
+    if (trimmed.length < 4) {
+      return { success: false, error: 'La nueva contraseña debe tener al menos 4 caracteres.' };
+    }
+
+    const targetUser = users.find((u) => u.id === targetId);
+    if (!targetUser) {
+      return { success: false, error: 'Usuario no encontrado.' };
+    }
+
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === targetId
+          ? { ...u, password: trimmed, mustChangePassword: false }
+          : u
+      )
+    );
+
+    if (currentUser?.id === targetId) {
+      setCurrentUser((prev) => (prev ? { ...prev, password: trimmed, mustChangePassword: false } : null));
+    }
+
+    // Auditoría: cambio de contraseña
+    logAction({
+      action: 'cambiar contraseña',
+      module: 'Usuarios',
+      entityType: 'User',
+      recordId: `@${targetUser.username}`,
+      description: `Cambio obligatorio de contraseña completado para @${targetUser.username} (${targetUser.name}). Contraseña personal configurada.`,
+      previousValue: 'Contraseña temporal previa',
+      newValue: 'Nueva contraseña personal configurada',
+      metadata: { targetUserId: targetUser.id, username: targetUser.username },
+    });
+
+    addToast('Contraseña actualizada correctamente. Bienvenido al sistema.', 'success', 'Contraseña configurada');
+    return { success: true };
   };
 
   const toggleUserActive = (id: string) => {
@@ -835,16 +965,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       prev.map((u) => (u.id === id ? { ...u, active: nextActive } : u))
     );
 
-    const actionName = nextActive ? 'activar usuario' : 'inactivar usuario';
+    const actionName = nextActive ? 'activar usuario' : 'desactivar usuario';
     logAction({
       action: actionName,
       module: 'Usuarios',
       entityType: 'User',
-      recordId: userToToggle.username,
-      description: `${actionName.toUpperCase()}: Cuenta @${userToToggle.username} (${userToToggle.name}) pasó a ${nextActive ? 'Activo' : 'Inactivo'}`,
+      recordId: `@${userToToggle.username}`,
+      description: `${nextActive ? 'Activación' : 'Desactivación'} de usuario @${userToToggle.username} (${userToToggle.name}): Estado cambió a ${nextActive ? 'Activo' : 'Inactivo'}`,
       previousValue: userToToggle.active ? 'Activo' : 'Inactivo',
       newValue: nextActive ? 'Activo' : 'Inactivo',
-      metadata: { targetUserId: userToToggle.id },
+      metadata: { targetUserId: userToToggle.id, username: userToToggle.username },
     });
 
     const newStatus = nextActive ? 'activado' : 'desactivado';
@@ -2076,6 +2206,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         switchUserRole,
         updateUserProfile,
         updateUser,
+        createUser,
+        changePassword,
         toggleUserActive,
         resetUserPassword,
 

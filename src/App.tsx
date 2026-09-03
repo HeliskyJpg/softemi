@@ -20,6 +20,7 @@ import { UsersView } from './components/views/UsersView';
 import { ProfileView } from './components/views/ProfileView';
 import { SettingsView } from './components/views/SettingsView';
 import { AuditLogView } from './components/views/AuditLogView';
+import { MandatoryPasswordChangeModal } from './components/modals/MandatoryPasswordChangeModal';
 
 const AppContent: React.FC = () => {
   const { currentUser, activeView, selectedOrderId, selectedClientId } = useApp();
@@ -98,6 +99,9 @@ const AppContent: React.FC = () => {
 
       {/* Feedback Toast Notification System */}
       <ToastContainer />
+
+      {/* Mandatory password change on first login */}
+      <MandatoryPasswordChangeModal />
     </div>
   );
 
