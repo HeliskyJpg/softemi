@@ -20,13 +20,18 @@ export const MandatoryPasswordChangeModal: React.FC = () => {
     e.preventDefault();
     setErrorMsg('');
 
-    if (newPassword.trim().length < 6) {
-      setErrorMsg('La nueva contraseña debe contener al menos 6 caracteres.');
+    if (newPassword.trim().length < 4) {
+      setErrorMsg('La nueva contraseña debe contener al menos 4 caracteres.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
       setErrorMsg('Las contraseñas ingresadas no coinciden.');
+      return;
+    }
+
+    if (currentUser.password && newPassword.trim() === currentUser.password) {
+      setErrorMsg('La nueva contraseña no puede ser idéntica a la contraseña temporal.');
       return;
     }
 
@@ -56,10 +61,10 @@ export const MandatoryPasswordChangeModal: React.FC = () => {
             <Lock className="w-6 h-6 text-[#FBECEF]" />
           </div>
           <h2 className="text-xl font-serif font-bold tracking-tight text-white">
-            Primer Inicio de Sesión
+            Cambio Obligatorio de Contraseña
           </h2>
           <p className="text-xs text-[#FBECEF]/80 mt-1">
-            Cambio obligatorio de contraseña requerido
+            Contraseña temporal detectada &bull; Requerido para continuar
           </p>
         </div>
 

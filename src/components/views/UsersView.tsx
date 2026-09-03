@@ -37,6 +37,8 @@ export const UsersView: React.FC = () => {
     toggleUserActive,
     addToast,
     switchUserRole,
+    resetUserPassword,
+    logout,
   } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
@@ -45,6 +47,17 @@ export const UsersView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<'all' | 'Administrador' | 'Colaborador'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  // Dedicated Modal State for "Restablecer Contraseña"
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [userToReset, setUserToReset] = useState<SystemUser | null>(null);
+  const [resetStep, setResetStep] = useState<'form' | 'success'>('form');
+  const [resetPasswordMode, setResetPasswordMode] = useState<'auto' | 'custom'>('auto');
+  const [resetTempPassword, setResetTempPassword] = useState('');
+  const [showResetPasswordText, setShowResetPasswordText] = useState(true);
+  const [resetConfirmed, setResetConfirmed] = useState(false);
+  const [resetErrorMsg, setResetErrorMsg] = useState('');
+  const [resetCopiedNotice, setResetCopiedNotice] = useState(false);
 
   // Modal State for Creating User
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -111,6 +124,69 @@ export const UsersView: React.FC = () => {
     const symbols = ['!', '#', '*', '$'];
     const symbol = symbols[Math.floor(Math.random() * symbols.length)];
     return `${prefix}${num}${symbol}`;
+  };
+
+  // Open Dedicated Reset Password Modal
+  const handleOpenResetPassword = (user: SystemUser) => {
+    setUserToReset(user);
+    setResetStep('form');
+    setResetPasswordMode('auto');
+    setResetTempPassword(generateRandomTempPassword());
+    setShowResetPasswordText(true);
+    setResetConfirmed(false);
+    setResetErrorMsg('');
+    setResetCopiedNotice(false);
+    setShowResetModal(true);
+  };
+
+  // Handle Confirm Reset Password
+  const handleConfirmResetPassword = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setResetErrorMsg('');
+
+    if (!userToReset) return;
+
+    if (!resetConfirmed) {
+      setResetErrorMsg('Debe confirmar explícitamente el restablecimiento marcando la casilla de autorización.');
+      return;
+    }
+
+    const cleanPass = resetTempPassword.trim();
+    if (cleanPass.length < 4) {
+      setResetErrorMsg('La contraseña temporal debe contener al menos 4 caracteres.');
+      return;
+    }
+
+    const res = resetUserPassword(userToReset.id, cleanPass);
+    if (!res.success) {
+      setResetErrorMsg(res.error || 'No se pudo restablecer la contraseña.');
+      return;
+    }
+
+    setResetStep('success');
+  };
+
+  // Copy Temporary Credentials for Delivery
+  const handleCopyResetCredentials = () => {
+    if (!userToReset) return;
+    const textToCopy = `Credenciales de acceso EMILA:\nUsuario: @${userToReset.username}\nContraseña temporal: ${resetTempPassword}\n\nNota: Por seguridad, al iniciar sesión el sistema le solicitará definir su contraseña personal definitiva.`;
+    navigator.clipboard.writeText(textToCopy);
+    setResetCopiedNotice(true);
+    setTimeout(() => setResetCopiedNotice(false), 2500);
+    addToast('Credenciales copiadas al portapapeles.', 'success');
+  };
+
+  // Quick Test Login with Reset User
+  const handleTestLoginWithUser = () => {
+    if (!userToReset) return;
+    const usernameToTest = userToReset.username;
+    setShowResetModal(false);
+    logout();
+    addToast(
+      `Sesión cerrada. Pruebe ingresar como @${usernameToTest} con la clave temporal para validar el cambio obligatorio.`,
+      'info',
+      'Validar Acceso'
+    );
   };
 
   // Open Create User Modal
@@ -515,6 +591,18 @@ export const UsersView: React.FC = () => {
                         </td>
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {/* Acción Restablecer contraseña */}
+                            <button
+                              id={`btn-reset-password-${u.id}`}
+                              type="button"
+                              onClick={() => handleOpenResetPassword(u)}
+                              className="px-2.5 py-1.5 rounded-lg border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold text-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                              title={`Restablecer contraseña de ${u.name}`}
+                            >
+                              <Key className="w-3.5 h-3.5 text-amber-700" />
+                              <span>Restablecer</span>
+                            </button>
+
                             <button
                               id={`btn-edit-user-${u.id}`}
                               onClick={() => handleOpenEdit(u)}
@@ -633,14 +721,27 @@ export const UsersView: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F2D6DE]/30">
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#F2D6DE]/30">
+                      <button
+                        id={`btn-reset-password-mobile-${u.id}`}
+                        type="button"
+                        onClick={() => handleOpenResetPassword(u)}
+                        className="py-2 px-3 rounded-xl border border-amber-300/80 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Key className="w-3.5 h-3.5 text-amber-700" />
+                        Restablecer
+                      </button>
+
                       <button
                         onClick={() => handleOpenEdit(u)}
-                        className="flex-1 py-2 px-3 rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/30 hover:bg-[#FBECEF] text-[#681B2B] font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="py-2 px-3 rounded-xl border border-[#F2D6DE] bg-[#FBECEF]/30 hover:bg-[#FBECEF] text-[#681B2B] font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                         Editar
                       </button>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-1">
 
                       {isCurrent ? (
                         <span className="py-2 px-3 rounded-xl border border-gray-200 text-gray-300 text-xs font-semibold cursor-not-allowed flex items-center gap-1">
@@ -1188,6 +1289,21 @@ export const UsersView: React.FC = () => {
               🔒 Por política de seguridad, las contraseñas existentes <strong>nunca son visibles ni recuperables</strong>.
             </p>
 
+            <button
+              type="button"
+              id="btn-open-dedicated-reset-from-edit"
+              onClick={() => {
+                if (editingUser) {
+                  setShowEditModal(false);
+                  handleOpenResetPassword(editingUser);
+                }
+              }}
+              className="w-full mt-2.5 py-2 px-3 rounded-xl border border-amber-300 bg-amber-50/80 hover:bg-amber-100 text-amber-900 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+            >
+              <Key className="w-3.5 h-3.5 text-amber-700" />
+              Abrir Asistente Completo de Restablecimiento
+            </button>
+
             {enableResetPassword && (
               <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2">
                 <label className="block text-[11px] font-bold text-amber-950">
@@ -1218,6 +1334,321 @@ export const UsersView: React.FC = () => {
             )}
           </div>
         </form>
+      </Modal>
+
+      {/* ============================================================ */}
+      {/* MODAL DEDICADO: RESTABLECER CONTRASEÑA                       */}
+      {/* Flujo: Administrador -> Usuario -> Restablecer contraseña    */}
+      {/* -> Confirmación -> Definir/generar contraseña temporal       */}
+      {/* -> Guardar -> Obligatorio cambiar en próximo login           */}
+      {/* ============================================================ */}
+      <Modal
+        id="modal-reset-password"
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        title={resetStep === 'success' ? 'Contraseña Restablecida Exitosamente' : 'Restablecer Contraseña de Usuario'}
+        subtitle={
+          userToReset
+            ? resetStep === 'success'
+              ? `Credenciales temporales activas para @${userToReset.username}`
+              : `Flujo administrativo para @${userToReset.username} (${userToReset.name})`
+            : undefined
+        }
+        size="md"
+        footer={
+          resetStep === 'form' ? (
+            <div className="flex items-center justify-end gap-3 w-full">
+              <button
+                type="button"
+                id="btn-cancel-reset-password"
+                onClick={() => setShowResetModal(false)}
+                className="px-4 py-2 text-xs font-semibold text-[#7D6871] hover:text-[#2C1E23] rounded-xl hover:bg-stone-50 cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-save-reset-password"
+                onClick={handleConfirmResetPassword}
+                disabled={!resetConfirmed || resetTempPassword.trim().length < 4}
+                className="px-5 py-2 text-xs font-bold text-white bg-[#681B2B] hover:bg-[#531422] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl cursor-pointer shadow-xs flex items-center gap-1.5"
+              >
+                <Key className="w-3.5 h-3.5" />
+                Guardar y Restablecer Contraseña
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 w-full">
+              <button
+                type="button"
+                id="btn-test-login-reset-user"
+                onClick={handleTestLoginWithUser}
+                className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-[#681B2B] bg-[#FBECEF] hover:bg-[#F2D6DE] border border-[#F2D6DE] rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Power className="w-3.5 h-3.5" />
+                Probar inicio de sesión con este usuario
+              </button>
+              <button
+                type="button"
+                id="btn-finish-reset-password"
+                onClick={() => setShowResetModal(false)}
+                className="w-full sm:w-auto px-5 py-2 text-xs font-bold text-white bg-[#681B2B] hover:bg-[#531422] rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                Finalizar
+              </button>
+            </div>
+          )
+        }
+      >
+        {userToReset && resetStep === 'form' && (
+          <div className="space-y-4">
+            {/* 1. Target User Summary Card */}
+            <div className="bg-[#FAF6F4] p-3.5 rounded-xl border border-[#F2D6DE] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#681B2B] text-white font-bold flex items-center justify-center text-sm shadow-2xs">
+                  {userToReset.name.charAt(0)}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#2C1E23] flex items-center gap-1.5">
+                    {userToReset.name}
+                    {userToReset.id === currentUser?.id && (
+                      <span className="text-[10px] bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE] px-1.5 py-0.2 rounded font-bold">
+                        Tu usuario
+                      </span>
+                    )}
+                  </h4>
+                  <p className="text-xs text-[#7D6871]">@{userToReset.username}</p>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    userToReset.role === 'Administrador'
+                      ? 'bg-[#FBECEF] text-[#681B2B] border-[#F2D6DE]'
+                      : 'bg-gray-100 text-[#4A202A] border-gray-200'
+                  }`}
+                >
+                  {userToReset.role}
+                </span>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    userToReset.active ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'
+                  }`}
+                >
+                  {userToReset.active ? 'Activo' : 'Inactivo'}
+                </span>
+              </div>
+            </div>
+
+            {/* 2. Privacy & Never Disclosed Password Notice */}
+            <div className="p-3 bg-stone-50 border border-stone-200 rounded-xl flex items-start gap-2.5">
+              <Shield className="w-4 h-4 text-[#681B2B] shrink-0 mt-0.5" />
+              <div className="text-xs text-[#4A202A] leading-relaxed">
+                <strong className="text-[#2C1E23]">Garantía de Privacidad y Seguridad:</strong> La contraseña anterior <strong>nunca se muestra ni queda registrada</strong> en ninguna vista, componente o registro de auditoría del sistema.
+              </div>
+            </div>
+
+            {/* 3. Confirmation Step (Obligatorio) */}
+            <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2">
+              <div className="flex items-start gap-2 text-xs font-semibold text-amber-950">
+                <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                <span>
+                  ¿Desea restablecer la contraseña para <strong>{userToReset.name}</strong> (@{userToReset.username})?
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-900 pl-6 leading-relaxed">
+                La contraseña anterior dejará de ser válida inmediatamente y no se podrá volver a usar. En su próximo inicio de sesión, el usuario estará obligado a cambiarla por una nueva clave personal.
+              </p>
+              <div className="pl-6 pt-1">
+                <label
+                  htmlFor="checkbox-confirm-reset"
+                  className="flex items-center gap-2 cursor-pointer select-none text-xs font-bold text-amber-950"
+                >
+                  <input
+                    id="checkbox-confirm-reset"
+                    type="checkbox"
+                    checked={resetConfirmed}
+                    onChange={(e) => setResetConfirmed(e.target.checked)}
+                    className="w-4 h-4 text-[#681B2B] rounded border-amber-300 focus:ring-[#681B2B] cursor-pointer"
+                  />
+                  <span>Confirmo el restablecimiento e invalidación de la contraseña actual</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 4. Definir / Generar Contraseña Temporal */}
+            <div className="space-y-2.5 border-t border-[#F2D6DE]/40 pt-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-[#2C1E23] flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5 text-[#681B2B]" />
+                  Definir o Generar Contraseña Temporal:
+                </label>
+                <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-lg text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetPasswordMode('auto');
+                      setResetTempPassword(generateRandomTempPassword());
+                    }}
+                    className={`px-2 py-0.5 rounded-md font-medium transition-colors cursor-pointer ${
+                      resetPasswordMode === 'auto'
+                        ? 'bg-white text-[#681B2B] shadow-2xs font-bold'
+                        : 'text-[#7D6871] hover:text-[#2C1E23]'
+                    }`}
+                  >
+                    ⚡ Automática
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResetPasswordMode('custom')}
+                    className={`px-2 py-0.5 rounded-md font-medium transition-colors cursor-pointer ${
+                      resetPasswordMode === 'custom'
+                        ? 'bg-white text-[#681B2B] shadow-2xs font-bold'
+                        : 'text-[#7D6871] hover:text-[#2C1E23]'
+                    }`}
+                  >
+                    ✏️ Manual
+                  </button>
+                </div>
+              </div>
+
+              {resetPasswordMode === 'auto' ? (
+                <div className="p-3 bg-white border-2 border-dashed border-[#F2D6DE] rounded-xl flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] text-[#7D6871] uppercase tracking-wider block font-bold">
+                      Clave Temporal Sugerida
+                    </span>
+                    <span className="font-mono text-base font-bold text-[#681B2B] tracking-wide select-all">
+                      {showResetPasswordText ? resetTempPassword : '••••••••••'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPasswordText(!showResetPasswordText)}
+                      className="p-1.5 text-[#7D6871] hover:text-[#2C1E23] hover:bg-stone-100 rounded-lg cursor-pointer"
+                      title={showResetPasswordText ? 'Ocultar' : 'Mostrar'}
+                    >
+                      {showResetPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setResetTempPassword(generateRandomTempPassword())}
+                      className="px-2.5 py-1 text-[11px] font-semibold text-[#681B2B] bg-[#FBECEF] hover:bg-[#F2D6DE] rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Generar otra clave aleatoria"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Otra
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    id="input-reset-temp-password"
+                    type={showResetPasswordText ? 'text' : 'password'}
+                    value={resetTempPassword}
+                    onChange={(e) => setResetTempPassword(e.target.value)}
+                    placeholder="Escriba contraseña temporal (mínimo 4 caracteres)"
+                    className="w-full pl-3.5 pr-10 py-2 font-mono text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowResetPasswordText(!showResetPasswordText)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7D6871] hover:text-[#2C1E23]"
+                  >
+                    {showResetPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 5. Policy highlights */}
+            <div className="bg-[#FAF6F4] p-3 rounded-xl border border-[#F2D6DE]/60 space-y-1.5 text-[11px] text-[#7D6871]">
+              <div className="flex items-center gap-1.5 font-medium text-[#2C1E23]">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>El usuario debe cambiarla obligatoriamente en el próximo inicio de sesión.</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-medium text-[#2C1E23]">
+                <Mail className="w-3.5 h-3.5 text-[#681B2B] shrink-0" />
+                <span>No se implementa correo electrónico todavía; entréguela personalmente al usuario.</span>
+              </div>
+              <div className="flex items-center gap-1.5 font-medium text-[#2C1E23]">
+                <Shield className="w-3.5 h-3.5 text-[#681B2B] shrink-0" />
+                <span>Se registrará la operación en Auditoría <strong>sin registrar el valor</strong> de la contraseña.</span>
+              </div>
+            </div>
+
+            {resetErrorMsg && (
+              <SystemAlert id="alert-reset-error" type="error" message={resetErrorMsg} />
+            )}
+          </div>
+        )}
+
+        {userToReset && resetStep === 'success' && (
+          <div className="space-y-4 py-1">
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-center space-y-1">
+              <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-2xs">
+                <Check className="w-5 h-5" />
+              </div>
+              <h4 className="text-sm font-bold text-emerald-950">
+                ¡Contraseña Restablecida Exitosamente!
+              </h4>
+              <p className="text-xs text-emerald-800">
+                La contraseña anterior ha quedado invalidada. La clave temporal ha sido asignada.
+              </p>
+            </div>
+
+            <div className="p-4 bg-stone-900 text-stone-100 rounded-xl space-y-3 font-mono">
+              <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-800">
+                <span className="text-stone-400">Usuario:</span>
+                <span className="font-bold text-white select-all">@{userToReset.username}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-800">
+                <span className="text-stone-400">Contraseña temporal:</span>
+                <span className="font-bold text-amber-300 text-sm tracking-wider select-all">
+                  {resetTempPassword}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-stone-400">Estado de acceso:</span>
+                <span className="text-emerald-400 font-bold">Cambio obligatorio activo</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                type="button"
+                id="btn-copy-reset-credentials"
+                onClick={handleCopyResetCredentials}
+                className="w-full py-2.5 px-4 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+              >
+                {resetCopiedNotice ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-700" />
+                    <span>¡Copiado al portapapeles!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-emerald-700" />
+                    <span>Copiar credenciales completas para entrega</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
+              <p className="font-bold flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                Instrucciones para el usuario:
+              </p>
+              <p className="text-[11px] leading-relaxed">
+                Entregue esta clave a <strong>{userToReset.name}</strong>. En cuanto inicie sesión con esta clave temporal, el sistema le desplegará automáticamente la pantalla obligatoria para definir su contraseña definitiva.
+              </p>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* ============================================================ */}

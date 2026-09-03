@@ -198,6 +198,26 @@ export const DemoScenarioBar: React.FC = () => {
                 </span>
               </div>
             </button>
+
+            <button
+              onClick={() => {
+                setActiveView('users');
+                addToast(
+                  'Haga clic en el botón "Restablecer" de cualquier usuario para iniciar el flujo de reseteo con clave temporal.',
+                  'info',
+                  'Tarea 7 — Restablecer Clave'
+                );
+              }}
+              className="p-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-left transition-colors flex items-start gap-2 cursor-pointer border border-amber-400/30"
+            >
+              <PlayCircle className="w-3.5 h-3.5 shrink-0 text-amber-300 mt-0.5" />
+              <div>
+                <strong className="block text-amber-200 text-[11px]">7. Restablecer Clave</strong>
+                <span className="text-[10px] text-amber-100/80">
+                  Clave temporal y cambio forzado.
+                </span>
+              </div>
+            </button>
           </div>
         </div>
       )}

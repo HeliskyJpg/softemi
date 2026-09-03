@@ -674,6 +674,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!found.mustChangePassword) {
       addToast(`¡Bienvenido/a, ${found.name}!`, 'success', 'Sesión iniciada');
       setActiveView('dashboard');
+    } else {
+      addToast(`Acceso con contraseña temporal. Debe configurar su nueva contraseña personal para continuar.`, 'warning', 'Cambio obligatorio');
     }
     return true;
   };
@@ -766,6 +768,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             ...(userData.email !== undefined ? { email: userData.email.trim() } : {}),
             ...(userData.role !== undefined ? { role: userData.role } : {}),
             ...(userData.active !== undefined ? { active: userData.active } : {}),
+            ...(userData.password !== undefined ? { password: userData.password } : {}),
+            ...(userData.mustChangePassword !== undefined ? { mustChangePassword: userData.mustChangePassword } : {}),
           };
           if (currentUser?.id === id) {
             setCurrentUser(updated);
@@ -997,19 +1001,58 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const generated = tempPassword?.trim() || `Emila${Math.floor(1000 + Math.random() * 9000)}!`;
+    if (generated.length < 4) {
+      return { success: false, error: 'La contraseña temporal debe contener al menos 4 caracteres.' };
+    }
 
+    // Actualizar usuario en el estado con contraseña temporal y bandera de cambio obligatorio
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === id
+          ? {
+              ...u,
+              password: generated,
+              mustChangePassword: true,
+            }
+          : u
+      )
+    );
+
+    if (currentUser?.id === id) {
+      setCurrentUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              password: generated,
+              mustChangePassword: true,
+            }
+          : null
+      );
+    }
+
+    // Registrar en auditoría SIN registrar el valor de la contraseña
     logAction({
       action: 'restablecer contraseña',
       module: 'Usuarios',
       entityType: 'User',
-      recordId: targetUser.username,
-      description: `Restablecimiento de credenciales para @${targetUser.username} (${targetUser.name})`,
-      previousValue: 'Contraseña previa',
-      newValue: `Contraseña provisional asignada (${generated})`,
-      metadata: { targetUserId: targetUser.id, targetUserName: targetUser.name },
+      recordId: `@${targetUser.username}`,
+      description: `Restablecimiento de contraseña para el usuario @${targetUser.username} (${targetUser.name}). Contraseña temporal asignada con cambio obligatorio en el próximo inicio de sesión.`,
+      previousValue: 'Contraseña anterior (protegida, no visible)',
+      newValue: 'Contraseña temporal asignada (requiere cambio obligatorio)',
+      metadata: {
+        targetUserId: targetUser.id,
+        targetUserName: targetUser.name,
+        targetUsername: targetUser.username,
+        mustChangePassword: true,
+        // NUNCA incluir el valor de la contraseña en auditoría
+      },
     });
 
-    addToast(`Contraseña temporal asignada para @${targetUser.username}: ${generated}`, 'success', 'Contraseña restablecida');
+    addToast(
+      `Contraseña de @${targetUser.username} restablecida. Entregue la clave temporal al usuario.`,
+      'success',
+      'Contraseña restablecida'
+    );
     return { success: true, tempPassword: generated };
   };
 

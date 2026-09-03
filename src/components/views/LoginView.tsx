@@ -15,6 +15,9 @@ export const LoginView: React.FC = () => {
   const empleadoUser = users.find((u) => u.username === 'empleado');
   const adminUser = users.find((u) => u.username === 'admin');
 
+  const empleadoPass = empleadoUser?.password || 'demo123';
+  const adminPass = adminUser?.password || 'admin123';
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -183,7 +186,7 @@ export const LoginView: React.FC = () => {
               <button
                 id="btn-quick-login-colaborador"
                 type="button"
-                onClick={() => handleQuickLogin('empleado', 'demo123')}
+                onClick={() => handleQuickLogin('empleado', empleadoPass)}
                 className={`p-3 rounded-xl border transition-colors cursor-pointer text-left ${
                   empleadoUser?.active === false
                     ? 'border-rose-200 bg-rose-50/50 hover:bg-rose-50 opacity-85'
@@ -196,6 +199,10 @@ export const LoginView: React.FC = () => {
                     <span className="text-[10px] bg-rose-600 text-white px-1.5 py-0.2 rounded font-bold">
                       Inactivo
                     </span>
+                  ) : empleadoUser?.mustChangePassword ? (
+                    <span className="text-[10px] bg-amber-600 text-white px-1.5 py-0.2 rounded font-medium">
+                      Clave Temporal
+                    </span>
                   ) : (
                     <span className="text-[10px] bg-[#681B2B] text-white px-1.5 py-0.2 rounded font-medium">
                       Demo Principal
@@ -206,14 +213,14 @@ export const LoginView: React.FC = () => {
                   user: <strong className="text-[#2C1E23]">empleado</strong>
                 </p>
                 <p className="text-[11px] text-[#7D6871]">
-                  pass: <strong className="text-[#2C1E23]">demo123</strong>
+                  pass: <strong className="text-[#2C1E23]">{empleadoUser?.mustChangePassword ? '(temporal asignada)' : empleadoPass}</strong>
                 </p>
               </button>
 
               <button
                 id="btn-quick-login-admin"
                 type="button"
-                onClick={() => handleQuickLogin('admin', 'admin123')}
+                onClick={() => handleQuickLogin('admin', adminPass)}
                 className={`p-3 rounded-xl border transition-colors cursor-pointer text-left ${
                   adminUser?.active === false
                     ? 'border-rose-200 bg-rose-50/50 hover:bg-rose-50 opacity-85'
@@ -226,6 +233,10 @@ export const LoginView: React.FC = () => {
                     <span className="text-[10px] bg-rose-600 text-white px-1.5 py-0.2 rounded font-bold">
                       Inactivo
                     </span>
+                  ) : adminUser?.mustChangePassword ? (
+                    <span className="text-[10px] bg-amber-600 text-white px-1.5 py-0.2 rounded font-medium">
+                      Clave Temporal
+                    </span>
                   ) : (
                     <Shield className="w-3.5 h-3.5 text-[#681B2B]" />
                   )}
@@ -234,7 +245,7 @@ export const LoginView: React.FC = () => {
                   user: <strong className="text-[#2C1E23]">admin</strong>
                 </p>
                 <p className="text-[11px] text-[#7D6871]">
-                  pass: <strong className="text-[#2C1E23]">admin123</strong>
+                  pass: <strong className="text-[#2C1E23]">{adminUser?.mustChangePassword ? '(temporal asignada)' : adminPass}</strong>
                 </p>
               </button>
             </div>
