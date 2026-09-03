@@ -37,7 +37,6 @@ export const UsersView: React.FC = () => {
     toggleUserActive,
     addToast,
     switchUserRole,
-    resetUserPassword,
   } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
