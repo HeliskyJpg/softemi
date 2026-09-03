@@ -18,10 +18,13 @@ import {
   NavigationHistoryEntry,
   CatalogItem,
   CatalogKey,
+  AutocompleteOption,
 } from '../types';
 import {
   CATALOG_DEFINITIONS,
   CATALOG_KEYS_ORDERED,
+  buildCatalogSelectOptions,
+  CatalogSelectOptionsParams,
 } from '../config/catalogsConfig';
 import {
   INITIAL_USERS,
@@ -157,6 +160,10 @@ interface AppContextType {
   // Catalogs Management
   catalogs: Record<CatalogKey, CatalogItem[]>;
   getCatalogItems: (key: CatalogKey, onlyActive?: boolean) => CatalogItem[];
+  getCatalogSelectOptions: (
+    key: CatalogKey,
+    params?: CatalogSelectOptionsParams
+  ) => AutocompleteOption[];
   addCatalogItem: (
     key: CatalogKey,
     item: Omit<CatalogItem, 'id' | 'createdAt' | 'updatedAt'>
@@ -781,6 +788,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
       return [...prev, trimmed];
     });
+    // Ensure entry exists in master catalog
+    setCatalogs((prev) => {
+      const currentList = prev.component_categories || [];
+      if (currentList.some((it) => it.name.trim().toLowerCase() === trimmed.toLowerCase())) {
+        return prev;
+      }
+      const now = new Date().toISOString();
+      const newItem: CatalogItem = {
+        id: `cat-component_categories-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: trimmed,
+        description: 'Categoría agregada desde gestión de componentes',
+        active: true,
+        orderIndex: currentList.length + 1,
+        createdAt: now,
+        updatedAt: now,
+      };
+      return {
+        ...prev,
+        component_categories: [...currentList, newItem],
+      };
+    });
     // Only show toast if it wasn't already in list
     if (!categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
       addToast(`Categoría "${trimmed}" agregada con éxito.`, 'success');
@@ -796,6 +824,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return prev;
       }
       return [...prev, trimmed];
+    });
+    // Ensure entry exists in master catalog
+    setCatalogs((prev) => {
+      const currentList = prev.component_units || [];
+      if (currentList.some((it) => it.name.trim().toLowerCase() === trimmed.toLowerCase())) {
+        return prev;
+      }
+      const now = new Date().toISOString();
+      const newItem: CatalogItem = {
+        id: `cat-component_units-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: trimmed,
+        description: 'Unidad agregada desde gestión de componentes',
+        active: true,
+        orderIndex: currentList.length + 1,
+        createdAt: now,
+        updatedAt: now,
+      };
+      return {
+        ...prev,
+        component_units: [...currentList, newItem],
+      };
     });
     // Only show toast if it wasn't already in list
     if (!units.some((u) => u.toLowerCase() === trimmed.toLowerCase())) {
@@ -1453,6 +1502,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return list;
   };
 
+  const getCatalogSelectOptions = (
+    key: CatalogKey,
+    params?: CatalogSelectOptionsParams
+  ): AutocompleteOption[] => {
+    return buildCatalogSelectOptions(catalogs[key], params);
+  };
+
   const isCatalogItemInUse = (
     key: CatalogKey,
     name: string,
@@ -1693,6 +1749,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         // Catalogs Management
         catalogs,
         getCatalogItems,
+        getCatalogSelectOptions,
         addCatalogItem,
         updateCatalogItem,
         toggleCatalogItemActive,

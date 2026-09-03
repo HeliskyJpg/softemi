@@ -53,6 +53,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     newOrderInitialData,
     setNewOrderInitialData,
     getCatalogItems,
+    getCatalogSelectOptions,
   } = useApp();
 
   const isEditing = !!orderIdToEdit;
@@ -63,7 +64,11 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     if (existingOrder) return existingOrder.clientId;
     return newOrderInitialData?.clientId || '';
   });
-  const [channel, setChannel] = useState<OrderChannel>('WhatsApp');
+  const [channel, setChannel] = useState<OrderChannel>(() => {
+    if (existingOrder) return existingOrder.channel;
+    const active = getCatalogItems('order_channels', true);
+    return (active[0]?.name as OrderChannel) || 'WhatsApp';
+  });
   const [deliveryDate, setDeliveryDate] = useState<string>(() => {
     if (existingOrder) return existingOrder.deliveryDate;
     if (newOrderInitialData?.deliveryDate) return newOrderInitialData.deliveryDate;
@@ -456,22 +461,15 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 id="select-order-channel"
                 label="Canal de Recepción"
                 required
-                options={(() => {
-                  const items = getCatalogItems('order_channels');
-                  const valid = items.filter(
-                    (it) => it.active || (isEditing && existingOrder?.channel === it.name)
-                  );
-                  if (valid.length === 0) {
-                    return [{ value: channel, label: channel }];
-                  }
-                  return valid.map((it) => ({
-                    value: it.name,
-                    label: it.name + (!it.active ? ' (Inactivo)' : ''),
-                  }));
-                })()}
+                options={getCatalogSelectOptions('order_channels', {
+                  currentValue: channel,
+                  isNew: !isEditing,
+                  includeDescription: true,
+                })}
                 value={channel}
                 onChange={(val) => setChannel(val as OrderChannel)}
-                searchable={false}
+                searchable={true}
+                placeholder="Seleccione un canal..."
               />
             </div>
 

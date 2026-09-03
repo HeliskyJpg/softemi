@@ -14,7 +14,15 @@ export type SystemUser = User;
 
 export type OrderStatus = 'Pendiente' | 'En preparación' | 'Listo' | 'Entregado' | 'Cancelado';
 
-export type OrderChannel = 'WhatsApp' | 'Instagram' | 'Llamada' | 'Otro';
+export type OrderChannel = 'WhatsApp' | 'Instagram' | 'Llamada' | 'Otro' | string;
+
+export interface AutocompleteOption {
+  value: string;
+  label: string;
+  description?: string;
+  group?: string;
+  disabled?: boolean;
+}
 
 export type ComponentUnit = 'Unidad' | 'Docena' | 'Paquete' | 'Metro' | 'Rollo' | string;
 

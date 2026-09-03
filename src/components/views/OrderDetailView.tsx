@@ -47,6 +47,8 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
     cancelOrder,
     registerOrderPayment,
     addToast,
+    getCatalogItems,
+    getCatalogSelectOptions,
   } = useApp();
 
   const order = orders.find((o) => o.id === orderId);
@@ -59,13 +61,19 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
   // Standalone Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmountInput, setPaymentAmountInput] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('Efectivo');
+  const [paymentMethod, setPaymentMethod] = useState<string>(() => {
+    const active = getCatalogItems('payment_methods', true);
+    return active[0]?.name || 'Efectivo';
+  });
   const [paymentNote, setPaymentNote] = useState('');
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Delivery Payment Step in Status Modal
   const [deliveryPaymentAmount, setDeliveryPaymentAmount] = useState('');
-  const [deliveryPaymentMethod, setDeliveryPaymentMethod] = useState('Efectivo');
+  const [deliveryPaymentMethod, setDeliveryPaymentMethod] = useState<string>(() => {
+    const active = getCatalogItems('payment_methods', true);
+    return active[0]?.name || 'Efectivo';
+  });
   const [deliveryPaymentError, setDeliveryPaymentError] = useState<string | null>(null);
 
   // Cancel Order Modal State
@@ -95,7 +103,8 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
   // Open Standalone Payment Modal
   const handleOpenPaymentModal = () => {
     setPaymentAmountInput(order.balance.toFixed(2));
-    setPaymentMethod('Efectivo');
+    const active = getCatalogItems('payment_methods', true);
+    setPaymentMethod(active[0]?.name || 'Efectivo');
     setPaymentNote('');
     setPaymentError(null);
     setShowPaymentModal(true);
@@ -136,7 +145,8 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
     setStatusNote('');
     setDeliveryPaymentAmount(order.balance > 0 ? order.balance.toFixed(2) : '');
-    setDeliveryPaymentMethod('Efectivo');
+    const active = getCatalogItems('payment_methods', true);
+    setDeliveryPaymentMethod(active[0]?.name || 'Efectivo');
     setDeliveryPaymentError(null);
     setShowStatusModal(true);
   };
@@ -643,29 +653,20 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
           {/* Payment Method */}
           <div>
-            <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-              Forma de pago
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => {
-                const isSelected = paymentMethod === m;
-                return (
-                  <button
-                    key={m}
-                    id={`btn-payment-method-${m.toLowerCase()}`}
-                    type="button"
-                    onClick={() => setPaymentMethod(m)}
-                    className={`py-2 px-3 rounded-xl text-xs transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-2 border-[#681B2B] bg-[#FBECEF] text-[#681B2B] font-bold shadow-xs'
-                        : 'border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/30 text-[#7D6871] font-medium'
-                    }`}
-                  >
-                    {m}
-                  </button>
-                );
+            <AutocompleteSelect
+              id="select-payment-method"
+              label="Forma de pago"
+              required
+              options={getCatalogSelectOptions('payment_methods', {
+                currentValue: paymentMethod,
+                isNew: true,
+                includeDescription: true,
               })}
-            </div>
+              value={paymentMethod}
+              onChange={(val) => setPaymentMethod(val)}
+              searchable={true}
+              placeholder="Seleccione forma de pago..."
+            />
           </div>
 
           {/* Note / Reference */}
@@ -805,25 +806,21 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
               {/* Payment Method Selector */}
               <div>
-                <label className="block text-[11px] font-bold text-[#2C1E23] mb-1">
-                  Método de Cobro
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setDeliveryPaymentMethod(m)}
-                      className={`py-1 px-2 rounded-lg text-[11px] font-medium border transition-colors cursor-pointer ${
-                        deliveryPaymentMethod === m
-                          ? 'border-emerald-600 bg-white text-emerald-900 font-bold shadow-xs'
-                          : 'border-amber-200 bg-amber-100/40 text-amber-900'
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
+                <AutocompleteSelect
+                  id="select-delivery-payment-method"
+                  label="Método de Cobro"
+                  required
+                  options={getCatalogSelectOptions('payment_methods', {
+                    currentValue: deliveryPaymentMethod,
+                    isNew: true,
+                    includeDescription: true,
+                  })}
+                  value={deliveryPaymentMethod}
+                  onChange={(val) => setDeliveryPaymentMethod(val)}
+                  size="sm"
+                  searchable={true}
+                  placeholder="Seleccione método de cobro..."
+                />
               </div>
 
               {/* Outcome Note */}

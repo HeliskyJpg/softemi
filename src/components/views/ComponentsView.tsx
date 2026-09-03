@@ -60,15 +60,6 @@ export const formatUnitCount = (count: number, unit?: string): string => {
   return count === 1 ? `1 ${normalized}` : `${count} ${normalized}`;
 };
 
-const PRESET_ADJUSTMENT_REASONS = [
-  'Reabastecimiento / Compra de insumos',
-  'Conteo físico / Cuadre de inventario',
-  'Merma natural / Flor marchita',
-  'Daño, rotura o empaque defectuoso',
-  'Devolución o reintegración al taller',
-  'Otro motivo particular',
-];
-
 export const ComponentsView: React.FC = () => {
   const {
     components,
@@ -86,6 +77,7 @@ export const ComponentsView: React.FC = () => {
     componentsViewState,
     setComponentsViewState,
     getCatalogItems,
+    getCatalogSelectOptions,
   } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
@@ -129,7 +121,7 @@ export const ComponentsView: React.FC = () => {
   const [stockComponent, setStockComponent] = useState<ComponentItem | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<'Entrada' | 'Salida'>('Entrada');
   const [adjustmentQtyStr, setAdjustmentQtyStr] = useState<string>('10');
-  const [adjustmentReason, setAdjustmentReason] = useState<string>(PRESET_ADJUSTMENT_REASONS[0]);
+  const [adjustmentReason, setAdjustmentReason] = useState<string>('');
   const [adjustmentObservation, setAdjustmentObservation] = useState<string>('');
   const [stockModalErrors, setStockModalErrors] = useState<{
     quantity?: string;
@@ -200,41 +192,41 @@ export const ComponentsView: React.FC = () => {
     };
   }, [components]);
 
-  // Unique categories and units to ensure no duplicate keys in UI
-  const uniqueCategories = useMemo(() => {
+  // Options for Category filter (includes catalog categories + any assigned to components)
+  const categoryFilterOptions = useMemo(() => {
+    const catalogCats = getCatalogItems('component_categories', false);
     const set = new Set<string>();
-    const res: string[] = [];
-    categories.forEach((c) => {
-      const trimmed = c.trim();
+    const res: { value: string; label: string }[] = [];
+    catalogCats.forEach((c) => {
+      const trimmed = c.name.trim();
       const lower = trimmed.toLowerCase();
       if (trimmed && !set.has(lower)) {
         set.add(lower);
-        res.push(trimmed);
+        res.push({ value: trimmed, label: trimmed });
+      }
+    });
+    components.forEach((c) => {
+      const trimmed = c.category?.trim();
+      if (trimmed) {
+        const lower = trimmed.toLowerCase();
+        if (!set.has(lower)) {
+          set.add(lower);
+          res.push({ value: trimmed, label: trimmed });
+        }
       }
     });
     return res;
-  }, [categories]);
-
-  const uniqueUnits = useMemo(() => {
-    const set = new Set<string>();
-    const res: string[] = [];
-    units.forEach((u) => {
-      const trimmed = u.trim();
-      const lower = trimmed.toLowerCase();
-      if (trimmed && !set.has(lower)) {
-        set.add(lower);
-        res.push(trimmed);
-      }
-    });
-    return res;
-  }, [units]);
+  }, [getCatalogItems, components]);
 
   // Open Create Component Modal
   const handleOpenCreate = () => {
+    const activeCats = getCatalogItems('component_categories', true);
+    const activeUnits = getCatalogItems('component_units', true);
+
     setEditingComponent(null);
     setFormName('');
-    setFormCategory(uniqueCategories[0] || 'Flores');
-    setFormUnit(uniqueUnits[0] || 'Tallos');
+    setFormCategory(activeCats[0]?.name || 'Flores');
+    setFormUnit(activeUnits[0]?.name || 'Tallos');
     setFormPrice(15.0);
     setFormInitialPhysicalStock(25);
     setFormMinStock(10);
@@ -252,7 +244,7 @@ export const ComponentsView: React.FC = () => {
     setEditingComponent(comp);
     setFormName(comp.name);
     setFormCategory(comp.category);
-    setFormUnit(comp.unit || units[0] || 'Tallos');
+    setFormUnit(comp.unit || 'Tallos');
     setFormPrice(comp.price);
     setFormMinStock(comp.minStockAlert);
     setFormDescription(comp.description || '');
@@ -328,7 +320,8 @@ export const ComponentsView: React.FC = () => {
     setStockComponent(comp);
     setAdjustmentType('Entrada');
     setAdjustmentQtyStr('10');
-    setAdjustmentReason(PRESET_ADJUSTMENT_REASONS[0]);
+    const activeReasons = getCatalogItems('stock_adjustment_reasons', true);
+    setAdjustmentReason(activeReasons[0]?.name || '');
     setAdjustmentObservation('');
     setStockModalErrors({});
     setShowStockModal(true);
@@ -533,19 +526,18 @@ export const ComponentsView: React.FC = () => {
 
               {/* Category Filter */}
               <div>
-                <select
+                <AutocompleteSelect
                   id="select-components-category-filter"
                   value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer"
-                >
-                  <option value="Todas">Categoría: Todas</option>
-                  {uniqueCategories.map((cat) => (
-                    <option key={`filter-cat-${cat}`} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setCategoryFilter(val || 'Todas')}
+                  options={[
+                    { value: 'Todas', label: 'Categoría: Todas' },
+                    ...categoryFilterOptions,
+                  ]}
+                  size="sm"
+                  searchable={true}
+                  placeholder="Categoría: Todas"
+                />
               </div>
 
               {/* Status Filter */}
@@ -1067,8 +1059,14 @@ export const ComponentsView: React.FC = () => {
                       id="select-comp-category"
                       value={formCategory}
                       onChange={(val) => setFormCategory(val as ComponentCategory)}
-                      options={uniqueCategories.map((c) => ({ value: c, label: c }))}
+                      options={getCatalogSelectOptions('component_categories', {
+                        currentValue: formCategory,
+                        isNew: !editingComponent,
+                        includeDescription: true,
+                      })}
                       size="sm"
+                      searchable={true}
+                      placeholder="Seleccione o busque categoría..."
                     />
                   )}
                 </div>
@@ -1104,8 +1102,14 @@ export const ComponentsView: React.FC = () => {
                       id="select-comp-unit"
                       value={formUnit}
                       onChange={(val) => setFormUnit(val as ComponentUnit)}
-                      options={uniqueUnits.map((u) => ({ value: u, label: u }))}
+                      options={getCatalogSelectOptions('component_units', {
+                        currentValue: formUnit,
+                        isNew: !editingComponent,
+                        includeDescription: true,
+                      })}
                       size="sm"
+                      searchable={true}
+                      placeholder="Seleccione o busque unidad..."
                     />
                   )}
                 </div>
@@ -1418,13 +1422,11 @@ export const ComponentsView: React.FC = () => {
                   id="select-adjustment-reason"
                   label="Motivo del ajuste"
                   required
-                  options={(() => {
-                    const catalogReasons = getCatalogItems('stock_adjustment_reasons', true);
-                    if (catalogReasons.length > 0) {
-                      return catalogReasons.map((r) => r.name);
-                    }
-                    return PRESET_ADJUSTMENT_REASONS;
-                  })()}
+                  options={getCatalogSelectOptions('stock_adjustment_reasons', {
+                    currentValue: adjustmentReason,
+                    isNew: true,
+                    includeDescription: true,
+                  })}
                   value={adjustmentReason}
                   onChange={(val) => {
                     setAdjustmentReason(val);
@@ -1435,6 +1437,7 @@ export const ComponentsView: React.FC = () => {
                   error={!!stockModalErrors.reason}
                   errorMessage={stockModalErrors.reason}
                   placeholder="Seleccione o busque un motivo..."
+                  searchable={true}
                 />
               </div>
 

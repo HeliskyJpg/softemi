@@ -13,7 +13,83 @@ import {
   Order,
   ComponentItem,
   StockAdjustmentLog,
+  AutocompleteOption,
 } from '../types';
+
+export interface CatalogSelectOptionsParams {
+  currentValue?: string;
+  isNew?: boolean;
+  includeDescription?: boolean;
+  inactiveLabelSuffix?: string;
+}
+
+/**
+ * Builds standard AutocompleteOption[] from a catalog item list, strictly enforcing:
+ * 1. Active-only options for new records (isNew: true)
+ * 2. Historical deactivated items preserved when editing existing records (isNew: false)
+ * 3. Consistent ordering by orderIndex and name
+ * 4. Graceful retention of legacy historical values not in catalog
+ */
+export function buildCatalogSelectOptions(
+  items: CatalogItem[] | undefined,
+  params?: CatalogSelectOptionsParams
+): AutocompleteOption[] {
+  if (!items || !Array.isArray(items)) return [];
+
+  const currentValue = params?.currentValue?.trim() || '';
+  const isNew = params?.isNew ?? false;
+  const inactiveSuffix = params?.inactiveLabelSuffix ?? ' (Inactivo)';
+
+  const result: AutocompleteOption[] = [];
+  let currentValueFoundInActive = false;
+  let currentValueFoundInInactive = false;
+
+  // Sort by orderIndex first, then by name
+  const sorted = [...items].sort((a, b) => {
+    if ((a.orderIndex ?? 0) !== (b.orderIndex ?? 0)) {
+      return (a.orderIndex ?? 0) - (b.orderIndex ?? 0);
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  for (const item of sorted) {
+    const matchesCurrent =
+      Boolean(currentValue) && item.name.trim().toLowerCase() === currentValue.toLowerCase();
+
+    if (item.active) {
+      if (matchesCurrent) {
+        currentValueFoundInActive = true;
+      }
+      result.push({
+        value: item.name,
+        label: item.name,
+        description: params?.includeDescription ? item.description : undefined,
+      });
+    } else if (!isNew && matchesCurrent) {
+      // Historical deactivated item matches the existing record's value: preserve it
+      currentValueFoundInInactive = true;
+      result.push({
+        value: item.name,
+        label: `${item.name}${inactiveSuffix}`,
+        description: params?.includeDescription
+          ? (item.description ? `${item.description} - Desactivado en catálogo` : 'Desactivado en catálogo')
+          : 'Desactivado en catálogo',
+      });
+    }
+  }
+
+  // Edge case: if editing an existing record and currentValue is not in catalog at all,
+  // retain it so the form never blanks out or corrupts historical data
+  if (!isNew && currentValue && !currentValueFoundInActive && !currentValueFoundInInactive) {
+    result.push({
+      value: currentValue,
+      label: `${currentValue}${inactiveSuffix}`,
+      description: 'Registro histórico conservado',
+    });
+  }
+
+  return result;
+}
 
 export interface CatalogUsageCheckContext {
   orders: Order[];
