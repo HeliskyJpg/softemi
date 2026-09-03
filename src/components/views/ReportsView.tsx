@@ -9,7 +9,7 @@ import {
   Filter,
   CalendarDays,
 } from 'lucide-react';
-import { SystemAlert } from '../common/SystemAlert';
+import { SystemAlert, AutocompleteSelect } from '../common';
 import {
   ResponsiveContainer,
   BarChart,
@@ -415,33 +415,26 @@ export const ReportsView: React.FC = () => {
         {periodType === 'month_year' && (
           <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#F2D6DE]/40">
             <span className="text-xs font-medium text-[#7D6871]">Seleccionar:</span>
-            <select
-              id="select-report-month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              aria-label="Seleccionar mes"
-              className="px-3 py-1.5 rounded-xl border border-[#F2D6DE] text-xs font-semibold text-[#2C1E23] bg-white focus:outline-none focus:ring-1 focus:ring-[#681B2B]"
-            >
-              {MONTH_OPTIONS.map((m, idx) => (
-                <option key={idx} value={idx}>
-                  {m}
-                </option>
-              ))}
-            </select>
-
-            <select
-              id="select-report-year"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              aria-label="Seleccionar año"
-              className="px-3 py-1.5 rounded-xl border border-[#F2D6DE] text-xs font-semibold text-[#2C1E23] bg-white focus:outline-none focus:ring-1 focus:ring-[#681B2B]"
-            >
-              {availableYears.map((yr) => (
-                <option key={yr} value={yr}>
-                  {yr}
-                </option>
-              ))}
-            </select>
+            <div className="w-36">
+              <AutocompleteSelect
+                id="select-report-month"
+                value={String(selectedMonth)}
+                onChange={(val) => setSelectedMonth(Number(val))}
+                options={MONTH_OPTIONS.map((m, idx) => ({ value: String(idx), label: m }))}
+                size="sm"
+                searchable={false}
+              />
+            </div>
+            <div className="w-28">
+              <AutocompleteSelect
+                id="select-report-year"
+                value={String(selectedYear)}
+                onChange={(val) => setSelectedYear(Number(val))}
+                options={availableYears.map((yr) => ({ value: String(yr), label: String(yr) }))}
+                size="sm"
+                searchable={false}
+              />
+            </div>
           </div>
         )}
 

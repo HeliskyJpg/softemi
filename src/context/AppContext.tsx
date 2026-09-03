@@ -16,7 +16,13 @@ import {
   ComponentsViewState,
   ClientsViewState,
   NavigationHistoryEntry,
+  CatalogItem,
+  CatalogKey,
 } from '../types';
+import {
+  CATALOG_DEFINITIONS,
+  CATALOG_KEYS_ORDERED,
+} from '../config/catalogsConfig';
 import {
   INITIAL_USERS,
   INITIAL_CLIENTS,
@@ -148,6 +154,32 @@ interface AppContextType {
   addToast: (message: string, type?: 'success' | 'error' | 'warning' | 'info', title?: string) => void;
   removeToast: (id: string) => void;
 
+  // Catalogs Management
+  catalogs: Record<CatalogKey, CatalogItem[]>;
+  getCatalogItems: (key: CatalogKey, onlyActive?: boolean) => CatalogItem[];
+  addCatalogItem: (
+    key: CatalogKey,
+    item: Omit<CatalogItem, 'id' | 'createdAt' | 'updatedAt'>
+  ) => { success: boolean; item?: CatalogItem; error?: string };
+  updateCatalogItem: (
+    key: CatalogKey,
+    id: string,
+    itemData: Partial<CatalogItem>
+  ) => { success: boolean; error?: string };
+  toggleCatalogItemActive: (
+    key: CatalogKey,
+    id: string
+  ) => { success: boolean; error?: string };
+  deleteCatalogItem: (
+    key: CatalogKey,
+    id: string
+  ) => { success: boolean; error?: string; inUse?: boolean };
+  isCatalogItemInUse: (
+    key: CatalogKey,
+    name: string,
+    id: string
+  ) => { inUse: boolean; count: number; details: string };
+
   // Demo Control
   resetDemoData: () => void;
   resetToInitialSeedData: () => void;
@@ -164,6 +196,7 @@ const STORAGE_KEYS = {
   UNITS: 'emila_units_v2',
   ORDERS: 'emila_orders_v2',
   STOCK_LOGS: 'emila_stock_logs_v2',
+  CATALOGS: 'emila_catalogs_v2',
 };
 
 const deduplicateStrings = (arr: unknown[]): string[] => {
@@ -258,6 +291,48 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return saved ? JSON.parse(saved) : INITIAL_STOCK_LOGS;
     } catch {
       return INITIAL_STOCK_LOGS;
+    }
+  });
+
+  // Helper to build initial catalogs from definitions
+  const getInitialCatalogs = (): Record<CatalogKey, CatalogItem[]> => {
+    const initial: Partial<Record<CatalogKey, CatalogItem[]>> = {};
+    const now = new Date().toISOString();
+    for (const key of CATALOG_KEYS_ORDERED) {
+      const def = CATALOG_DEFINITIONS[key];
+      initial[key] = (def?.defaultItems || []).map((it, idx) => ({
+        ...it,
+        orderIndex: it.orderIndex ?? idx + 1,
+        createdAt: now,
+        updatedAt: now,
+      }));
+    }
+    return initial as Record<CatalogKey, CatalogItem[]>;
+  };
+
+  // Administrable Master Catalogs State
+  const [catalogs, setCatalogs] = useState<Record<CatalogKey, CatalogItem[]>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.CATALOGS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const merged: Partial<Record<CatalogKey, CatalogItem[]>> = { ...parsed };
+        const now = new Date().toISOString();
+        for (const key of CATALOG_KEYS_ORDERED) {
+          if (!merged[key] || !Array.isArray(merged[key]) || merged[key]!.length === 0) {
+            merged[key] = (CATALOG_DEFINITIONS[key]?.defaultItems || []).map((it, idx) => ({
+              ...it,
+              orderIndex: it.orderIndex ?? idx + 1,
+              createdAt: now,
+              updatedAt: now,
+            }));
+          }
+        }
+        return merged as Record<CatalogKey, CatalogItem[]>;
+      }
+      return getInitialCatalogs();
+    } catch {
+      return getInitialCatalogs();
     }
   });
 
@@ -488,6 +563,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.STOCK_LOGS, JSON.stringify(stockAdjustmentLogs));
   }, [stockAdjustmentLogs]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CATALOGS, JSON.stringify(catalogs));
+  }, [catalogs]);
 
   // Toast Helper
   const addToast = (
@@ -1365,6 +1444,172 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   };
 
+  // Catalog Functions
+  const getCatalogItems = (key: CatalogKey, onlyActive: boolean = false): CatalogItem[] => {
+    const list = catalogs[key] || [];
+    if (onlyActive) {
+      return list.filter((item) => item.active);
+    }
+    return list;
+  };
+
+  const isCatalogItemInUse = (
+    key: CatalogKey,
+    name: string,
+    id: string
+  ): { inUse: boolean; count: number; details: string } => {
+    const def = CATALOG_DEFINITIONS[key];
+    const item = (catalogs[key] || []).find((it) => it.id === id) || {
+      id,
+      name,
+      active: true,
+    };
+    if (def && typeof def.checkInUse === 'function') {
+      return def.checkInUse(item as CatalogItem, {
+        orders,
+        components,
+        stockLogs: stockAdjustmentLogs,
+      });
+    }
+    return { inUse: false, count: 0, details: '' };
+  };
+
+  const addCatalogItem = (
+    key: CatalogKey,
+    itemData: Omit<CatalogItem, 'id' | 'createdAt' | 'updatedAt'>
+  ): { success: boolean; item?: CatalogItem; error?: string } => {
+    const trimmedName = itemData.name.trim();
+    if (!trimmedName) {
+      return { success: false, error: 'El nombre es requerido.' };
+    }
+    const currentList = catalogs[key] || [];
+    if (currentList.some((it) => it.name.trim().toLowerCase() === trimmedName.toLowerCase())) {
+      return { success: false, error: `Ya existe un registro con el nombre "${trimmedName}".` };
+    }
+
+    const now = new Date().toISOString();
+    const newItem: CatalogItem = {
+      ...itemData,
+      name: trimmedName,
+      id: `cat-${key}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    setCatalogs((prev) => ({
+      ...prev,
+      [key]: [...(prev[key] || []), newItem],
+    }));
+
+    // Keep legacy categories or units in sync if applicable
+    if (key === 'component_categories') {
+      setCategories((prev) => (prev.includes(trimmedName) ? prev : [...prev, trimmedName]));
+    } else if (key === 'component_units') {
+      setUnits((prev) => (prev.includes(trimmedName) ? prev : [...prev, trimmedName]));
+    }
+
+    return { success: true, item: newItem };
+  };
+
+  const updateCatalogItem = (
+    key: CatalogKey,
+    id: string,
+    itemData: Partial<CatalogItem>
+  ): { success: boolean; error?: string } => {
+    const currentList = catalogs[key] || [];
+    const target = currentList.find((it) => it.id === id);
+    if (!target) {
+      return { success: false, error: 'Elemento no encontrado.' };
+    }
+
+    if (itemData.name) {
+      const trimmedName = itemData.name.trim();
+      const duplicate = currentList.find(
+        (it) => it.id !== id && it.name.trim().toLowerCase() === trimmedName.toLowerCase()
+      );
+      if (duplicate) {
+        return { success: false, error: `Ya existe un elemento llamado "${trimmedName}".` };
+      }
+    }
+
+    const now = new Date().toISOString();
+    setCatalogs((prev) => ({
+      ...prev,
+      [key]: (prev[key] || []).map((it) =>
+        it.id === id
+          ? {
+              ...it,
+              ...itemData,
+              ...(itemData.name ? { name: itemData.name.trim() } : {}),
+              updatedAt: now,
+            }
+          : it
+      ),
+    }));
+
+    // Keep legacy categories / units in sync if renamed
+    if (itemData.name && key === 'component_categories') {
+      const oldName = target.name;
+      const newName = itemData.name.trim();
+      setCategories((prev) => prev.map((c) => (c === oldName ? newName : c)));
+    } else if (itemData.name && key === 'component_units') {
+      const oldName = target.name;
+      const newName = itemData.name.trim();
+      setUnits((prev) => prev.map((u) => (u === oldName ? newName : u)));
+    }
+
+    return { success: true };
+  };
+
+  const toggleCatalogItemActive = (
+    key: CatalogKey,
+    id: string
+  ): { success: boolean; error?: string } => {
+    const currentList = catalogs[key] || [];
+    const target = currentList.find((it) => it.id === id);
+    if (!target) {
+      return { success: false, error: 'Elemento no encontrado.' };
+    }
+
+    const now = new Date().toISOString();
+    setCatalogs((prev) => ({
+      ...prev,
+      [key]: (prev[key] || []).map((it) =>
+        it.id === id ? { ...it, active: !it.active, updatedAt: now } : it
+      ),
+    }));
+
+    return { success: true };
+  };
+
+  const deleteCatalogItem = (
+    key: CatalogKey,
+    id: string
+  ): { success: boolean; error?: string; inUse?: boolean } => {
+    const currentList = catalogs[key] || [];
+    const target = currentList.find((it) => it.id === id);
+    if (!target) {
+      return { success: false, error: 'Elemento no encontrado.' };
+    }
+
+    // Protection rule: Check if used historically
+    const usage = isCatalogItemInUse(key, target.name, target.id);
+    if (usage.inUse) {
+      return {
+        success: false,
+        inUse: true,
+        error: `No se puede eliminar físicamente "${target.name}" porque está registrado en registros históricos (${usage.details}). Por favor desactívelo en su lugar.`,
+      };
+    }
+
+    setCatalogs((prev) => ({
+      ...prev,
+      [key]: (prev[key] || []).filter((it) => it.id !== id),
+    }));
+
+    return { success: true };
+  };
+
   const resetDemoData = () => {
     setUsers(INITIAL_USERS);
     setCurrentUser(INITIAL_USERS[0]); // Elena Soto Admin
@@ -1374,6 +1619,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setComponents(INITIAL_COMPONENTS);
     setOrders(INITIAL_ORDERS);
     setStockAdjustmentLogs(INITIAL_STOCK_LOGS);
+    setCatalogs(getInitialCatalogs());
     setSelectedOrderId(null);
     setActiveView('components');
     addToast('Datos del sistema restablecidos a los valores iniciales.', 'info', 'Reinicio completo');
@@ -1443,6 +1689,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         toasts,
         addToast,
         removeToast,
+
+        // Catalogs Management
+        catalogs,
+        getCatalogItems,
+        addCatalogItem,
+        updateCatalogItem,
+        toggleCatalogItemActive,
+        deleteCatalogItem,
+        isCatalogItemInUse,
 
         resetDemoData,
         resetToInitialSeedData: resetDemoData,

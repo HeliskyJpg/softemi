@@ -20,8 +20,16 @@ import {
   Sparkles,
   Info,
 } from 'lucide-react';
-import { StatusBadge } from '../common/StatusBadge';
-import { ConfirmModal } from '../common/ConfirmModal';
+import {
+  StatusBadge,
+  ConfirmDialog,
+  Modal,
+  FormField,
+  MoneyFormatter,
+  DateFormatter,
+  AutocompleteSelect,
+  TextArea,
+} from '../common';
 import { FormFieldError } from '../common/FormFieldError';
 import { SystemAlert } from '../common/SystemAlert';
 import { OrderStatus } from '../../types';
@@ -501,390 +509,355 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
       {/* ============================================================ */}
       {/* MODAL 1: REGISTRAR PAGO INDEPENDIENTE */}
       {/* ============================================================ */}
-      {showPaymentModal && (
-        <div
-          id="modal-register-payment"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#681B2B] flex items-center gap-2 leading-snug break-words">
-                  <Receipt className="w-5 h-5 text-[#681B2B] shrink-0" />
-                  <span className="truncate">Registrar pago</span>
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  Pedido <strong className="text-[#2C1E23]">{order.code}</strong> · Cliente:{' '}
-                  <strong className="text-[#2C1E23]">{order.clientName}</strong>
-                </p>
-              </div>
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
+      <Modal
+        id="modal-register-payment"
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        title={
+          <span className="flex items-center gap-2">
+            <Receipt className="w-5 h-5 text-[#681B2B] shrink-0" />
+            <span className="truncate">Registrar pago</span>
+          </span>
+        }
+        subtitle={
+          <span>
+            Pedido <strong className="text-[#2C1E23]">{order.code}</strong> · Cliente:{' '}
+            <strong className="text-[#2C1E23]">{order.clientName}</strong>
+          </span>
+        }
+        size="lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowPaymentModal(false)}
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btn-confirm-payment-save"
+              form="form-register-payment"
+              type="submit"
+              disabled={currentPayNum <= 0 || currentPayNum > order.balance + 0.001}
+              className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px] transition-colors"
+            >
+              <Receipt className="w-4 h-4" />
+              <span>Registrar pago</span>
+            </button>
+          </>
+        }
+      >
+        <form id="form-register-payment" onSubmit={handleConfirmPayment} className="space-y-4">
+          {/* Compact Financial Summary Strip */}
+          <div
+            id="payment-modal-summary-strip"
+            className="px-3.5 py-2.5 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE] text-xs flex flex-wrap items-center justify-between sm:justify-center gap-x-2.5 gap-y-1 text-[#7D6871]"
+          >
+            <span>
+              Total <strong className="font-bold text-[#2C1E23]"><MoneyFormatter amount={order.total} /></strong>
+            </span>
+            <span className="text-[#F2D6DE]">·</span>
+            <span>
+              Pagado <strong className="font-bold text-[#2C1E23]"><MoneyFormatter amount={order.advancePayment} /></strong>
+            </span>
+            <span className="text-[#F2D6DE]">·</span>
+            <span>
+              Pendiente <strong className="font-bold text-[#681B2B]"><MoneyFormatter amount={order.balance} /></strong>
+            </span>
+          </div>
+
+          {/* Payment Amount Input */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="input-payment-amount"
+                className="text-xs font-bold text-[#2C1E23]"
               >
-                <X className="w-5 h-5" />
+                Monto a pagar <span className="text-red-500">*</span>
+              </label>
+              <button
+                type="button"
+                id="btn-use-pending-balance"
+                onClick={() => {
+                  setPaymentAmountInput(order.balance.toFixed(2));
+                  setPaymentError(null);
+                }}
+                className="text-[11px] sm:text-xs font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer transition-colors"
+              >
+                Usar saldo pendiente Q{order.balance.toFixed(2)}
               </button>
             </div>
-
-            <form onSubmit={handleConfirmPayment} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-                {/* Compact Financial Summary Strip */}
-                <div
-                  id="payment-modal-summary-strip"
-                  className="px-3.5 py-2.5 rounded-xl bg-[#FBECEF]/40 border border-[#F2D6DE] text-xs flex flex-wrap items-center justify-between sm:justify-center gap-x-2.5 gap-y-1 text-[#7D6871]"
-                >
-                  <span>
-                    Total <strong className="font-bold text-[#2C1E23]">Q{order.total.toFixed(2)}</strong>
-                  </span>
-                  <span className="text-[#F2D6DE]">·</span>
-                  <span>
-                    Pagado <strong className="font-bold text-[#2C1E23]">Q{order.advancePayment.toFixed(2)}</strong>
-                  </span>
-                  <span className="text-[#F2D6DE]">·</span>
-                  <span>
-                    Pendiente <strong className="font-bold text-[#681B2B]">Q{order.balance.toFixed(2)}</strong>
-                  </span>
-                </div>
-
-                {/* Payment Amount Input */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label
-                      htmlFor="input-payment-amount"
-                      className="text-xs font-bold text-[#2C1E23]"
-                    >
-                      Monto a pagar <span className="text-red-500">*</span>
-                    </label>
-                    <button
-                      type="button"
-                      id="btn-use-pending-balance"
-                      onClick={() => {
-                        setPaymentAmountInput(order.balance.toFixed(2));
-                        setPaymentError(null);
-                      }}
-                      className="text-[11px] sm:text-xs font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer transition-colors"
-                    >
-                      Usar saldo pendiente Q{order.balance.toFixed(2)}
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs sm:text-sm font-bold text-[#7D6871] pointer-events-none">
-                      Q
-                    </span>
-                    <input
-                      id="input-payment-amount"
-                      type="number"
-                      min={0.01}
-                      max={order.balance}
-                      step="0.01"
-                      required
-                      value={paymentAmountInput}
-                      onChange={(e) => {
-                        setPaymentAmountInput(e.target.value);
-                        setPaymentError(null);
-                      }}
-                      placeholder="0.00"
-                      className={`w-full pl-8 pr-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl border outline-none text-[#2C1E23] ${
-                        paymentError
-                          ? 'border-rose-400 ring-1 ring-rose-200 bg-rose-50/20'
-                          : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B]'
-                      }`}
-                    />
-                  </div>
-                  <FormFieldError id="error-payment-amount" error={paymentError} />
-                </div>
-
-                {/* Simplified Calculation Preview */}
-                {currentPayNum > 0 && currentPayNum <= order.balance + 0.001 && (
-                  <div
-                    id="payment-live-preview"
-                    className="px-3.5 py-2 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60 text-xs flex items-center justify-between text-[#7D6871]"
-                  >
-                    <span>Después del pago</span>
-                    <span className="text-[#F2D6DE]">·</span>
-                    <span className="font-medium">
-                      Saldo pendiente{' '}
-                      <strong
-                        className={`font-bold ${
-                          projectedBalance === 0 ? 'text-[#059669]' : 'text-[#681B2B]'
-                        }`}
-                      >
-                        Q{projectedBalance.toFixed(2)}
-                      </strong>
-                      {projectedBalance === 0 && (
-                        <span className="ml-1.5 text-[11px] font-semibold text-[#059669]">
-                          (Liquidado)
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                )}
-
-                {/* Payment Method */}
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                    Forma de pago
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => {
-                      const isSelected = paymentMethod === m;
-                      return (
-                        <button
-                          key={m}
-                          id={`btn-payment-method-${m.toLowerCase()}`}
-                          type="button"
-                          onClick={() => setPaymentMethod(m)}
-                          className={`py-2 px-3 rounded-xl text-xs transition-all cursor-pointer ${
-                            isSelected
-                              ? 'border-2 border-[#681B2B] bg-[#FBECEF] text-[#681B2B] font-bold shadow-xs'
-                              : 'border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/30 text-[#7D6871] font-medium'
-                          }`}
-                        >
-                          {m}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Note / Reference */}
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                    Referencia o nota (opcional)
-                  </label>
-                  <input
-                    id="input-payment-note"
-                    type="text"
-                    value={paymentNote}
-                    onChange={(e) => setPaymentNote(e.target.value)}
-                    placeholder="Ej. Comprobante #124567, transferencia bancaria..."
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowPaymentModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-confirm-payment-save"
-                  type="submit"
-                  disabled={currentPayNum <= 0 || currentPayNum > order.balance + 0.001}
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px] transition-colors"
-                >
-                  <Receipt className="w-4 h-4" />
-                  <span>Registrar pago</span>
-                </button>
-              </div>
-            </form>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs sm:text-sm font-bold text-[#7D6871] pointer-events-none">
+                Q
+              </span>
+              <input
+                id="input-payment-amount"
+                type="number"
+                min={0.01}
+                max={order.balance}
+                step="0.01"
+                required
+                value={paymentAmountInput}
+                onChange={(e) => {
+                  setPaymentAmountInput(e.target.value);
+                  setPaymentError(null);
+                }}
+                placeholder="0.00"
+                className={`w-full pl-8 pr-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl border outline-none text-[#2C1E23] ${
+                  paymentError
+                    ? 'border-rose-400 ring-1 ring-rose-200 bg-rose-50/20'
+                    : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B]'
+                }`}
+              />
+            </div>
+            <FormFieldError id="error-payment-amount" error={paymentError} />
           </div>
-        </div>
-      )}
+
+          {/* Simplified Calculation Preview */}
+          {currentPayNum > 0 && currentPayNum <= order.balance + 0.001 && (
+            <div
+              id="payment-live-preview"
+              className="px-3.5 py-2 rounded-xl bg-[#FBECEF]/30 border border-[#F2D6DE]/60 text-xs flex items-center justify-between text-[#7D6871]"
+            >
+              <span>Después del pago</span>
+              <span className="text-[#F2D6DE]">·</span>
+              <span className="font-medium">
+                Saldo pendiente{' '}
+                <strong
+                  className={`font-bold ${
+                    projectedBalance === 0 ? 'text-[#059669]' : 'text-[#681B2B]'
+                  }`}
+                >
+                  <MoneyFormatter amount={projectedBalance} />
+                </strong>
+                {projectedBalance === 0 && (
+                  <span className="ml-1.5 text-[11px] font-semibold text-[#059669]">
+                    (Liquidado)
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+
+          {/* Payment Method */}
+          <div>
+            <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
+              Forma de pago
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => {
+                const isSelected = paymentMethod === m;
+                return (
+                  <button
+                    key={m}
+                    id={`btn-payment-method-${m.toLowerCase()}`}
+                    type="button"
+                    onClick={() => setPaymentMethod(m)}
+                    className={`py-2 px-3 rounded-xl text-xs transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-2 border-[#681B2B] bg-[#FBECEF] text-[#681B2B] font-bold shadow-xs'
+                        : 'border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/30 text-[#7D6871] font-medium'
+                    }`}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Note / Reference */}
+          <div>
+            <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
+              Referencia o nota (opcional)
+            </label>
+            <input
+              id="input-payment-note"
+              type="text"
+              value={paymentNote}
+              onChange={(e) => setPaymentNote(e.target.value)}
+              placeholder="Ej. Comprobante #124567, transferencia bancaria..."
+              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] outline-none"
+            />
+          </div>
+        </form>
+      </Modal>
 
       {/* ============================================================ */}
       {/* MODAL 2: CAMBIAR ESTADO (WITH INTEGRATED DELIVERY BALANCE CHECK) */}
       {/* ============================================================ */}
-      {showStatusModal && (
-        <div
-          id="modal-change-status"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] leading-snug break-words">
-                  Actualizar Estado del Pedido {order.code}
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  Estado actual: <strong className="text-[#681B2B]">{order.status}</strong>
-                </p>
-              </div>
-              <button
-                onClick={() => setShowStatusModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <Modal
+        id="modal-change-status"
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        title={`Actualizar Estado del Pedido ${order.code}`}
+        subtitle={
+          <span>
+            Estado actual: <strong className="text-[#681B2B]">{order.status}</strong>
+          </span>
+        }
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowStatusModal(false)}
+              className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btn-confirm-status-update"
+              form="form-change-status"
+              type="submit"
+              className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px]"
+            >
+              {newStatus === 'Entregado' && order.balance > 0 && willDeliver ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>Cobrar y Marcar como Entregado</span>
+                </>
+              ) : newStatus === 'Entregado' && order.balance > 0 && !willDeliver ? (
+                <>
+                  <Receipt className="w-4 h-4 shrink-0" />
+                  <span>Registrar Abono</span>
+                </>
+              ) : (
+                'Actualizar Estado'
+              )}
+            </button>
+          </>
+        }
+      >
+        <form id="form-change-status" onSubmit={handleConfirmStatusChange} className="space-y-4">
+          <AutocompleteSelect
+            id="select-order-status"
+            label="Nuevo Estado a Asignar"
+            options={[
+              { value: 'Pendiente', label: 'Pendiente' },
+              { value: 'En preparación', label: 'En preparación' },
+              { value: 'Listo', label: 'Listo' },
+              { value: 'Entregado', label: 'Entregado' },
+            ]}
+            value={newStatus}
+            onChange={(val) => {
+              setNewStatus(val as OrderStatus);
+              setDeliveryPaymentError(null);
+            }}
+            placeholder="Seleccionar estado"
+          />
 
-            <form onSubmit={handleConfirmStatusChange} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+          {/* Conditional Block when user selects "Entregado" and order has pending balance */}
+          {newStatus === 'Entregado' && order.balance > 0 && (
+            <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-3">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                    Nuevo Estado a Asignar
+                  <h4 className="text-xs font-bold text-amber-900">
+                    Este pedido tiene un saldo pendiente de <MoneyFormatter amount={order.balance} />.
+                  </h4>
+                  <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                    Para marcar el pedido como <strong>Entregado</strong>, registre el pago del saldo pendiente. Si registra un abono parcial, el pago quedará asentado pero el estado no se cambiará a Entregado hasta su liquidación total.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-[#2C1E23]">
+                    Monto a Cobrar (Q) <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    value={newStatus}
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryPaymentAmount(order.balance.toFixed(2))}
+                    className="text-[10px] font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer"
+                  >
+                    Pagar Saldo Completo
+                  </button>
+                </div>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-bold text-[#7D6871] pointer-events-none">
+                    Q
+                  </span>
+                  <input
+                    type="number"
+                    min={0.01}
+                    max={order.balance}
+                    step="0.01"
+                    required
+                    value={deliveryPaymentAmount}
                     onChange={(e) => {
-                      setNewStatus(e.target.value as OrderStatus);
+                      setDeliveryPaymentAmount(e.target.value);
                       setDeliveryPaymentError(null);
                     }}
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 bg-white font-semibold outline-none"
-                  >
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="En preparación">En preparación</option>
-                    <option value="Listo">Listo</option>
-                    <option value="Entregado">Entregado</option>
-                  </select>
-                </div>
-
-                {/* Conditional Block when user selects "Entregado" and order has pending balance */}
-                {newStatus === 'Entregado' && order.balance > 0 && (
-                  <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-3">
-                    <div className="flex items-start gap-2.5">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="text-xs font-bold text-amber-900">
-                          Este pedido tiene un saldo pendiente de Q {order.balance.toFixed(2)}.
-                        </h4>
-                        <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
-                          Para marcar el pedido como <strong>Entregado</strong>, registre el pago del saldo pendiente. Si registra un abono parcial, el pago quedará asentado pero el estado no se cambiará a Entregado hasta su liquidación total.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="text-xs font-bold text-[#2C1E23]">
-                          Monto a Cobrar (Q) <span className="text-red-500">*</span>
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => setDeliveryPaymentAmount(order.balance.toFixed(2))}
-                          className="text-[10px] font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer"
-                        >
-                          Pagar Saldo Completo
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-bold text-[#7D6871] pointer-events-none">
-                          Q
-                        </span>
-                        <input
-                          type="number"
-                          min={0.01}
-                          max={order.balance}
-                          step="0.01"
-                          required
-                          value={deliveryPaymentAmount}
-                          onChange={(e) => {
-                            setDeliveryPaymentAmount(e.target.value);
-                            setDeliveryPaymentError(null);
-                          }}
-                          placeholder="0.00"
-                          className={`w-full pl-7 pr-3 py-2 text-xs font-bold rounded-lg border outline-none ${
-                            deliveryPaymentError
-                              ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200'
-                              : 'border-amber-300 bg-white focus:ring-2 focus:ring-amber-500/30'
-                          }`}
-                        />
-                      </div>
-                      <FormFieldError id="error-delivery-payment" error={deliveryPaymentError} />
-                    </div>
-
-                    {/* Payment Method Selector */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-[#2C1E23] mb-1">
-                        Método de Cobro
-                      </label>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => setDeliveryPaymentMethod(m)}
-                            className={`py-1 px-2 rounded-lg text-[11px] font-medium border transition-colors cursor-pointer ${
-                              deliveryPaymentMethod === m
-                                ? 'border-emerald-600 bg-white text-emerald-900 font-bold shadow-xs'
-                                : 'border-amber-200 bg-amber-100/40 text-amber-900'
-                            }`}
-                          >
-                            {m}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Outcome Note */}
-                    {deliveryPayNum > 0 && (
-                      <div className="p-2 rounded-lg bg-white border border-amber-200 text-[11px]">
-                        {willDeliver ? (
-                          <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                            Saldo liquidado (Q 0.00 restante). El pedido se marcará como <strong>Entregado</strong>.
-                          </span>
-                        ) : (
-                          <span className="text-amber-900 leading-snug block">
-                            <strong>Abono Parcial:</strong> Quedará un saldo pendiente de <strong>Q {deliveryProjectedBalance.toFixed(2)}</strong>. El pedido <strong>NO</strong> se marcará como Entregado.
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-                    Nota / Observación del Cambio
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={statusNote}
-                    onChange={(e) => setStatusNote(e.target.value)}
-                    placeholder="Ej. Entregado en recepción del taller con firma de recibido..."
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
+                    placeholder="0.00"
+                    className={`w-full pl-7 pr-3 py-2 text-xs font-bold rounded-lg border outline-none ${
+                      deliveryPaymentError
+                        ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200'
+                        : 'border-amber-300 bg-white focus:ring-2 focus:ring-amber-500/30'
+                    }`}
                   />
                 </div>
+                <FormFieldError id="error-delivery-payment" error={deliveryPaymentError} />
               </div>
 
-              {/* Action Buttons */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowStatusModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-confirm-status-update"
-                  type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px]"
-                >
-                  {newStatus === 'Entregado' && order.balance > 0 && willDeliver ? (
-                    <>
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      <span>Cobrar y Marcar como Entregado</span>
-                    </>
-                  ) : newStatus === 'Entregado' && order.balance > 0 && !willDeliver ? (
-                    <>
-                      <Receipt className="w-4 h-4 shrink-0" />
-                      <span>Registrar Abono</span>
-                    </>
-                  ) : (
-                    'Actualizar Estado'
-                  )}
-                </button>
+              {/* Payment Method Selector */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#2C1E23] mb-1">
+                  Método de Cobro
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {['Efectivo', 'Transferencia', 'Tarjeta'].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setDeliveryPaymentMethod(m)}
+                      className={`py-1 px-2 rounded-lg text-[11px] font-medium border transition-colors cursor-pointer ${
+                        deliveryPaymentMethod === m
+                          ? 'border-emerald-600 bg-white text-emerald-900 font-bold shadow-xs'
+                          : 'border-amber-200 bg-amber-100/40 text-amber-900'
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+              {/* Outcome Note */}
+              {deliveryPayNum > 0 && (
+                <div className="p-2 rounded-lg bg-white border border-amber-200 text-[11px]">
+                  {willDeliver ? (
+                    <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      Saldo liquidado (Q 0.00 restante). El pedido se marcará como <strong>Entregado</strong>.
+                    </span>
+                  ) : (
+                    <span className="text-amber-900 leading-snug block">
+                      <strong>Abono Parcial:</strong> Quedará un saldo pendiente de <strong><MoneyFormatter amount={deliveryProjectedBalance} /></strong>. El pedido <strong>NO</strong> se marcará como Entregado.
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <TextArea
+            label="Nota / Observación del Cambio"
+            rows={2}
+            value={statusNote}
+            onChange={(e) => setStatusNote(e.target.value)}
+            placeholder="Ej. Entregado en recepción del taller con firma de recibido..."
+          />
+        </form>
+      </Modal>
 
       {/* ============================================================ */}
       {/* MODAL 3: CANCELAR PEDIDO (CRITICAL ACTION CONFIRMATION) */}
       {/* ============================================================ */}
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}
         onConfirm={handleConfirmCancellation}

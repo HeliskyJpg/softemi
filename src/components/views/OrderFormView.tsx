@@ -23,10 +23,17 @@ import {
   Client,
   ComponentItem,
 } from '../../types';
-import { QuantityInput } from '../common/QuantityInput';
+import {
+  QuantityInput,
+  FormField,
+  FormFieldError,
+  SystemAlert,
+  AutocompleteSelect,
+  TextArea,
+  Modal,
+  MoneyFormatter,
+} from '../common';
 import { OrderComponentsEditor } from '../orders/OrderComponentsEditor';
-import { FormFieldError } from '../common/FormFieldError';
-import { SystemAlert } from '../common/SystemAlert';
 
 interface OrderFormViewProps {
   orderIdToEdit?: string | null;
@@ -45,6 +52,7 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
     addToast,
     newOrderInitialData,
     setNewOrderInitialData,
+    getCatalogItems,
   } = useApp();
 
   const isEditing = !!orderIdToEdit;
@@ -386,28 +394,22 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label
-                htmlFor="select-order-client"
-                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-              >
-                Seleccionar Cliente <span className="text-red-500">*</span>
-              </label>
-              <select
+              <AutocompleteSelect
                 id="select-order-client"
+                label="Seleccionar Cliente"
+                required
+                options={clients.map((cli) => ({
+                  value: cli.id,
+                  label: cli.name,
+                  description: `Tel: ${cli.phone}${cli.notes ? ` • ${cli.notes}` : ''}`,
+                }))}
                 value={selectedClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer ${
-                  errors.client ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
-                }`}
-              >
-                <option value="">-- Buscar o seleccionar cliente --</option>
-                {clients.map((cli) => (
-                  <option key={cli.id} value={cli.id}>
-                    {cli.name} ({cli.phone})
-                  </option>
-                ))}
-              </select>
-              <FormFieldError id="error-order-client" error={errors.client} />
+                onChange={(val) => setSelectedClientId(val)}
+                placeholder="-- Buscar o seleccionar cliente --"
+                searchable={true}
+                allowClear={true}
+                error={errors.client}
+              />
             </div>
 
             {selectedClient && (
@@ -450,32 +452,35 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label
-                htmlFor="select-order-channel"
-                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-              >
-                Canal de Recepción <span className="text-red-500">*</span>
-              </label>
-              <select
+              <AutocompleteSelect
                 id="select-order-channel"
+                label="Canal de Recepción"
+                required
+                options={(() => {
+                  const items = getCatalogItems('order_channels');
+                  const valid = items.filter(
+                    (it) => it.active || (isEditing && existingOrder?.channel === it.name)
+                  );
+                  if (valid.length === 0) {
+                    return [{ value: channel, label: channel }];
+                  }
+                  return valid.map((it) => ({
+                    value: it.name,
+                    label: it.name + (!it.active ? ' (Inactivo)' : ''),
+                  }));
+                })()}
                 value={channel}
-                onChange={(e) => setChannel(e.target.value as OrderChannel)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#F2D6DE] text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium cursor-pointer"
-              >
-                <option value="WhatsApp">WhatsApp</option>
-                <option value="Instagram">Instagram</option>
-                <option value="Llamada">Llamada</option>
-                <option value="Otro">Otro</option>
-              </select>
+                onChange={(val) => setChannel(val as OrderChannel)}
+                searchable={false}
+              />
             </div>
 
-            <div>
-              <label
-                htmlFor="input-order-date"
-                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-              >
-                Fecha de Entrega <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              id="input-order-date"
+              label="Fecha de Entrega"
+              required
+              error={errors.deliveryDate}
+            >
               <input
                 id="input-order-date"
                 type="date"
@@ -485,16 +490,14 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   errors.deliveryDate ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
                 }`}
               />
-              <FormFieldError id="error-order-date" error={errors.deliveryDate} />
-            </div>
+            </FormField>
 
-            <div>
-              <label
-                htmlFor="input-order-time"
-                className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-              >
-                Hora de Entrega <span className="text-red-500">*</span>
-              </label>
+            <FormField
+              id="input-order-time"
+              label="Hora de Entrega"
+              required
+              error={errors.deliveryTime}
+            >
               <input
                 id="input-order-time"
                 type="time"
@@ -504,17 +507,15 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                   errors.deliveryTime ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
                 }`}
               />
-              <FormFieldError id="error-order-time" error={errors.deliveryTime} />
-            </div>
+            </FormField>
           </div>
 
-          <div>
-            <label
-              htmlFor="input-order-description"
-              className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-            >
-              Descripción del Arreglo / Pedido <span className="text-red-500">*</span>
-            </label>
+          <FormField
+            id="input-order-description"
+            label="Descripción del Arreglo / Pedido"
+            required
+            error={errors.description}
+          >
             <input
               id="input-order-description"
               type="text"
@@ -525,25 +526,18 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 errors.description ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
               }`}
             />
-            <FormFieldError id="error-order-description" error={errors.description} />
-          </div>
+          </FormField>
 
-          <div>
-            <label
-              htmlFor="input-order-observations"
-              className="block text-xs font-bold text-[#2C1E23] mb-1.5"
-            >
-              Dedicatoria / Observaciones Especiales
-            </label>
-            <textarea
-              id="input-order-observations"
-              rows={2}
-              value={observations}
-              onChange={(e) => setObservations(e.target.value)}
-              placeholder="Texto de tarjeta personalizada, color de listón preferido, instrucciones de entrega..."
-              className="w-full px-3.5 py-2 rounded-xl border border-[#F2D6DE] text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium resize-none"
-            />
-          </div>
+          <TextArea
+            id="input-order-observations"
+            label="Dedicatoria / Observaciones Especiales"
+            rows={2}
+            value={observations}
+            onChange={(e) => setObservations(e.target.value)}
+            maxLength={250}
+            showCounter={true}
+            placeholder="Texto de tarjeta personalizada, color de listón preferido, instrucciones de entrega..."
+          />
         </div>
 
         {/* ============================================================ */}
@@ -703,98 +697,69 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
       {/* ============================================================ */}
       {/* MODAL: + NUEVO CLIENTE RÁPIDO */}
       {/* ============================================================ */}
-      {showClientModal && (
-        <div
-          id="modal-quick-client"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#681B2B] leading-snug break-words">
-                  Registrar Nuevo Cliente
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  Agregue al cliente para asociarlo de inmediato a este pedido.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowClientModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <Modal
+        id="modal-quick-client"
+        isOpen={showClientModal}
+        onClose={() => setShowClientModal(false)}
+        title="Registrar Nuevo Cliente"
+        subtitle="Agregue al cliente para asociarlo de inmediato a este pedido."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowClientModal(false)}
+              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btn-save-quick-client"
+              form="form-quick-client"
+              type="submit"
+              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Guardar y Seleccionar
+            </button>
+          </>
+        }
+      >
+        <form id="form-quick-client" onSubmit={handleCreateClientQuick} className="space-y-3.5">
+          <FormField id="input-quick-client-name" label="Nombre Completo" required>
+            <input
+              id="input-quick-client-name"
+              type="text"
+              required
+              value={newClientName}
+              onChange={(e) => setNewClientName(e.target.value)}
+              placeholder="Ej. Andrea López"
+              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+            />
+          </FormField>
 
-            <form onSubmit={handleCreateClientQuick} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Nombre Completo <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="input-quick-client-name"
-                    type="text"
-                    required
-                    value={newClientName}
-                    onChange={(e) => setNewClientName(e.target.value)}
-                    placeholder="Ej. Andrea López"
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                  />
-                </div>
+          <FormField id="input-quick-client-phone" label="Teléfono / WhatsApp" optional>
+            <input
+              id="input-quick-client-phone"
+              type="text"
+              value={newClientPhone}
+              onChange={(e) => setNewClientPhone(e.target.value)}
+              placeholder="Ej. 5512-3456"
+              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+            />
+          </FormField>
 
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Teléfono / WhatsApp
-                  </label>
-                  <input
-                    id="input-quick-client-phone"
-                    type="text"
-                    value={newClientPhone}
-                    onChange={(e) => setNewClientPhone(e.target.value)}
-                    placeholder="Ej. 5512-3456"
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Observaciones / Preferencias
-                  </label>
-                  <textarea
-                    id="input-quick-client-notes"
-                    rows={3}
-                    value={newClientNotes}
-                    onChange={(e) => setNewClientNotes(e.target.value)}
-                    placeholder="Tonos favoritos, tipo de flores preferidas..."
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowClientModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-save-quick-client"
-                  type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Guardar y Seleccionar
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <TextArea
+            id="input-quick-client-notes"
+            label="Observaciones / Preferencias"
+            rows={3}
+            value={newClientNotes}
+            onChange={(e) => setNewClientNotes(e.target.value)}
+            maxLength={150}
+            showCounter={true}
+            placeholder="Tonos favoritos, tipo de flores preferidas..."
+          />
+        </form>
+      </Modal>
     </div>
 
   );

@@ -12,9 +12,13 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { SystemUser, UserRole } from '../../types';
-import { ConfirmModal } from '../common/ConfirmModal';
-import { SystemAlert } from '../common/SystemAlert';
-import { FormFieldError } from '../common/FormFieldError';
+import {
+  ConfirmDialog,
+  SystemAlert,
+  FormFieldError,
+  Modal,
+  AutocompleteSelect,
+} from '../common';
 
 export const UsersView: React.FC = () => {
   const { users, currentUser, updateUser, toggleUserActive, addToast, switchUserRole } = useApp();
@@ -468,35 +472,35 @@ export const UsersView: React.FC = () => {
       {/* MODAL: EDITAR USUARIO (ACCIONES ESTRICTAMENTE PERMITIDAS)     */}
       {/* NUNCA MOSTRAR, RECUPERAR NI PRECARGAR CONTRASEÑAS            */}
       {/* ============================================================ */}
-      {showEditModal && editingUser && (
-        <div
-          id="modal-edit-user"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE]/60 relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] mb-0.5 flex items-center gap-2">
-                  <UserCheck className="w-5 h-5 text-[#681B2B] shrink-0" />
-                  <span className="truncate">Editar Usuario</span>
-                </h3>
-                <p className="text-xs text-[#7D6871] leading-relaxed break-words">
-                  Modifique los datos permitidos, rol y estado de la cuenta en EMILA.
-                </p>
-              </div>
-              <button
-                id="btn-close-edit-user-modal"
-                onClick={() => setShowEditModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+      <Modal
+        id="modal-edit-user"
+        isOpen={showEditModal && Boolean(editingUser)}
+        onClose={() => setShowEditModal(false)}
+        title="Editar Usuario"
+        subtitle="Modifique los datos permitidos, rol y estado de la cuenta en EMILA."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              id="btn-cancel-edit-user"
+              onClick={() => setShowEditModal(false)}
+              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btn-save-edit-user"
+              form="form-edit-user"
+              type="submit"
+              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Guardar Cambios
+            </button>
+          </>
+        }
+      >
+        <form id="form-edit-user" onSubmit={handleEditSubmit} className="space-y-4">
                 {/* General error message if any */}
                 {formErrors.general && (
                   <SystemAlert
@@ -569,17 +573,18 @@ export const UsersView: React.FC = () => {
                   <label htmlFor="select-edit-user-role" className="block text-xs font-bold text-[#2C1E23] mb-1">
                     Rol Asignado
                   </label>
-                  <select
+                  <AutocompleteSelect
                     id="select-edit-user-role"
                     value={formRole}
-                    onChange={(e) => setFormRole(e.target.value as UserRole)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium text-[#2C1E23] cursor-pointer"
-                  >
-                    <option value="Colaborador" disabled={isEditingOnlyAdmin}>
-                      Colaborador (Recepción, agenda y taller)
-                    </option>
-                    <option value="Administrador">Administrador (Acceso total y configuración)</option>
-                  </select>
+                    onChange={(val) => setFormRole(val as UserRole)}
+                    options={[
+                      { value: 'Colaborador', label: 'Colaborador (Recepción, agenda y taller)' },
+                      { value: 'Administrador', label: 'Administrador (Acceso total y configuración)' },
+                    ]}
+                    searchable={false}
+                    disabled={isEditingOnlyAdmin}
+                    size="sm"
+                  />
 
                   {isEditingOnlyAdmin && (
                     <div className="mt-2">
@@ -624,37 +629,15 @@ export const UsersView: React.FC = () => {
                     </div>
                   </label>
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  id="btn-cancel-edit-user"
-                  onClick={() => setShowEditModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-save-edit-user"
-                  type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Guardar Cambios
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        </form>
+      </Modal>
 
       {/* ============================================================ */}
       {/* CONFIRM MODAL: DESACTIVACIÓN DE USUARIO (REQUERIMIENTO 8)    */}
       {/* “¿Desea desactivar a [nombre]? Ya no podrá iniciar sesión      */}
       {/*  hasta que vuelva a activarse.”                              */}
       {/* ============================================================ */}
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={Boolean(userToDeactivate)}
         onClose={() => {
           setUserToDeactivate(null);

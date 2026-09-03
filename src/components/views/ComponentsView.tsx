@@ -23,10 +23,14 @@ import {
   Check,
 } from 'lucide-react';
 import { ComponentCategory, ComponentItem, ComponentUnit } from '../../types';
-import { ConfirmModal } from '../common/ConfirmModal';
-import { AutocompleteSelect } from '../common/AutocompleteSelect';
-import { FormFieldError } from '../common/FormFieldError';
-import { SystemAlert } from '../common/SystemAlert';
+import {
+  ConfirmDialog,
+  AutocompleteSelect,
+  FormFieldError,
+  SystemAlert,
+  Modal,
+  TextArea,
+} from '../common';
 import {
   ArrowDownLeft,
 } from 'lucide-react';
@@ -81,6 +85,7 @@ export const ComponentsView: React.FC = () => {
     addToast,
     componentsViewState,
     setComponentsViewState,
+    getCatalogItems,
   } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
@@ -970,35 +975,38 @@ export const ComponentsView: React.FC = () => {
       {/* ============================================================ */}
       {/* MODAL 1: NUEVO / EDITAR COMPONENTE */}
       {/* ============================================================ */}
-      {showEditModal && (
-        <div
-          id="modal-component-form"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] tracking-tight leading-snug break-words">
-                  {editingComponent ? 'Editar Componente' : 'Nuevo Componente'}
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  {editingComponent
-                    ? 'Actualice las características generales del insumo. El stock físico se edita exclusivamente con Ajustar stock.'
-                    : 'Defina los datos del insumo y su existencia inicial para el taller.'}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveComponent} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+      <Modal
+        id="modal-component-form"
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={editingComponent ? 'Editar Componente' : 'Nuevo Componente'}
+        subtitle={
+          editingComponent
+            ? 'Actualice las características generales del insumo. El stock físico se edita exclusivamente con Ajustar stock.'
+            : 'Defina los datos del insumo y su existencia inicial para el taller.'
+        }
+        size="lg"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowEditModal(false)}
+              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btn-save-component"
+              form="form-component-modal"
+              type="submit"
+              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              {editingComponent ? 'Guardar Cambios' : 'Crear Componente'}
+            </button>
+          </>
+        }
+      >
+        <form id="form-component-modal" onSubmit={handleSaveComponent} className="space-y-4">
                 {editingComponent && (
                   <div className="p-3 bg-[#FBECEF]/30 rounded-xl border border-[#F2D6DE] text-xs text-[#2C1E23] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
@@ -1046,6 +1054,7 @@ export const ComponentsView: React.FC = () => {
 
                   {isAddingNewCat ? (
                     <input
+                      id="input-new-cat"
                       type="text"
                       required
                       value={newCustomCategory}
@@ -1054,18 +1063,13 @@ export const ComponentsView: React.FC = () => {
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium"
                     />
                   ) : (
-                    <select
+                    <AutocompleteSelect
                       id="select-comp-category"
                       value={formCategory}
-                      onChange={(e) => setFormCategory(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium cursor-pointer"
-                    >
-                      {uniqueCategories.map((c) => (
-                        <option key={`modal-cat-${c}`} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setFormCategory(val as ComponentCategory)}
+                      options={uniqueCategories.map((c) => ({ value: c, label: c }))}
+                      size="sm"
+                    />
                   )}
                 </div>
 
@@ -1096,18 +1100,13 @@ export const ComponentsView: React.FC = () => {
                       className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium"
                     />
                   ) : (
-                    <select
+                    <AutocompleteSelect
                       id="select-comp-unit"
                       value={formUnit}
-                      onChange={(e) => setFormUnit(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium cursor-pointer"
-                    >
-                      {uniqueUnits.map((u) => (
-                        <option key={`modal-unit-${u}`} value={u}>
-                          {u}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setFormUnit(val as ComponentUnit)}
+                      options={uniqueUnits.map((u) => ({ value: u, label: u }))}
+                      size="sm"
+                    />
                   )}
                 </div>
               </div>
@@ -1240,62 +1239,42 @@ export const ComponentsView: React.FC = () => {
                 </div>
               )}
 
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-save-component"
-                  type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  {editingComponent ? 'Guardar Cambios' : 'Crear Componente'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+        </form>
+      </Modal>
 
       {/* ============================================================ */}
       {/* MODAL 2: AJUSTAR STOCK (REFINED MODAL) */}
       {/* ============================================================ */}
-      {showStockModal && stockComponent && (
-        <div
-          id="modal-adjust-stock"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] tracking-tight leading-snug break-words">
-                  Ajustar stock
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 font-medium truncate">
-                  {stockComponent.name} · {stockComponent.category}
-                </p>
-              </div>
-              <button
-                id="btn-close-adjust-stock-modal"
-                onClick={() => setShowStockModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                title="Cerrar modal"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleConfirmStockAdjust} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+      <Modal
+        id="modal-adjust-stock"
+        isOpen={showStockModal && !!stockComponent}
+        onClose={() => setShowStockModal(false)}
+        title="Ajustar stock"
+        subtitle={stockComponent ? `${stockComponent.name} · ${stockComponent.category}` : ''}
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              id="btn-cancel-stock-adjust"
+              onClick={() => setShowStockModal(false)}
+              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-semibold text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-100 rounded-xl cursor-pointer transition-colors min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btn-confirm-stock-adjust"
+              form="form-adjust-stock"
+              type="submit"
+              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer transition-all min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Guardar ajuste
+            </button>
+          </>
+        }
+      >
+        {stockComponent && (
+          <form id="form-adjust-stock" onSubmit={handleConfirmStockAdjust} className="space-y-4">
                 {/* Stock Actual Context Row (Compact without independent cards) */}
                 <div className="bg-[#FBECEF]/40 border border-[#F2D6DE]/70 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <span className="text-[#7D6871] font-semibold text-xs shrink-0">Stock actual</span>
@@ -1439,7 +1418,13 @@ export const ComponentsView: React.FC = () => {
                   id="select-adjustment-reason"
                   label="Motivo del ajuste"
                   required
-                  options={PRESET_ADJUSTMENT_REASONS}
+                  options={(() => {
+                    const catalogReasons = getCatalogItems('stock_adjustment_reasons', true);
+                    if (catalogReasons.length > 0) {
+                      return catalogReasons.map((r) => r.name);
+                    }
+                    return PRESET_ADJUSTMENT_REASONS;
+                  })()}
                   value={adjustmentReason}
                   onChange={(val) => {
                     setAdjustmentReason(val);
@@ -1453,54 +1438,25 @@ export const ComponentsView: React.FC = () => {
                 />
               </div>
 
-              {/* 4. Detalle adicional (Textarea + Character Counter) */}
-              <div>
-                <label
-                  htmlFor="textarea-adjustment-observation"
-                  className="block text-xs font-bold text-[#2C1E23] mb-1"
-                >
-                  Detalle adicional (opcional)
-                </label>
-                <textarea
-                  id="textarea-adjustment-observation"
-                  rows={3}
-                  maxLength={250}
-                  value={adjustmentObservation}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setAdjustmentObservation(val);
-                    if (val.length <= 250 && stockModalErrors.observation) {
-                      setStockModalErrors((prev) => ({ ...prev, observation: undefined }));
-                    }
-                  }}
-                  placeholder="Explicación del ajuste, referencia, observaciones o incidencias..."
-                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border bg-white outline-none transition-all resize-none ${
-                    stockModalErrors.observation
-                      ? 'border-red-400 ring-2 ring-red-100'
-                      : 'border-[#F2D6DE] focus:border-[#681B2B] focus:ring-2 focus:ring-[#681B2B]/15'
-                  }`}
-                />
-                <div className="flex items-center justify-between mt-1 text-[11px]">
-                  {stockModalErrors.observation ? (
-                    <span className="text-red-600 font-semibold">
-                      {stockModalErrors.observation}
-                    </span>
-                  ) : (
-                    <span />
-                  )}
-                  <span
-                    className={`ml-auto font-medium transition-colors ${
-                      adjustmentObservation.length >= 250
-                        ? 'text-red-600 font-bold'
-                        : adjustmentObservation.length >= 230
-                        ? 'text-amber-700 font-semibold'
-                        : 'text-[#7D6871]'
-                    }`}
-                  >
-                    {adjustmentObservation.length} / 250 caracteres
-                  </span>
-                </div>
-              </div>
+              {/* 4. Detalle adicional (TextArea with character counter) */}
+              <TextArea
+                id="textarea-adjustment-observation"
+                label="Detalle adicional"
+                optional
+                rows={3}
+                maxLength={250}
+                showCounter={true}
+                value={adjustmentObservation}
+                error={stockModalErrors.observation}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setAdjustmentObservation(val);
+                  if (val.length <= 250 && stockModalErrors.observation) {
+                    setStockModalErrors((prev) => ({ ...prev, observation: undefined }));
+                  }
+                }}
+                placeholder="Explicación del ajuste, referencia, observaciones o incidencias..."
+              />
 
               {/* 5. Compact Result Preview (Clean without large cards) */}
               {(() => {
@@ -1550,35 +1506,14 @@ export const ComponentsView: React.FC = () => {
                 </div>
               )}
 
-              </div>
-
-              {/* Modal Actions */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  id="btn-cancel-stock-adjust"
-                  onClick={() => setShowStockModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-semibold text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-100 rounded-xl cursor-pointer transition-colors min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-confirm-stock-adjust"
-                  type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer transition-all min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Guardar ajuste
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          </form>
+        )}
+      </Modal>
 
       {/* ============================================================ */}
       {/* MODAL 3: CONFIRMAR ACTIVAR / DESACTIVAR */}
       {/* ============================================================ */}
-      <ConfirmModal
+      <ConfirmDialog
         isOpen={showConfirmToggleModal}
         onClose={() => setShowConfirmToggleModal(false)}
         onConfirm={handleConfirmToggleActive}

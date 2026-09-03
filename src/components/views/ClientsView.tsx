@@ -15,8 +15,14 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Client } from '../../types';
-import { FormFieldError } from '../common/FormFieldError';
 import { SystemAlert } from '../common/SystemAlert';
+import {
+  FormField,
+  TextArea,
+  Modal,
+  EmptyState,
+  Pagination,
+} from '../common';
 
 const CLIENTS_PER_PAGE = 9;
 
@@ -271,22 +277,28 @@ export const ClientsView: React.FC = () => {
       {/* Clients Cards Grid - 1 col Mobile, 2 cols Tablet, 3 cols Desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {paginatedClients.length === 0 ? (
-          <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-[#F2D6DE]/60 p-6">
-            <Users className="w-10 h-10 text-[#F2D6DE] mx-auto mb-2" />
-            <p className="font-semibold text-sm text-[#2C1E23]">No se encontraron clientes</p>
-            <p className="text-xs text-[#7D6871] mt-1 max-w-md mx-auto">
-              {searchTerm
-                ? 'Intente con otros términos de búsqueda o limpie el filtro para ver todos los registros.'
-                : 'Comience registrando su primer cliente con el botón "+ Nuevo Cliente".'}
-            </p>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="mt-3 px-3.5 py-1.5 rounded-xl border border-[#F2D6DE] text-xs font-bold text-[#681B2B] hover:bg-[#FBECEF]/40 transition-colors cursor-pointer"
-              >
-                Limpiar búsqueda
-              </button>
-            )}
+          <div className="col-span-full">
+            <EmptyState
+              icon={Users}
+              title="No se encontraron clientes"
+              description={
+                searchTerm
+                  ? 'Intente con otros términos de búsqueda o limpie el filtro para ver todos los registros.'
+                  : 'Comience registrando su primer cliente con el botón "+ Nuevo Cliente".'
+              }
+              action={
+                searchTerm
+                  ? {
+                      label: 'Limpiar búsqueda',
+                      onClick: () => setSearchTerm(''),
+                    }
+                  : {
+                      label: 'Nuevo Cliente',
+                      onClick: handleOpenCreate,
+                      icon: Plus,
+                    }
+              }
+            />
           </div>
         ) : (
           paginatedClients.map((client) => {
@@ -392,179 +404,99 @@ export const ClientsView: React.FC = () => {
         )}
       </div>
 
-      {/* Real Pagination Controls */}
-      {totalPages > 1 && (
-        <div
-          id="clients-pagination-container"
-          className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-[#F2D6DE]/40 bg-white rounded-2xl p-4 border border-[#F2D6DE]/60 shadow-xs"
-        >
-          <div className="text-xs text-[#7D6871] font-medium">
-            Página <strong className="text-[#2C1E23]">{currentPage}</strong> de{' '}
-            <strong className="text-[#2C1E23]">{totalPages}</strong>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {/* Anterior */}
-            <button
-              id="btn-clients-prev-page"
-              type="button"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-xl border border-[#F2D6DE] bg-white text-xs font-semibold text-[#2C1E23] hover:bg-[#FBECEF]/40 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center gap-1 cursor-pointer min-h-[36px]"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Anterior</span>
-            </button>
-
-            {/* Page numbers */}
-            <div className="flex items-center gap-1">
-              {pageNumbers.map((page, idx) => {
-                if (typeof page === 'string') {
-                  return (
-                    <span
-                      key={`ellipsis-${idx}`}
-                      className="px-2 py-1 text-xs text-[#7D6871] select-none"
-                    >
-                      ...
-                    </span>
-                  );
-                }
-
-                const isActive = page === currentPage;
-                return (
-                  <button
-                    key={`page-${page}`}
-                    id={`btn-clients-page-${page}`}
-                    type="button"
-                    onClick={() => setCurrentPage(page)}
-                    className={`min-w-[36px] h-9 px-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center ${
-                      isActive
-                        ? 'bg-[#681B2B] text-white shadow-xs'
-                        : 'border border-[#F2D6DE] bg-white text-[#2C1E23] hover:bg-[#FBECEF]/40'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Siguiente */}
-            <button
-              id="btn-clients-next-page"
-              type="button"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-xl border border-[#F2D6DE] bg-white text-xs font-semibold text-[#2C1E23] hover:bg-[#FBECEF]/40 disabled:opacity-40 disabled:pointer-events-none transition-colors flex items-center gap-1 cursor-pointer min-h-[36px]"
-            >
-              <span>Siguiente</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Standardized Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalFiltered}
+        itemsPerPage={CLIENTS_PER_PAGE}
+        onPageChange={(page) => setCurrentPage(page)}
+        itemName="clientes"
+        className="rounded-2xl border border-[#F2D6DE]/60 shadow-xs"
+      />
 
       {/* ============================================================ */}
       {/* MODAL: CREAR / EDITAR CLIENTE */}
       {/* ============================================================ */}
-      {showModal && (
-        <div
-          id="modal-client-form"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs overflow-y-auto"
-        >
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#F2D6DE] relative animate-in fade-in max-h-[90dvh] flex flex-col my-auto overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#F2D6DE]/60 shrink-0">
-              <div className="min-w-0 flex-1 pr-2">
-                <h3 className="text-base sm:text-lg font-bold text-[#2C1E23] leading-snug break-words">
-                  {editingClient ? 'Editar Cliente' : 'Registrar Nuevo Cliente'}
-                </h3>
-                <p className="text-xs text-[#7D6871] mt-0.5 leading-relaxed break-words">
-                  Mantenga la información de contacto y gustos florales del cliente.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="text-[#7D6871] hover:text-[#2C1E23] p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer shrink-0 min-w-[36px] min-h-[36px] flex items-center justify-center -mr-1 -mt-1"
-                aria-label="Cerrar modal"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <Modal
+        id="modal-client-form"
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingClient ? 'Editar Cliente' : 'Registrar Nuevo Cliente'}
+        subtitle="Mantenga la información de contacto y gustos florales del cliente."
+        size="md"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btn-save-client-form"
+              form="form-client-modal"
+              type="submit"
+              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+            >
+              Guardar Cliente
+            </button>
+          </>
+        }
+      >
+        <form id="form-client-modal" onSubmit={handleSubmit} className="space-y-3.5">
+          <FormField
+            id="input-client-name"
+            label="Nombre Completo"
+            required
+            error={formError}
+          >
+            <input
+              id="input-client-name"
+              type="text"
+              required
+              value={formName}
+              onChange={(e) => {
+                setFormName(e.target.value);
+                if (formError) setFormError('');
+              }}
+              placeholder="Ej. Sofía Morales"
+              className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none ${
+                formError
+                  ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-200'
+                  : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
+              }`}
+            />
+          </FormField>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Nombre Completo <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    id="input-client-name"
-                    type="text"
-                    required
-                    value={formName}
-                    onChange={(e) => {
-                      setFormName(e.target.value);
-                      if (formError) setFormError('');
-                    }}
-                    placeholder="Ej. Sofía Morales"
-                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none ${
-                      formError ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
-                    }`}
-                  />
-                  <FormFieldError id="error-client-name" error={formError} />
-                </div>
+          <FormField
+            id="input-client-phone"
+            label="Teléfono / WhatsApp"
+            optional
+          >
+            <input
+              id="input-client-phone"
+              type="text"
+              value={formPhone}
+              onChange={(e) => setFormPhone(e.target.value)}
+              placeholder="Ej. 5555-1234"
+              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
+            />
+          </FormField>
 
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Teléfono / WhatsApp
-                  </label>
-                  <input
-                    id="input-client-phone"
-                    type="text"
-                    value={formPhone}
-                    onChange={(e) => setFormPhone(e.target.value)}
-                    placeholder="Ej. 5555-1234"
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Observaciones / Preferencias Florales
-                  </label>
-                  <textarea
-                    id="input-client-notes"
-                    rows={3}
-                    value={formNotes}
-                    onChange={(e) => setFormNotes(e.target.value)}
-                    placeholder="Ej. Prefiere tonos pastel, no le gustan los lirios amarillos..."
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="p-3.5 sm:p-4 sm:px-6 border-t border-[#F2D6DE]/60 bg-gray-50/50 sm:bg-white flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Cancelar
-                </button>
-                <button
-                  id="btn-save-client-form"
-                  type="submit"
-                  className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
-                >
-                  Guardar Cliente
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <TextArea
+            id="input-client-notes"
+            label="Observaciones / Preferencias Florales"
+            rows={3}
+            value={formNotes}
+            onChange={(e) => setFormNotes(e.target.value)}
+            maxLength={200}
+            showCounter={true}
+            placeholder="Ej. Prefiere tonos pastel, no le gustan los lirios amarillos..."
+          />
+        </form>
+      </Modal>
     </div>
   );
 };

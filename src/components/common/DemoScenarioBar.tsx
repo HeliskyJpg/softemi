@@ -113,7 +113,7 @@ export const DemoScenarioBar: React.FC = () => {
       {/* Expanded Quick Demo Links */}
       {isExpanded && (
         <div className="border-t border-white/10 bg-[#541421] px-4 sm:px-8 py-2.5">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2 text-xs">
             <button
               onClick={handleTestCreateOrder}
               className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-left transition-colors flex items-start gap-2 cursor-pointer"
@@ -122,7 +122,7 @@ export const DemoScenarioBar: React.FC = () => {
               <div>
                 <strong className="block text-white text-[11px]">1. Crear Pedido</strong>
                 <span className="text-[10px] text-white/70">
-                  Valida clientes, cálculo y stock.
+                  Valida clientes y stock.
                 </span>
               </div>
             </button>
@@ -135,7 +135,7 @@ export const DemoScenarioBar: React.FC = () => {
               <div>
                 <strong className="block text-white text-[11px]">2. Ciclo de Estados</strong>
                 <span className="text-[10px] text-white/70">
-                  Pendiente → Prep. → Listo → Entregado.
+                  Pendiente → Listo → Entregado.
                 </span>
               </div>
             </button>
@@ -146,9 +146,9 @@ export const DemoScenarioBar: React.FC = () => {
             >
               <PlayCircle className="w-3.5 h-3.5 shrink-0 text-[#F5B5C8] mt-0.5" />
               <div>
-                <strong className="block text-white text-[11px]">3. Cancelación & Devolución</strong>
+                <strong className="block text-white text-[11px]">3. Cancelación</strong>
                 <span className="text-[10px] text-white/70">
-                  Restaura componentes al stock.
+                  Devolución automática al stock.
                 </span>
               </div>
             </button>
@@ -159,7 +159,7 @@ export const DemoScenarioBar: React.FC = () => {
             >
               <PlayCircle className="w-3.5 h-3.5 shrink-0 text-[#F5B5C8] mt-0.5" />
               <div>
-                <strong className="block text-white text-[11px]">4. Catálogo & Stock</strong>
+                <strong className="block text-white text-[11px]">4. Insumos</strong>
                 <span className="text-[10px] text-white/70">
                   Auditoría de inventario.
                 </span>
@@ -172,9 +172,29 @@ export const DemoScenarioBar: React.FC = () => {
             >
               <PlayCircle className="w-3.5 h-3.5 shrink-0 text-[#F5B5C8] mt-0.5" />
               <div>
-                <strong className="block text-white text-[11px]">5. Usuarios & Roles</strong>
+                <strong className="block text-white text-[11px]">5. Usuarios</strong>
                 <span className="text-[10px] text-white/70">
-                  Cuentas y control de acceso.
+                  Cuentas y roles.
+                </span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveView('settings');
+                addToast(
+                  'Catálogos maestros administrables con componente CRUD genérico unificado.',
+                  'info',
+                  'Configuraciones'
+                );
+              }}
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-left transition-colors flex items-start gap-2 cursor-pointer"
+            >
+              <PlayCircle className="w-3.5 h-3.5 shrink-0 text-[#F5B5C8] mt-0.5" />
+              <div>
+                <strong className="block text-white text-[11px]">6. Configuraciones</strong>
+                <span className="text-[10px] text-white/70">
+                  Catálogos administrables.
                 </span>
               </div>
             </button>

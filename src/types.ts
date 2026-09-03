@@ -119,7 +119,26 @@ export type ActiveView =
   | 'users'
   | 'profile'
   | 'calendar'
-  | 'reports';
+  | 'reports'
+  | 'settings';
+
+export interface CatalogItem {
+  id: string;
+  name: string;
+  description?: string;
+  active: boolean;
+  orderIndex?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type CatalogKey =
+  | 'order_channels'
+  | 'component_categories'
+  | 'component_units'
+  | 'stock_adjustment_reasons'
+  | 'payment_methods'
+  | 'delivery_types';
 
 export interface ToastMessage {
   id: string;

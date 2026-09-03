@@ -10,6 +10,7 @@ import {
   UserCheck,
   Plus,
   LogOut,
+  Settings,
 } from 'lucide-react';
 import { ActiveView } from '../../types';
 import { EmilaLogo } from '../common/EmilaLogo';
@@ -73,6 +74,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
       label: 'Usuarios y roles',
       icon: UserCheck,
       matchViews: ['users'],
+      adminOnly: true,
+    },
+    {
+      id: 'settings',
+      label: 'Configuraciones',
+      icon: Settings,
+      matchViews: ['settings'],
       adminOnly: true,
     },
   ];

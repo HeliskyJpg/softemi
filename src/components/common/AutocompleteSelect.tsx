@@ -18,12 +18,13 @@ export interface AutocompleteSelectProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
-  error?: boolean;
+  error?: boolean | string;
   errorMessage?: string;
   helperText?: string;
   searchable?: boolean;
   className?: string;
   allowClear?: boolean;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 export const AutocompleteSelect: React.FC<AutocompleteSelectProps> = ({
@@ -41,6 +42,7 @@ export const AutocompleteSelect: React.FC<AutocompleteSelectProps> = ({
   searchable = true,
   className = '',
   allowClear = false,
+  size = 'md',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -166,7 +168,14 @@ export const AutocompleteSelect: React.FC<AutocompleteSelectProps> = ({
     }
   };
 
-  const hasError = error || !!errorMessage;
+  const resolvedErrorMessage = typeof error === 'string' ? error : errorMessage;
+  const hasError = Boolean(error || errorMessage);
+
+  const sizeClasses = {
+    sm: 'min-h-[34px] h-[34px] px-2.5 py-1 text-xs rounded-lg',
+    md: 'min-h-[42px] px-3.5 py-2 text-xs sm:text-sm rounded-xl',
+    lg: 'min-h-[48px] px-4 py-2.5 text-sm sm:text-base rounded-xl',
+  };
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
@@ -183,7 +192,7 @@ export const AutocompleteSelect: React.FC<AutocompleteSelectProps> = ({
       <div
         id={id ? `${id}-container` : undefined}
         onClick={handleToggle}
-        className={`relative flex items-center justify-between w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border bg-white cursor-pointer transition-all duration-150 select-none ${
+        className={`relative flex items-center justify-between w-full border bg-white cursor-pointer transition-all duration-150 select-none ${sizeClasses[size]} ${
           disabled
             ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
             : hasError
@@ -303,7 +312,7 @@ export const AutocompleteSelect: React.FC<AutocompleteSelectProps> = ({
 
       {/* Error or Helper Message */}
       {hasError ? (
-        <FormFieldError id={id ? `error-${id}` : undefined} error={errorMessage || 'Campo requerido'} />
+        <FormFieldError id={id ? `error-${id}` : undefined} error={resolvedErrorMessage || 'Campo requerido'} />
       ) : helperText ? (
         <p className="text-[11px] text-[#7D6871] mt-1">{helperText}</p>
       ) : null}
