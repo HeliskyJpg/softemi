@@ -19,6 +19,8 @@ import {
   CatalogItem,
   CatalogKey,
   AutocompleteOption,
+  AuditLogEntry,
+  LogActionParams,
 } from '../types';
 import {
   CATALOG_DEFINITIONS,
@@ -34,7 +36,9 @@ import {
   INITIAL_CATEGORIES,
   INITIAL_UNITS,
   INITIAL_STOCK_LOGS,
+  INITIAL_AUDIT_LOGS,
 } from '../data/seedData';
+import { createAuditLogEntry } from '../services/auditService';
 
 interface AppContextType {
   // Auth & User
@@ -46,6 +50,11 @@ interface AppContextType {
   updateUserProfile: (name: string, email?: string) => void;
   updateUser: (id: string, userData: Partial<User>) => void;
   toggleUserActive: (id: string) => void;
+  resetUserPassword: (id: string, tempPassword?: string) => { success: boolean; tempPassword?: string; error?: string };
+
+  // Audit / Bitácora Global
+  auditLogs: AuditLogEntry[];
+  logAction: (params: LogActionParams) => AuditLogEntry;
 
   // Navigation
   activeView: ActiveView;
@@ -204,6 +213,7 @@ const STORAGE_KEYS = {
   ORDERS: 'emila_orders_v2',
   STOCK_LOGS: 'emila_stock_logs_v2',
   CATALOGS: 'emila_catalogs_v2',
+  AUDIT_LOGS: 'emila_audit_logs_v2',
 };
 
 const deduplicateStrings = (arr: unknown[]): string[] => {
@@ -298,6 +308,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return saved ? JSON.parse(saved) : INITIAL_STOCK_LOGS;
     } catch {
       return INITIAL_STOCK_LOGS;
+    }
+  });
+
+  // Global Reusable Audit Logs State (Bitácora central)
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return INITIAL_AUDIT_LOGS;
+    } catch {
+      return INITIAL_AUDIT_LOGS;
     }
   });
 
@@ -575,6 +599,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem(STORAGE_KEYS.CATALOGS, JSON.stringify(catalogs));
   }, [catalogs]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
+    } catch (err) {
+      console.error('Error saving audit logs to localStorage:', err);
+    }
+  }, [auditLogs]);
+
   // Toast Helper
   const addToast = (
     message: string,
@@ -606,6 +638,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const hours = String(now.getHours()).padStart(2, '0');
     const mins = String(now.getMinutes()).padStart(2, '0');
     return `${d} ${hours}:${mins}`;
+  };
+
+  // Central Global Audit Logging Function (Bitácora EMILA)
+  const logAction = (params: LogActionParams): AuditLogEntry => {
+    const entry = createAuditLogEntry(params, currentUser);
+    setAuditLogs((prev) => [entry, ...prev]);
+    return entry;
   };
 
   // Auth Methods
@@ -654,6 +693,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateUserProfile = (name: string, email?: string) => {
     if (!currentUser) return;
+    const previous = { name: currentUser.name, email: currentUser.email || '' };
     const updatedUser: User = {
       ...currentUser,
       name: name.trim(),
@@ -661,6 +701,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
     setCurrentUser(updatedUser);
     setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updatedUser : u)));
+
+    logAction({
+      action: 'editar perfil',
+      module: 'Perfil',
+      entityType: 'User',
+      recordId: currentUser.username,
+      description: `Actualización de datos de perfil personal para ${name.trim()}`,
+      previousValue: JSON.stringify(previous),
+      newValue: JSON.stringify({ name: name.trim(), email: email?.trim() || '' }),
+    });
+
     addToast('Perfil actualizado correctamente.', 'success');
   };
 
@@ -722,6 +773,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return u;
       })
     );
+
+    // Audit Logging
+    let actionName = 'editar usuario';
+    if (userData.role && userData.role !== targetUser.role) {
+      actionName = 'cambiar rol';
+    } else if (userData.active !== undefined && userData.active !== targetUser.active) {
+      actionName = userData.active ? 'activar usuario' : 'inactivar usuario';
+    }
+
+    logAction({
+      action: actionName,
+      module: 'Usuarios',
+      entityType: 'User',
+      recordId: targetUser.username,
+      description: `${actionName.toUpperCase()}: Usuario @${targetUser.username} (${targetUser.name})`,
+      previousValue: JSON.stringify({
+        nombre: targetUser.name,
+        usuario: targetUser.username,
+        rol: targetUser.role,
+        activo: targetUser.active,
+      }),
+      newValue: JSON.stringify({
+        nombre: userData.name ?? targetUser.name,
+        usuario: userData.username ?? targetUser.username,
+        rol: userData.role ?? targetUser.role,
+        activo: userData.active ?? targetUser.active,
+      }),
+      metadata: { targetUserId: targetUser.id },
+    });
+
     addToast('Usuario actualizado correctamente.', 'success');
   };
 
@@ -749,11 +830,57 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     }
 
+    const nextActive = !userToToggle.active;
     setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, active: !u.active } : u))
+      prev.map((u) => (u.id === id ? { ...u, active: nextActive } : u))
     );
-    const newStatus = !userToToggle.active ? 'activado' : 'desactivado';
+
+    const actionName = nextActive ? 'activar usuario' : 'inactivar usuario';
+    logAction({
+      action: actionName,
+      module: 'Usuarios',
+      entityType: 'User',
+      recordId: userToToggle.username,
+      description: `${actionName.toUpperCase()}: Cuenta @${userToToggle.username} (${userToToggle.name}) pasó a ${nextActive ? 'Activo' : 'Inactivo'}`,
+      previousValue: userToToggle.active ? 'Activo' : 'Inactivo',
+      newValue: nextActive ? 'Activo' : 'Inactivo',
+      metadata: { targetUserId: userToToggle.id },
+    });
+
+    const newStatus = nextActive ? 'activado' : 'desactivado';
     addToast(`Usuario "${userToToggle.name}" ${newStatus} correctamente.`, 'info');
+  };
+
+  const resetUserPassword = (
+    id: string,
+    tempPassword?: string
+  ): { success: boolean; tempPassword?: string; error?: string } => {
+    if (currentUser?.role !== 'Administrador') {
+      const errorMsg = 'Acceso denegado: Solo los administradores pueden restablecer contraseñas.';
+      addToast(errorMsg, 'error', 'No autorizado');
+      return { success: false, error: errorMsg };
+    }
+
+    const targetUser = users.find((u) => u.id === id);
+    if (!targetUser) {
+      return { success: false, error: 'Usuario no encontrado.' };
+    }
+
+    const generated = tempPassword?.trim() || `Emila${Math.floor(1000 + Math.random() * 9000)}!`;
+
+    logAction({
+      action: 'restablecer contraseña',
+      module: 'Usuarios',
+      entityType: 'User',
+      recordId: targetUser.username,
+      description: `Restablecimiento de credenciales para @${targetUser.username} (${targetUser.name})`,
+      previousValue: 'Contraseña previa',
+      newValue: `Contraseña provisional asignada (${generated})`,
+      metadata: { targetUserId: targetUser.id, targetUserName: targetUser.name },
+    });
+
+    addToast(`Contraseña temporal asignada para @${targetUser.username}: ${generated}`, 'success', 'Contraseña restablecida');
+    return { success: true, tempPassword: generated };
   };
 
   // Clients
@@ -767,14 +894,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       totalOrders: 0,
     };
     setClients((prev) => [newClient, ...prev]);
+
+    logAction({
+      action: 'crear cliente',
+      module: 'Clientes',
+      entityType: 'Client',
+      recordId: newClient.name,
+      description: `Registro de nuevo cliente: ${newClient.name} (Tel: ${newClient.phone})`,
+      previousValue: null,
+      newValue: JSON.stringify({
+        nombre: newClient.name,
+        telefono: newClient.phone,
+        notas: newClient.notes || '',
+      }),
+      metadata: { clientId: newClient.id },
+    });
+
     addToast(`Cliente "${newClient.name}" registrado correctamente.`, 'success');
     return newClient;
   };
 
   const updateClient = (id: string, clientData: Partial<Client>) => {
+    const currentClient = clients.find((c) => c.id === id);
     setClients((prev) =>
       prev.map((c) => (c.id === id ? { ...c, ...clientData } : c))
     );
+
+    logAction({
+      action: 'editar cliente',
+      module: 'Clientes',
+      entityType: 'Client',
+      recordId: currentClient ? currentClient.name : id,
+      description: `Actualización de información del cliente: ${currentClient ? currentClient.name : id}`,
+      previousValue: currentClient
+        ? JSON.stringify({
+            nombre: currentClient.name,
+            telefono: currentClient.phone,
+            notas: currentClient.notes || '',
+          })
+        : null,
+      newValue: JSON.stringify(clientData),
+      metadata: { clientId: id },
+    });
+
     addToast('Datos del cliente actualizados correctamente.', 'success');
   };
 
@@ -871,6 +1033,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addUnit(item.unit.trim());
     }
 
+    logAction({
+      action: 'crear componente',
+      module: 'Componentes',
+      entityType: 'ComponentItem',
+      recordId: newItem.name,
+      description: `Creación de nuevo componente "${newItem.name}" en categoría ${newItem.category} a Q ${newItem.price.toFixed(2)}`,
+      previousValue: null,
+      newValue: JSON.stringify({
+        nombre: newItem.name,
+        categoria: newItem.category,
+        unidad: newItem.unit,
+        precio: newItem.price,
+        stockFisico: newItem.physicalStock,
+        alertaMinimo: newItem.minStockAlert,
+      }),
+      metadata: { componentId: newItem.id },
+    });
+
     addToast('Componente registrado correctamente en el catálogo.', 'success');
   };
 
@@ -878,6 +1058,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     id: string,
     itemData: Partial<Omit<ComponentItem, 'id' | 'physicalStock' | 'reservedStock'>>
   ) => {
+    const currentComp = components.find((c) => c.id === id);
     setComponents((prev) =>
       prev.map((c) => {
         if (c.id === id) {
@@ -905,6 +1086,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (itemData.unit && itemData.unit.trim()) {
       addUnit(itemData.unit.trim());
     }
+
+    logAction({
+      action: 'editar componente',
+      module: 'Componentes',
+      entityType: 'ComponentItem',
+      recordId: currentComp ? currentComp.name : id,
+      description: `Actualización del componente "${currentComp ? currentComp.name : id}"`,
+      previousValue: currentComp
+        ? JSON.stringify({
+            nombre: currentComp.name,
+            categoria: currentComp.category,
+            precio: currentComp.price,
+            alertaMinimo: currentComp.minStockAlert,
+            unidad: currentComp.unit,
+          })
+        : null,
+      newValue: JSON.stringify(itemData),
+      metadata: { componentId: id },
+    });
 
     addToast('Componente actualizado correctamente.', 'success');
   };
@@ -973,6 +1173,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setStockAdjustmentLogs((prev) => [newLog, ...prev]);
 
+    // Global Reusable Bitácora Logging
+    const lowerReason = adjustment.reason.toLowerCase();
+    const isMerma =
+      adjustment.type === 'Salida' &&
+      (lowerReason.includes('merma') ||
+        lowerReason.includes('daño') ||
+        lowerReason.includes('desperdicio') ||
+        lowerReason.includes('marchit') ||
+        lowerReason.includes('vencid'));
+
+    const actionName = isMerma
+      ? 'salida por merma'
+      : adjustment.type === 'Entrada'
+      ? 'entrada de stock'
+      : 'ajustar stock';
+
+    logAction({
+      action: actionName,
+      module: 'Inventario',
+      entityType: 'ComponentItem',
+      recordId: comp.name,
+      description: `${actionName.toUpperCase()}: ${adjustment.quantity} ${comp.unit}(s) de "${comp.name}". Motivo: ${adjustment.reason}${adjustment.observation ? ` - ${adjustment.observation}` : ''}`,
+      previousValue: JSON.stringify({ stockFisico: previousPhysicalStock, stockReservado: comp.reservedStock }),
+      newValue: JSON.stringify({
+        stockFisico: newPhysicalStock,
+        stockReservado: comp.reservedStock,
+        tipo: adjustment.type,
+        cantidad: adjustment.quantity,
+      }),
+      metadata: {
+        componentId: comp.id,
+        tipo: adjustment.type,
+        motivo: adjustment.reason,
+        observacion: adjustment.observation,
+      },
+    });
+
     addToast('Ajuste de inventario aplicado correctamente.', 'success');
     return { success: true };
   };
@@ -985,6 +1222,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setComponents((prev) =>
       prev.map((c) => (c.id === id ? { ...c, active: nextState } : c))
     );
+
+    const actionName = nextState ? 'activar componente' : 'desactivar componente';
+    logAction({
+      action: actionName,
+      module: 'Componentes',
+      entityType: 'ComponentItem',
+      recordId: comp.name,
+      description: `Componente "${comp.name}" ${nextState ? 'activado' : 'desactivado'} en catálogo`,
+      previousValue: comp.active ? 'Activo' : 'Inactivo',
+      newValue: nextState ? 'Activo' : 'Inactivo',
+      metadata: { componentId: comp.id },
+    });
 
     if (nextState) {
       addToast(`Componente "${comp.name}" activado correctamente.`, 'success');
@@ -1102,6 +1351,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       )
     );
 
+    logAction({
+      action: 'crear pedido',
+      module: 'Pedidos',
+      entityType: 'Order',
+      recordId: code,
+      description: `Creación del pedido ${code} para ${client.name} por Q ${total.toFixed(2)} (Anticipo: Q ${advance.toFixed(2)})`,
+      previousValue: null,
+      newValue: JSON.stringify({
+        codigo: code,
+        cliente: client.name,
+        total,
+        anticipo: advance,
+        saldo: balance,
+        canal: orderData.channel,
+        fechaEntrega: orderData.deliveryDate,
+        cantidadItems: orderData.items.length,
+      }),
+      metadata: { orderId, clientId: client.id, channel: orderData.channel },
+    });
+
     addToast(`Pedido ${code} guardado correctamente y componentes reservados.`, 'success', '¡Éxito!');
     setSelectedOrderId(orderId);
     setActiveViewRaw('order-detail');
@@ -1217,6 +1486,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     setOrders((prev) => prev.map((o) => (o.id === id ? updatedOrder : o)));
+
+    logAction({
+      action: 'editar pedido',
+      module: 'Pedidos',
+      entityType: 'Order',
+      recordId: existingOrder.code,
+      description: `Modificación de insumos y datos del pedido ${existingOrder.code}`,
+      previousValue: JSON.stringify({
+        total: existingOrder.total,
+        anticipo: existingOrder.advancePayment,
+        saldo: existingOrder.balance,
+        fechaEntrega: existingOrder.deliveryDate,
+        itemsCount: existingOrder.items.length,
+      }),
+      newValue: JSON.stringify({
+        total,
+        anticipo: advance,
+        saldo: balance,
+        fechaEntrega: orderData.deliveryDate,
+        itemsCount: orderData.items.length,
+      }),
+      metadata: { orderId: id },
+    });
+
     addToast(`Pedido ${existingOrder.code} actualizado y reserva ajustada correctamente.`, 'success', 'Actualización exitosa');
     setSelectedOrderId(id);
     
@@ -1305,6 +1598,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       )
     );
 
+    logAction({
+      action: 'cambiar estado',
+      module: 'Pedidos',
+      entityType: 'Order',
+      recordId: order.code,
+      description: `Cambio de estado del pedido ${order.code}: "${order.status}" ➔ "${newStatus}"${note ? ` (Nota: ${note})` : ''}`,
+      previousValue: order.status,
+      newValue: newStatus,
+      metadata: { orderId: order.id, note },
+    });
+
     addToast(
       newStatus === 'Entregado'
         ? `Pedido ${order.code} marcado como Entregado. Stock físico actualizado en taller.`
@@ -1357,6 +1661,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           : o
       )
     );
+
+    logAction({
+      action: 'cancelar pedido',
+      module: 'Pedidos',
+      entityType: 'Order',
+      recordId: order.code,
+      description: `Cancelación del pedido ${order.code}. Motivo: ${reason}. Insumos liberados de reserva.`,
+      previousValue: order.status,
+      newValue: 'Cancelado',
+      metadata: { orderId: order.id, motivo: reason },
+    });
 
     addToast(`Pedido ${order.code} cancelado y reserva de insumos liberada.`, 'info', 'Pedido cancelado');
     return true;
@@ -1465,6 +1780,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       )
     );
 
+    logAction({
+      action: 'registrar pago',
+      module: 'Pedidos',
+      entityType: 'Order',
+      recordId: order.code,
+      description: `Abono de Q ${effectiveAmount.toFixed(2)} registrado al pedido ${order.code}. Saldo: Q ${newBalance.toFixed(2)}${shouldDeliver ? ' (Entregado)' : ''}`,
+      previousValue: JSON.stringify({ anticipo: order.advancePayment, saldo: order.balance, estado: order.status }),
+      newValue: JSON.stringify({ anticipo: newPaid, saldo: newBalance, estado: shouldDeliver ? 'Entregado' : order.status }),
+      metadata: {
+        orderId: order.id,
+        montoAbonado: effectiveAmount,
+        liquidado: newBalance === 0,
+        marcadoEntregado: shouldDeliver,
+        nota: options?.note,
+      },
+    });
+
     if (shouldDeliver) {
       addToast(
         `Pago de Q ${effectiveAmount.toFixed(2)} registrado y pedido ${order.code} marcado como Entregado.`,
@@ -1564,6 +1896,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUnits((prev) => (prev.includes(trimmedName) ? prev : [...prev, trimmedName]));
     }
 
+    logAction({
+      action: 'crear catálogo',
+      module: 'Catálogos',
+      entityType: key,
+      recordId: newItem.id,
+      description: `Creación de elemento de catálogo "${newItem.name}" en ${key}`,
+      previousValue: null,
+      newValue: JSON.stringify(newItem),
+      metadata: { catalogKey: key, name: newItem.name },
+    });
+
     return { success: true, item: newItem };
   };
 
@@ -1614,6 +1957,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUnits((prev) => prev.map((u) => (u === oldName ? newName : u)));
     }
 
+    logAction({
+      action: 'editar catálogo',
+      module: 'Catálogos',
+      entityType: key,
+      recordId: id,
+      description: `Actualización de elemento de catálogo "${target.name}" en ${key}`,
+      previousValue: JSON.stringify(target),
+      newValue: JSON.stringify({ ...target, ...itemData }),
+      metadata: { catalogKey: key, id },
+    });
+
     return { success: true };
   };
 
@@ -1628,12 +1982,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
 
     const now = new Date().toISOString();
+    const nextState = !target.active;
     setCatalogs((prev) => ({
       ...prev,
       [key]: (prev[key] || []).map((it) =>
-        it.id === id ? { ...it, active: !it.active, updatedAt: now } : it
+        it.id === id ? { ...it, active: nextState, updatedAt: now } : it
       ),
     }));
+
+    logAction({
+      action: nextState ? 'activar catálogo' : 'desactivar catálogo',
+      module: 'Catálogos',
+      entityType: key,
+      recordId: id,
+      description: `${nextState ? 'Activación' : 'Desactivación'} de elemento "${target.name}" en ${key}`,
+      previousValue: `Estado: ${target.active ? 'Activo' : 'Inactivo'}`,
+      newValue: `Estado: ${nextState ? 'Activo' : 'Inactivo'}`,
+      metadata: { catalogKey: key, id, active: nextState },
+    });
 
     return { success: true };
   };
@@ -1663,6 +2029,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       [key]: (prev[key] || []).filter((it) => it.id !== id),
     }));
 
+    logAction({
+      action: 'eliminar catálogo',
+      module: 'Catálogos',
+      entityType: key,
+      recordId: id,
+      description: `Eliminación de elemento de catálogo "${target.name}" en ${key}`,
+      previousValue: JSON.stringify(target),
+      newValue: null,
+      metadata: { catalogKey: key, id, name: target.name },
+    });
+
     return { success: true };
   };
 
@@ -1676,6 +2053,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setOrders(INITIAL_ORDERS);
     setStockAdjustmentLogs(INITIAL_STOCK_LOGS);
     setCatalogs(getInitialCatalogs());
+    setAuditLogs(INITIAL_AUDIT_LOGS);
     setSelectedOrderId(null);
     setActiveView('components');
     addToast('Datos del sistema restablecidos a los valores iniciales.', 'info', 'Reinicio completo');
@@ -1692,6 +2070,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         updateUserProfile,
         updateUser,
         toggleUserActive,
+        resetUserPassword,
 
         activeView,
         setActiveView,
@@ -1755,6 +2134,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         toggleCatalogItemActive,
         deleteCatalogItem,
         isCatalogItemInUse,
+
+        // Central Audit Log / Bitácora
+        auditLogs,
+        logAction,
 
         resetDemoData,
         resetToInitialSeedData: resetDemoData,

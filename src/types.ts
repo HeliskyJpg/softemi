@@ -115,6 +115,50 @@ export interface StockAdjustmentLog {
   timestamp: string;
 }
 
+export type AuditModule =
+  | 'Pedidos'
+  | 'Clientes'
+  | 'Componentes'
+  | 'Inventario'
+  | 'Usuarios'
+  | 'Reportes'
+  | 'Configuraciones'
+  | 'Perfil'
+  | string;
+
+export interface AuditLogEntry {
+  id: string;                      // Unique ID (compatible with UUID primary key in SQL)
+  timestamp: string;               // ISO 8601 string (e.g. 2026-09-03T15:30:00.000Z)
+  userId: string;                  // Identifier of user (user_id in SQL)
+  userName: string;                // Name or username of user (user_name in SQL)
+  userRole: UserRole;              // Role at the moment of action (user_role in SQL)
+  action: string;                  // Normalized action name (e.g. "crear pedido")
+  module: AuditModule;             // System module (module in SQL)
+  entityType: string;              // Entity type (e.g. "Order", "Client", "ComponentItem", "User")
+  recordId: string;                // Target entity ID or code (record_id in SQL)
+  description: string;             // Concise human-readable description
+  previousValue: string | null;    // Serialized/formatted previous value when applicable
+  newValue: string | null;         // Serialized/formatted new value when applicable
+  metadata?: Record<string, unknown>; // Optional additional JSON payload
+}
+
+export interface LogActionParams {
+  action: string;
+  module: AuditModule;
+  entityType: string;
+  recordId: string;
+  description: string;
+  previousValue?: unknown;
+  newValue?: unknown;
+  metadata?: Record<string, unknown>;
+  user?: {
+    id: string;
+    name: string;
+    username?: string;
+    role: UserRole;
+  } | null;
+}
+
 export type ActiveView = 
   | 'dashboard'
   | 'orders'
@@ -128,7 +172,8 @@ export type ActiveView =
   | 'profile'
   | 'calendar'
   | 'reports'
-  | 'settings';
+  | 'settings'
+  | 'audit';
 
 export interface CatalogItem {
   id: string;

@@ -8,6 +8,8 @@ import {
   Calendar,
   Filter,
   CalendarDays,
+  Download,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { SystemAlert, AutocompleteSelect } from '../common';
 import {
@@ -86,7 +88,7 @@ const formatRangeLabel = (startStr: string, endStr: string): string => {
 };
 
 export const ReportsView: React.FC = () => {
-  const { orders } = useApp();
+  const { orders, logAction, addToast } = useApp();
 
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -177,6 +179,46 @@ export const ReportsView: React.FC = () => {
       return d >= activeStartDate && d <= activeEndDate;
     });
   }, [orders, activeStartDate, activeEndDate]);
+
+  const handleExportReport = () => {
+    const headers = ['Código', 'Cliente', 'Teléfono', 'Canal', 'Fecha Entrega', 'Total (Q)', 'Anticipo (Q)', 'Saldo (Q)', 'Estado'];
+    const rows = filteredOrders.map((o) => [
+      o.code,
+      `"${o.clientName.replace(/"/g, '""')}"`,
+      `"${o.clientPhone || ''}"`,
+      o.channel,
+      o.deliveryDate,
+      o.total.toFixed(2),
+      o.advancePayment.toFixed(2),
+      o.balance.toFixed(2),
+      o.status,
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `reporte_pedidos_${activeStartDate}_al_${activeEndDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    const totalAmount = filteredOrders.reduce((sum, o) => sum + o.total, 0);
+    logAction({
+      action: 'exportar reporte',
+      module: 'Reportes',
+      entityType: 'Report',
+      recordId: `REP-${activeStartDate}_${activeEndDate}`,
+      description: `Exportación de reporte de pedidos para el período: "${appliedPeriodLabel}" (${filteredOrders.length} pedidos, Total: Q ${totalAmount.toFixed(2)})`,
+      previousValue: null,
+      newValue: `Reporte CSV con ${filteredOrders.length} pedidos`,
+      metadata: { periodLabel: appliedPeriodLabel, startDate: activeStartDate, endDate: activeEndDate, totalOrders: filteredOrders.length, totalAmount },
+    });
+
+    addToast('Reporte exportado correctamente a CSV.', 'success');
+  };
 
   // 1. Orders by Status
   const statusData = useMemo(() => {
@@ -305,13 +347,25 @@ export const ReportsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Discreet applied period indicator */}
-        <div
-          id="applied-period-badge"
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#F2D6DE] shadow-2xs self-start sm:self-auto"
-        >
-          <CalendarDays className="w-4 h-4 text-[#681B2B] shrink-0" />
-          <span className="text-xs font-medium text-[#2C1E23]">{appliedPeriodLabel}</span>
+        {/* Discreet applied period indicator & Export button */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <div
+            id="applied-period-badge"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-[#F2D6DE] shadow-2xs"
+          >
+            <CalendarDays className="w-4 h-4 text-[#681B2B] shrink-0" />
+            <span className="text-xs font-medium text-[#2C1E23]">{appliedPeriodLabel}</span>
+          </div>
+
+          <button
+            id="btn-export-report-csv"
+            type="button"
+            onClick={handleExportReport}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#681B2B] bg-white border border-[#F2D6DE] hover:bg-[#FBECEF] shadow-2xs transition-colors cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Exportar reporte</span>
+          </button>
         </div>
       </div>
 

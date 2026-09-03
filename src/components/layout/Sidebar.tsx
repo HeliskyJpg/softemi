@@ -11,6 +11,7 @@ import {
   Plus,
   LogOut,
   Settings,
+  History,
 } from 'lucide-react';
 import { ActiveView } from '../../types';
 import { EmilaLogo } from '../common/EmilaLogo';
@@ -74,6 +75,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
       label: 'Usuarios y roles',
       icon: UserCheck,
       matchViews: ['users'],
+      adminOnly: true,
+    },
+    {
+      id: 'audit',
+      label: 'Bitácora de auditoría',
+      icon: History,
+      matchViews: ['audit'],
       adminOnly: true,
     },
     {

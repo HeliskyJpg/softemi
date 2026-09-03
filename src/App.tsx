@@ -19,6 +19,7 @@ import { ReportsView } from './components/views/ReportsView';
 import { UsersView } from './components/views/UsersView';
 import { ProfileView } from './components/views/ProfileView';
 import { SettingsView } from './components/views/SettingsView';
+import { AuditLogView } from './components/views/AuditLogView';
 
 const AppContent: React.FC = () => {
   const { currentUser, activeView, selectedOrderId, selectedClientId } = useApp();
@@ -59,6 +60,8 @@ const AppContent: React.FC = () => {
         return <ReportsView />;
       case 'users':
         return currentUser.role === 'Administrador' ? <UsersView /> : <DashboardView />;
+      case 'audit':
+        return currentUser.role === 'Administrador' ? <AuditLogView /> : <DashboardView />;
       case 'settings':
         return currentUser.role === 'Administrador' ? <SettingsView /> : <DashboardView />;
       case 'profile':
