@@ -100,6 +100,8 @@ export const OrdersListView: React.FC = () => {
         matchesDate =
           order.deliveryDate < todayStr &&
           (order.status === 'Pendiente' || order.status === 'En preparación');
+      } else if (dateFilter === 'con_saldo') {
+        matchesDate = (order.balance || 0) > 0 && order.status !== 'Cancelado';
       }
 
       return matchesSearch && matchesStatus && matchesDate;
@@ -220,6 +222,7 @@ export const OrdersListView: React.FC = () => {
                 { value: 'hoy', label: 'Entregas de Hoy' },
                 { value: 'pendientes', label: 'Pendientes / En preparación' },
                 { value: 'atrasados', label: 'Atrasados (Límite vencido)' },
+                { value: 'con_saldo', label: 'Con saldo pendiente de cobro' },
               ]}
               searchable={false}
               size="sm"
@@ -229,9 +232,31 @@ export const OrdersListView: React.FC = () => {
 
         {/* Active filters pill list */}
         <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6871] pt-2 border-t border-[#F2D6DE]/40 gap-2">
-          <span>
-            Mostrando <strong className="text-[#2C1E23]">{sortedOrders.length}</strong> pedidos encontrados
-          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span>
+              Mostrando <strong className="text-[#2C1E23]">{sortedOrders.length}</strong> pedidos encontrados
+            </span>
+            {dateFilter === 'con_saldo' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                Filtro: Con saldo pendiente
+              </span>
+            )}
+            {dateFilter === 'atrasados' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-900 border border-rose-200">
+                Filtro: Atrasados
+              </span>
+            )}
+            {dateFilter === 'hoy' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-900 border border-sky-200">
+                Filtro: Entregas de Hoy
+              </span>
+            )}
+            {statusFilter !== 'Todos' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#681B2B]/10 text-[#681B2B] border border-[#681B2B]/20">
+                Estado: {statusFilter}
+              </span>
+            )}
+          </div>
           {(searchTerm || statusFilter !== 'Todos' || dateFilter !== 'todos') && (
             <button
               id="btn-clear-orders-filters"
