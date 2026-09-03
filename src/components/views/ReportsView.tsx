@@ -10,8 +10,11 @@ import {
   CalendarDays,
   Download,
   FileSpreadsheet,
+  FileText,
 } from 'lucide-react';
 import { SystemAlert, AutocompleteSelect } from '../common';
+import { ReportExportModal } from '../modals/ReportExportModal';
+import { ReportExportFormat } from '../../services/reportExportService';
 import {
   ResponsiveContainer,
   BarChart,
@@ -180,50 +183,50 @@ export const ReportsView: React.FC = () => {
     });
   }, [orders, activeStartDate, activeEndDate]);
 
-  const handleExportReport = () => {
+  // Modal de Exportación (PDF y Excel)
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [exportFormat, setExportFormat] = useState<ReportExportFormat>('pdf');
+
+  const handleOpenExport = (format: ReportExportFormat) => {
     if (!hasPermission('reports.export')) {
-      addToast('No tienes permiso para exportar reportes.', 'error');
+      addToast('No tienes permiso para exportar reportes.', 'error', 'Acceso denegado');
       return;
     }
-
-    const headers = ['Código', 'Cliente', 'Teléfono', 'Canal', 'Fecha Entrega', 'Total (Q)', 'Anticipo (Q)', 'Saldo (Q)', 'Estado'];
-    const rows = filteredOrders.map((o) => [
-      o.code,
-      `"${o.clientName.replace(/"/g, '""')}"`,
-      `"${o.clientPhone || ''}"`,
-      o.channel,
-      o.deliveryDate,
-      o.total.toFixed(2),
-      o.advancePayment.toFixed(2),
-      o.balance.toFixed(2),
-      o.status,
-    ]);
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `reporte_pedidos_${activeStartDate}_al_${activeEndDate}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    const totalAmount = filteredOrders.reduce((sum, o) => sum + o.total, 0);
-    logAction({
-      action: 'exportar reporte',
-      module: 'Reportes',
-      entityType: 'Report',
-      recordId: `REP-${activeStartDate}_${activeEndDate}`,
-      description: `Exportación de reporte de pedidos para el período: "${appliedPeriodLabel}" (${filteredOrders.length} pedidos, Total: Q ${totalAmount.toFixed(2)})`,
-      previousValue: null,
-      newValue: `Reporte CSV con ${filteredOrders.length} pedidos`,
-      metadata: { periodLabel: appliedPeriodLabel, startDate: activeStartDate, endDate: activeEndDate, totalOrders: filteredOrders.length, totalAmount },
-    });
-
-    addToast('Reporte exportado correctamente a CSV.', 'success');
+    setExportFormat(format);
+    setExportModalOpen(true);
   };
+
+  // Métricas consolidadas para las exportaciones
+  const exportMetrics = useMemo(() => {
+    const delivered = filteredOrders.filter((o) => o.status === 'Entregado').length;
+    const pending = filteredOrders.filter((o) => o.status === 'Pendiente').length;
+    const inPrep = filteredOrders.filter((o) => o.status === 'En preparación').length;
+    const ready = filteredOrders.filter((o) => o.status === 'Listo').length;
+    const cancelled = filteredOrders.filter((o) => o.status === 'Cancelado').length;
+
+    const totalSales = filteredOrders
+      .filter((o) => o.status !== 'Cancelado')
+      .reduce((sum, o) => sum + o.total, 0);
+
+    const totalAdvance = filteredOrders
+      .filter((o) => o.status !== 'Cancelado')
+      .reduce((sum, o) => sum + o.advancePayment, 0);
+
+    const totalBalance = filteredOrders
+      .filter((o) => o.status !== 'Cancelado')
+      .reduce((sum, o) => sum + (o.balance || 0), 0);
+
+    return {
+      totalSales,
+      totalAdvance,
+      totalBalance,
+      deliveredCount: delivered,
+      pendingCount: pending,
+      inPrepCount: inPrep,
+      readyCount: ready,
+      cancelledCount: cancelled,
+    };
+  }, [filteredOrders]);
 
   // 1. Orders by Status
   const statusData = useMemo(() => {
@@ -363,15 +366,29 @@ export const ReportsView: React.FC = () => {
           </div>
 
           {hasPermission('reports.export') && (
-            <button
-              id="btn-export-report-csv"
-              type="button"
-              onClick={handleExportReport}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#681B2B] bg-white border border-[#F2D6DE] hover:bg-[#FBECEF] shadow-2xs transition-colors cursor-pointer"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>Exportar reporte</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                id="btn-export-report-pdf"
+                type="button"
+                onClick={() => handleOpenExport('pdf')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#681B2B] bg-white border border-[#F2D6DE] hover:bg-[#FBECEF] shadow-2xs transition-all cursor-pointer hover:shadow-xs active:scale-98"
+                title="Exportar reporte en formato PDF"
+              >
+                <FileText className="w-4 h-4 text-rose-700 shrink-0" />
+                <span>Exportar PDF</span>
+              </button>
+
+              <button
+                id="btn-export-report-excel"
+                type="button"
+                onClick={() => handleOpenExport('excel')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-white border border-[#F2D6DE] hover:bg-emerald-50/80 shadow-2xs transition-all cursor-pointer hover:shadow-xs active:scale-98"
+                title="Exportar reporte en formato Excel"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Exportar Excel</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -787,6 +804,18 @@ export const ReportsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de Preparación y Descarga de Reportes */}
+      <ReportExportModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        format={exportFormat}
+        periodLabel={appliedPeriodLabel}
+        startDate={activeStartDate}
+        endDate={activeEndDate}
+        orders={filteredOrders}
+        metrics={exportMetrics}
+      />
     </div>
   );
 };
