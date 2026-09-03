@@ -23,6 +23,11 @@ import {
   LogActionParams,
   CreateUserParams,
 } from '../types';
+import { PermissionCode } from '../types/permissions';
+import {
+  hasPermission as checkUserHasPermission,
+  describePermissionChanges,
+} from '../services/permissionsService';
 import {
   CATALOG_DEFINITIONS,
   CATALOG_KEYS_ORDERED,
@@ -41,6 +46,35 @@ import {
 } from '../data/seedData';
 import { createAuditLogEntry } from '../services/auditService';
 
+export const getViewRequiredPermission = (view: ActiveView): PermissionCode | null => {
+  switch (view) {
+    case 'orders':
+    case 'order-detail':
+      return 'orders.view';
+    case 'order-new':
+      return 'orders.create';
+    case 'order-edit':
+      return 'orders.edit';
+    case 'clients':
+    case 'client-detail':
+      return 'clients.view';
+    case 'components':
+      return 'stock.view';
+    case 'calendar':
+      return 'calendar.view';
+    case 'reports':
+      return 'reports.view';
+    case 'users':
+      return 'users.view';
+    case 'audit':
+      return 'audit.view';
+    case 'settings':
+      return 'settings.manage';
+    default:
+      return null;
+  }
+};
+
 interface AppContextType {
   // Auth & User
   currentUser: User | null;
@@ -54,6 +88,13 @@ interface AppContextType {
   changePassword: (newPassword: string, userId?: string) => { success: boolean; error?: string };
   toggleUserActive: (id: string) => void;
   resetUserPassword: (id: string, tempPassword?: string) => { success: boolean; tempPassword?: string; error?: string };
+
+  // Granular Permissions (RBAC Extendido)
+  hasPermission: (permissionCode: PermissionCode) => boolean;
+  updateUserPermissions: (
+    userId: string,
+    permissions: Partial<Record<PermissionCode, boolean>>
+  ) => { success: boolean; error?: string };
 
   // Audit / Bitácora Global
   auditLogs: AuditLogEntry[];
@@ -241,7 +282,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [users, setUsers] = useState<User[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.USERS);
-      return saved ? JSON.parse(saved) : INITIAL_USERS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Merge in any missing seed users (e.g., Carlos Méndez with custom permissions)
+          const existingIds = new Set(parsed.map((u: User) => u.id));
+          const missing = INITIAL_USERS.filter((u) => !existingIds.has(u.id));
+          return missing.length > 0 ? [...parsed, ...missing] : parsed;
+        }
+      }
+      return INITIAL_USERS;
     } catch {
       return INITIAL_USERS;
     }
@@ -255,6 +305,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return INITIAL_USERS[0];
     }
   });
+
+  // Granular RBAC Authorization Engine
+  const hasPermission = (code: PermissionCode): boolean => {
+    return checkUserHasPermission(currentUser, code);
+  };
 
   const [clients, setClients] = useState<Client[]>(() => {
     try {
@@ -412,10 +467,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     view: ActiveView,
     options?: { clearHistory?: boolean; origin?: ActiveView }
   ) => {
-    // RBAC guard: 'users' view is strictly reserved for Administrators
-    if (view === 'users' && currentUser?.role !== 'Administrador') {
-      addToast('Acceso restringido: Se requieren permisos de Administrador para gestionar usuarios.', 'warning', 'No autorizado');
-      setActiveViewRaw('dashboard');
+    // Granular RBAC navigation guard
+    const requiredPerm = getViewRequiredPermission(view);
+    if (requiredPerm && !hasPermission(requiredPerm)) {
+      addToast(
+        `Acceso restringido: Se requiere el permiso "${requiredPerm}" para acceder a este módulo.`,
+        'warning',
+        'No autorizado'
+      );
       return;
     }
 
@@ -439,10 +498,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     view: ActiveView,
     options?: { orderId?: string | null; clientId?: string | null; origin?: ActiveView; clearHistory?: boolean }
   ) => {
-    // RBAC guard: 'users' view is strictly reserved for Administrators
-    if (view === 'users' && currentUser?.role !== 'Administrador') {
-      addToast('Acceso restringido: Se requieren permisos de Administrador para gestionar usuarios.', 'warning', 'No autorizado');
-      setActiveViewRaw('dashboard');
+    // Granular RBAC navigation guard
+    const requiredPerm = getViewRequiredPermission(view);
+    if (requiredPerm && !hasPermission(requiredPerm)) {
+      addToast(
+        `Acceso restringido: Se requiere el permiso "${requiredPerm}" para acceder a este módulo.`,
+        'warning',
+        'No autorizado'
+      );
       return;
     }
 
@@ -461,6 +524,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const navigateToOrderDetail = (orderId: string, origin?: ActiveView) => {
+    if (!hasPermission('orders.view')) {
+      addToast('Acceso restringido: Se requiere el permiso "orders.view" para ver el detalle de pedidos.', 'warning', 'No autorizado');
+      return;
+    }
     const sourceView = origin || activeView;
     setNavigationHistory((prev) => [
       ...prev,
@@ -471,6 +538,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const navigateToClientDetail = (clientId: string, origin?: ActiveView) => {
+    if (!hasPermission('clients.view')) {
+      addToast('Acceso restringido: Se requiere el permiso "clients.view" para consultar clientes.', 'warning', 'No autorizado');
+      return;
+    }
     const sourceView = origin || activeView;
     setNavigationHistory((prev) => [
       ...prev,
@@ -481,6 +552,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const navigateToOrderEdit = (orderId: string, origin?: ActiveView) => {
+    if (!hasPermission('orders.edit')) {
+      addToast('Acceso restringido: Se requiere el permiso "orders.edit" para editar pedidos.', 'warning', 'No autorizado');
+      return;
+    }
     const sourceView = origin || activeView;
     setNavigationHistory((prev) => [
       ...prev,
@@ -494,6 +569,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     origin?: ActiveView,
     initialData?: { initialDeliveryDate?: string; initialClientId?: string | null }
   ) => {
+    if (!hasPermission('orders.create')) {
+      addToast('Acceso restringido: Se requiere el permiso "orders.create" para crear pedidos.', 'warning', 'No autorizado');
+      return;
+    }
     const sourceView = origin || activeView;
     setNavigationHistory((prev) => [
       ...prev,
@@ -558,7 +637,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           live.role !== currentUser.role ||
           live.name !== currentUser.name ||
           live.username !== currentUser.username ||
-          live.email !== currentUser.email
+          live.email !== currentUser.email ||
+          JSON.stringify(live.permissions || {}) !== JSON.stringify(currentUser.permissions || {})
         ) {
           setCurrentUser(live);
         }
@@ -720,8 +800,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateUser = (id: string, userData: Partial<User>) => {
-    if (currentUser?.role !== 'Administrador') {
-      addToast('Acceso denegado: Solo los administradores pueden modificar usuarios.', 'error', 'No autorizado');
+    if (!hasPermission('users.manage')) {
+      addToast('Acceso denegado: Se requiere el permiso "users.manage" para modificar usuarios.', 'error', 'No autorizado');
       return;
     }
 
@@ -770,6 +850,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             ...(userData.active !== undefined ? { active: userData.active } : {}),
             ...(userData.password !== undefined ? { password: userData.password } : {}),
             ...(userData.mustChangePassword !== undefined ? { mustChangePassword: userData.mustChangePassword } : {}),
+            ...(userData.permissions !== undefined ? { permissions: userData.permissions } : {}),
           };
           if (currentUser?.id === id) {
             setCurrentUser(updated);
@@ -826,8 +907,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     error?: string;
     tempPassword?: string;
   } => {
-    if (currentUser?.role !== 'Administrador') {
-      const errorMsg = 'Acceso denegado: Solo los administradores pueden registrar nuevos usuarios.';
+    if (!hasPermission('users.manage')) {
+      const errorMsg = 'Acceso denegado: Se requiere el permiso "users.manage" para registrar nuevos usuarios.';
       addToast(errorMsg, 'error', 'No autorizado');
       return { success: false, error: errorMsg };
     }
@@ -863,6 +944,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       active: true,
       password: tempPass,
       mustChangePassword: true, // Requerimiento: La contraseña temporal debe requerir cambio al primer inicio de sesión
+      permissions: userData.permissions ? { ...userData.permissions } : {},
       createdAt: new Date().toISOString().split('T')[0],
     };
 
@@ -941,8 +1023,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const toggleUserActive = (id: string) => {
-    if (currentUser?.role !== 'Administrador') {
-      addToast('Acceso denegado: Solo los administradores pueden cambiar el estado de usuarios.', 'error', 'No autorizado');
+    if (!hasPermission('users.manage')) {
+      addToast('Acceso denegado: Se requiere el permiso "users.manage" para cambiar el estado de usuarios.', 'error', 'No autorizado');
       return;
     }
 
@@ -989,8 +1071,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     id: string,
     tempPassword?: string
   ): { success: boolean; tempPassword?: string; error?: string } => {
-    if (currentUser?.role !== 'Administrador') {
-      const errorMsg = 'Acceso denegado: Solo los administradores pueden restablecer contraseñas.';
+    if (!hasPermission('users.manage')) {
+      const errorMsg = 'Acceso denegado: Se requiere el permiso "users.manage" para restablecer contraseñas.';
       addToast(errorMsg, 'error', 'No autorizado');
       return { success: false, error: errorMsg };
     }
@@ -1056,10 +1138,67 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return { success: true, tempPassword: generated };
   };
 
+  const updateUserPermissions = (
+    userId: string,
+    permissions: Partial<Record<PermissionCode, boolean>>
+  ): { success: boolean; error?: string } => {
+    if (!hasPermission('users.manage')) {
+      const errorMsg = 'Acceso denegado: Se requiere el permiso "users.manage" para modificar permisos de usuarios.';
+      addToast(errorMsg, 'error', 'No autorizado');
+      return { success: false, error: errorMsg };
+    }
+
+    const targetUser = users.find((u) => u.id === userId);
+    if (!targetUser) {
+      return { success: false, error: 'Usuario no encontrado.' };
+    }
+
+    const previousPermissions = targetUser.permissions || {};
+    const diffDesc = describePermissionChanges(previousPermissions, permissions, targetUser.role);
+
+    const updatedUser: User = {
+      ...targetUser,
+      permissions: { ...permissions },
+    };
+
+    setUsers((prev) => prev.map((u) => (u.id === userId ? updatedUser : u)));
+
+    if (currentUser?.id === userId) {
+      setCurrentUser(updatedUser);
+    }
+
+    logAction({
+      action: 'modificar permisos',
+      module: 'Usuarios',
+      entityType: 'UserPermission',
+      recordId: `@${targetUser.username}`,
+      description: `Ajuste de permisos granulares para @${targetUser.username} (${targetUser.name}): ${diffDesc}`,
+      previousValue: JSON.stringify(previousPermissions),
+      newValue: JSON.stringify(permissions),
+      metadata: {
+        targetUserId: targetUser.id,
+        username: targetUser.username,
+        role: targetUser.role,
+      },
+    });
+
+    addToast(
+      `Permisos granulares de @${targetUser.username} guardados correctamente.`,
+      'success',
+      'Permisos actualizados'
+    );
+    return { success: true };
+  };
+
   // Clients
   const addClient = (
     clientData: Omit<Client, 'id' | 'createdAt' | 'totalOrders' | 'lastOrderDate'>
   ): Client => {
+    if (!hasPermission('clients.edit')) {
+      addToast('Acceso denegado: Se requiere el permiso "clients.edit" para registrar nuevos clientes.', 'error', 'No autorizado');
+      throw new Error('Permiso insuficiente: clients.edit');
+    }
+
     const newClient: Client = {
       ...clientData,
       id: 'cli-' + Date.now(),
@@ -1088,6 +1227,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateClient = (id: string, clientData: Partial<Client>) => {
+    if (!hasPermission('clients.edit')) {
+      addToast('Acceso denegado: Se requiere el permiso "clients.edit" para actualizar información de clientes.', 'error', 'No autorizado');
+      return;
+    }
+
     const currentClient = clients.find((c) => c.id === id);
     setClients((prev) =>
       prev.map((c) => (c.id === id ? { ...c, ...clientData } : c))
@@ -1189,6 +1333,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Components & Inventory Management
   const addComponent = (item: Omit<ComponentItem, 'id' | 'reservedStock'>) => {
+    if (!hasPermission('stock.adjust')) {
+      addToast('Acceso denegado: Se requiere el permiso "stock.adjust" para registrar insumos en catálogo.', 'error', 'No autorizado');
+      return;
+    }
+
     const newItem: ComponentItem = {
       ...item,
       id: 'cmp-' + Date.now(),
@@ -1231,6 +1380,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     id: string,
     itemData: Partial<Omit<ComponentItem, 'id' | 'physicalStock' | 'reservedStock'>>
   ) => {
+    if (!hasPermission('stock.adjust')) {
+      addToast('Acceso denegado: Se requiere el permiso "stock.adjust" para modificar insumos del catálogo.', 'error', 'No autorizado');
+      return;
+    }
+
     const currentComp = components.find((c) => c.id === id);
     setComponents((prev) =>
       prev.map((c) => {
@@ -1291,8 +1445,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       observation?: string;
     }
   ): { success: boolean; error?: string } => {
-    if (currentUser?.role !== 'Administrador') {
-      const errorMsg = 'Acceso denegado: Solo los administradores pueden realizar ajustes manuales de stock.';
+    if (!hasPermission('stock.adjust')) {
+      const errorMsg = 'Acceso denegado: Se requiere el permiso "stock.adjust" para realizar ajustes manuales de stock.';
       addToast(errorMsg, 'error', 'No autorizado');
       return { success: false, error: errorMsg };
     }
@@ -1433,6 +1587,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     items: OrderItemDetail[];
     advancePayment: number;
   }): { success: boolean; orderId?: string; error?: string } => {
+    if (!hasPermission('orders.create')) {
+      const errorMsg = 'Acceso denegado: Se requiere el permiso "orders.create" para registrar pedidos.';
+      addToast(errorMsg, 'error', 'No autorizado');
+      return { success: false, error: errorMsg };
+    }
+
     const client = clients.find((c) => c.id === orderData.clientId);
     if (!client) {
       return { success: false, error: 'Debe seleccionar un cliente válido.' };
@@ -1571,6 +1731,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       advancePayment: number;
     }
   ): { success: boolean; error?: string } => {
+    if (!hasPermission('orders.edit')) {
+      const errorMsg = 'Acceso denegado: Se requiere el permiso "orders.edit" para modificar pedidos.';
+      addToast(errorMsg, 'error', 'No autorizado');
+      return { success: false, error: errorMsg };
+    }
+
     const existingOrder = orders.find((o) => o.id === id);
     if (!existingOrder) {
       return { success: false, error: 'El pedido no fue encontrado.' };
@@ -1707,6 +1873,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const changeOrderStatus = (id: string, newStatus: OrderStatus, note?: string): boolean => {
+    if (!hasPermission('orders.change_status')) {
+      addToast('Acceso denegado: Se requiere el permiso "orders.change_status" para cambiar el estado de pedidos.', 'error', 'No autorizado');
+      return false;
+    }
+
     const order = orders.find((o) => o.id === id);
     if (!order) return false;
 
@@ -1799,6 +1970,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const cancelOrder = (id: string, reason: string = 'Cancelación solicitada'): boolean => {
+    if (!hasPermission('orders.change_status')) {
+      addToast('Acceso denegado: Se requiere el permiso "orders.change_status" para cancelar pedidos.', 'error', 'No autorizado');
+      return false;
+    }
+
     const order = orders.find((o) => o.id === id);
     if (!order) return false;
 
@@ -1872,6 +2048,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     newBalance?: number;
     markedAsDelivered?: boolean;
   } => {
+    if (!hasPermission('payments.register')) {
+      const errorMsg = 'Acceso denegado: Se requiere el permiso "payments.register" para registrar pagos o abonos.';
+      addToast(errorMsg, 'error', 'No autorizado');
+      return { success: false, error: errorMsg };
+    }
+
     const order = orders.find((o) => o.id === orderId);
     if (!order) {
       addToast('Pedido no encontrado.', 'error');
@@ -2253,6 +2435,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         changePassword,
         toggleUserActive,
         resetUserPassword,
+        updateUserPermissions,
+        hasPermission,
 
         activeView,
         setActiveView,

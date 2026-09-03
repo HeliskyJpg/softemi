@@ -20,20 +20,20 @@ import {
 import { GenericCatalogManager } from '../settings/GenericCatalogManager';
 
 export const SettingsView: React.FC = () => {
-  const { currentUser, getCatalogItems } = useApp();
+  const { currentUser, getCatalogItems, hasPermission } = useApp();
   const [selectedKey, setSelectedKey] = useState<CatalogKey>('order_channels');
   const [catalogSearch, setCatalogSearch] = useState('');
   const [mobileShowList, setMobileShowList] = useState(false);
 
-  // Security guard - only Administrators
-  if (!currentUser || currentUser.role !== 'Administrador') {
+  // Security guard - requires settings.manage permission
+  if (!currentUser || !hasPermission('settings.manage')) {
     return (
       <div className="bg-white rounded-2xl p-8 border border-[#F2D6DE] text-center max-w-md mx-auto my-12 shadow-xs">
         <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-3" />
         <h2 className="text-lg font-bold text-[#2C1E23]">Acceso Restringido</h2>
         <p className="text-xs text-[#7D6871] mt-1.5 leading-relaxed">
-          La sección de Configuraciones y Catálogos Maestros es exclusiva para usuarios con el rol
-          de <strong>Administrador</strong>.
+          La sección de Configuraciones y Catálogos Maestros requiere el permiso de{' '}
+          <strong>Administración de configuraciones (settings.manage)</strong>.
         </p>
       </div>
     );

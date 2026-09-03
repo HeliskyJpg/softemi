@@ -38,6 +38,7 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId }) 
     navigateToOrderDetail,
     navigateToOrderNew,
     addToast,
+    hasPermission,
   } = useApp();
 
   const client = clients.find((c) => c.id === clientId);
@@ -155,25 +156,29 @@ export const ClientDetailView: React.FC<ClientDetailViewProps> = ({ clientId }) 
 
         {/* Header Action Buttons */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            id="btn-edit-client-detail"
-            type="button"
-            onClick={handleOpenEdit}
-            className="px-3.5 py-2 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] font-semibold text-xs sm:text-sm shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Edit2 className="w-3.5 h-3.5 text-[#681B2B]" />
-            <span>Editar</span>
-          </button>
+          {hasPermission('clients.edit') && (
+            <button
+              id="btn-edit-client-detail"
+              type="button"
+              onClick={handleOpenEdit}
+              className="px-3.5 py-2 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] font-semibold text-xs sm:text-sm shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Edit2 className="w-3.5 h-3.5 text-[#681B2B]" />
+              <span>Editar</span>
+            </button>
+          )}
 
-          <button
-            id="btn-create-order-for-client"
-            type="button"
-            onClick={() => navigateToOrderNew('client-detail', { initialClientId: client.id })}
-            className="px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Nuevo Pedido</span>
-          </button>
+          {hasPermission('orders.create') && (
+            <button
+              id="btn-create-order-for-client"
+              type="button"
+              onClick={() => navigateToOrderNew('client-detail', { initialClientId: client.id })}
+              className="px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-2xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nuevo Pedido</span>
+            </button>
+          )}
         </div>
       </div>
 

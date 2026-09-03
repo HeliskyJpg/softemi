@@ -36,6 +36,7 @@ export const ClientsView: React.FC = () => {
     addToast,
     clientsViewState,
     setClientsViewState,
+    hasPermission,
   } = useApp();
 
   const { searchTerm, currentPage: savedPage } = clientsViewState;
@@ -176,15 +177,17 @@ export const ClientsView: React.FC = () => {
         </div>
 
         {/* Primary Action Button */}
-        <button
-          id="btn-new-client"
-          type="button"
-          onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto min-h-[42px]"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nuevo Cliente</span>
-        </button>
+        {hasPermission('clients.edit') && (
+          <button
+            id="btn-new-client"
+            type="button"
+            onClick={handleOpenCreate}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto min-h-[42px]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Nuevo Cliente</span>
+          </button>
+        )}
       </div>
 
       {/* Summary Metrics Banner - Responsive 2+1 on mobile, 3 on desktop without text clipping */}
@@ -375,7 +378,7 @@ export const ClientsView: React.FC = () => {
                 </div>
 
                 {/* Clear Actions per Client */}
-                <div className="mt-4 pt-3.5 border-t border-[#F2D6DE]/40 grid grid-cols-2 gap-2">
+                <div className={`mt-4 pt-3.5 border-t border-[#F2D6DE]/40 ${hasPermission('clients.edit') ? 'grid grid-cols-2 gap-2' : 'flex'}`}>
                   {/* Action 1: Ver cliente */}
                   <button
                     id={`btn-view-client-${client.id}`}
@@ -387,16 +390,18 @@ export const ClientsView: React.FC = () => {
                     <span>Ver cliente</span>
                   </button>
 
-                  {/* Action 2: Editar */}
-                  <button
-                    id={`btn-edit-client-${client.id}`}
-                    type="button"
-                    onClick={() => handleOpenEdit(client)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer min-h-[38px]"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 text-[#681B2B]" />
-                    <span>Editar</span>
-                  </button>
+                  {/* Action 2: Editar (only if user has clients.edit) */}
+                  {hasPermission('clients.edit') && (
+                    <button
+                      id={`btn-edit-client-${client.id}`}
+                      type="button"
+                      onClick={() => handleOpenEdit(client)}
+                      className="w-full px-3 py-2.5 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] font-semibold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer min-h-[38px]"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 text-[#681B2B]" />
+                      <span>Editar</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

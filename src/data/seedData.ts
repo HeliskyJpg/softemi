@@ -35,6 +35,20 @@ export const INITIAL_USERS: User[] = [
     mustChangePassword: false,
     createdAt: '2026-01-10',
   },
+  {
+    id: 'usr-3',
+    username: 'carlos',
+    name: 'Carlos Méndez',
+    role: 'Colaborador',
+    active: true,
+    email: 'carlos.mendez@emila.com',
+    password: 'demo123',
+    mustChangePassword: false,
+    createdAt: '2026-02-01',
+    permissions: {
+      'stock.adjust': true, // Ajuste específico: colaborador con permiso especial para inventario
+    },
+  },
 ];
 
 export const INITIAL_CLIENTS: Client[] = [

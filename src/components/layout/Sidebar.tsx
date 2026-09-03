@@ -14,6 +14,7 @@ import {
   History,
 } from 'lucide-react';
 import { ActiveView } from '../../types';
+import { PermissionCode } from '../../types/permissions';
 import { EmilaLogo } from '../common/EmilaLogo';
 
 interface SidebarProps {
@@ -22,18 +23,16 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
-  const { activeView, setActiveView, navigateToOrderNew, currentUser, logout } = useApp();
+  const { activeView, setActiveView, navigateToOrderNew, currentUser, logout, hasPermission } = useApp();
 
   if (!currentUser) return null;
-
-  const isAdmin = currentUser.role === 'Administrador';
 
   const navItems: Array<{
     id: ActiveView;
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     matchViews?: ActiveView[];
-    adminOnly?: boolean;
+    requiredPermission?: PermissionCode;
   }> = [
     {
       id: 'dashboard',
@@ -45,55 +44,63 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
       label: 'Pedidos',
       icon: FileText,
       matchViews: ['orders', 'order-detail', 'order-edit'],
+      requiredPermission: 'orders.view',
     },
     {
       id: 'clients',
       label: 'Clientes',
       icon: Users,
       matchViews: ['clients', 'client-detail'],
+      requiredPermission: 'clients.view',
     },
     {
       id: 'components',
       label: 'Componentes',
       icon: Package,
       matchViews: ['components'],
+      requiredPermission: 'stock.view',
     },
     {
       id: 'calendar',
       label: 'Agenda',
       icon: CalendarDays,
       matchViews: ['calendar'],
+      requiredPermission: 'orders.view',
     },
     {
       id: 'reports',
       label: 'Reportes',
       icon: BarChart3,
       matchViews: ['reports'],
+      requiredPermission: 'reports.view',
     },
     {
       id: 'users',
       label: 'Usuarios y roles',
       icon: UserCheck,
       matchViews: ['users'],
-      adminOnly: true,
+      requiredPermission: 'users.view',
     },
     {
       id: 'audit',
       label: 'Auditoría',
       icon: History,
       matchViews: ['audit'],
-      adminOnly: true,
+      requiredPermission: 'audit.view',
     },
     {
       id: 'settings',
       label: 'Configuraciones',
       icon: Settings,
       matchViews: ['settings'],
-      adminOnly: true,
+      requiredPermission: 'settings.manage',
     },
   ];
 
-  const visibleNavItems = navItems.filter((item) => !item.adminOnly || isAdmin);
+  const visibleNavItems = navItems.filter((item) => {
+    if (!item.requiredPermission) return true;
+    return hasPermission(item.requiredPermission);
+  });
 
   const handleNavClick = (viewId: ActiveView) => {
     setActiveView(viewId, { clearHistory: true });
@@ -182,15 +189,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
 
         {/* Bottom Section: New Order Button & User Profile */}
         <div className="space-y-3 pt-4 border-t border-[#F2D6DE]/60">
-          {/* Primary Action Button */}
-          <button
-            id="btn-sidebar-new-order"
-            onClick={handleNewOrderClick}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-            Nuevo pedido
-          </button>
+          {/* Primary Action Button - guarded by orders.create */}
+          {hasPermission('orders.create') && (
+            <button
+              id="btn-sidebar-new-order"
+              onClick={handleNewOrderClick}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              Nuevo pedido
+            </button>
+          )}
 
           {/* Current User Session Card */}
           <div

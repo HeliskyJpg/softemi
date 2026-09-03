@@ -49,6 +49,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
     addToast,
     getCatalogItems,
     getCatalogSelectOptions,
+    hasPermission,
   } = useApp();
 
   const order = orders.find((o) => o.id === orderId);
@@ -233,7 +234,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Register Payment Action Button (if pending balance exists and not cancelled) */}
-          {!isCancelled && hasPendingBalance && (
+          {!isCancelled && hasPendingBalance && hasPermission('payments.register') && (
             <button
               id="btn-order-detail-register-payment"
               onClick={handleOpenPaymentModal}
@@ -246,7 +247,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
           )}
 
           {/* Edit button */}
-          {!isCancelled && !isDelivered && (
+          {!isCancelled && !isDelivered && hasPermission('orders.edit') && (
             <button
               id="btn-order-detail-edit"
               onClick={() => navigateToOrderEdit(order.id)}
@@ -258,7 +259,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
           )}
 
           {/* Change status button */}
-          {!isCancelled && (
+          {!isCancelled && hasPermission('orders.change_status') && (
             <button
               id="btn-order-detail-change-status"
               onClick={handleOpenStatusModal}
@@ -270,7 +271,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
           )}
 
           {/* Cancel button */}
-          {!isCancelled && (
+          {!isCancelled && hasPermission('orders.change_status') && (
             <button
               id="btn-order-detail-cancel"
               onClick={() => setShowCancelModal(true)}
@@ -468,7 +469,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
             </div>
 
             {/* Quick action button inside financial card */}
-            {!isCancelled && hasPendingBalance && (
+            {!isCancelled && hasPendingBalance && hasPermission('payments.register') && (
               <button
                 id="btn-order-card-register-payment"
                 type="button"

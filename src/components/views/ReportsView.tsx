@@ -88,7 +88,7 @@ const formatRangeLabel = (startStr: string, endStr: string): string => {
 };
 
 export const ReportsView: React.FC = () => {
-  const { orders, logAction, addToast } = useApp();
+  const { orders, logAction, addToast, hasPermission } = useApp();
 
   const today = new Date();
   const currentYear = today.getFullYear();
@@ -181,6 +181,11 @@ export const ReportsView: React.FC = () => {
   }, [orders, activeStartDate, activeEndDate]);
 
   const handleExportReport = () => {
+    if (!hasPermission('reports.export')) {
+      addToast('No tienes permiso para exportar reportes.', 'error');
+      return;
+    }
+
     const headers = ['Código', 'Cliente', 'Teléfono', 'Canal', 'Fecha Entrega', 'Total (Q)', 'Anticipo (Q)', 'Saldo (Q)', 'Estado'];
     const rows = filteredOrders.map((o) => [
       o.code,
@@ -357,15 +362,17 @@ export const ReportsView: React.FC = () => {
             <span className="text-xs font-medium text-[#2C1E23]">{appliedPeriodLabel}</span>
           </div>
 
-          <button
-            id="btn-export-report-csv"
-            type="button"
-            onClick={handleExportReport}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#681B2B] bg-white border border-[#F2D6DE] hover:bg-[#FBECEF] shadow-2xs transition-colors cursor-pointer"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>Exportar reporte</span>
-          </button>
+          {hasPermission('reports.export') && (
+            <button
+              id="btn-export-report-csv"
+              type="button"
+              onClick={handleExportReport}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#681B2B] bg-white border border-[#F2D6DE] hover:bg-[#FBECEF] shadow-2xs transition-colors cursor-pointer"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>Exportar reporte</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -32,6 +32,7 @@ export const OrdersListView: React.FC = () => {
     navigateToOrderEdit,
     ordersViewState,
     setOrdersViewState,
+    hasPermission,
   } = useApp();
 
   const {
@@ -153,14 +154,16 @@ export const OrdersListView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          id="btn-orders-new"
-          onClick={() => navigateToOrderNew('orders')}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-          Nuevo Pedido
-        </button>
+        {hasPermission('orders.create') && (
+          <button
+            id="btn-orders-new"
+            onClick={() => navigateToOrderNew('orders')}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <PlusCircle className="w-4 h-4 stroke-[2.5]" />
+            Nuevo Pedido
+          </button>
+        )}
       </div>
 
       {/* Filters Toolbar */}
@@ -363,16 +366,18 @@ export const OrdersListView: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {order.status !== 'Cancelado' && order.status !== 'Entregado' && (
-                            <button
-                              id={`btn-edit-order-${order.code}`}
-                              onClick={() => navigateToOrderEdit(order.id, 'orders')}
-                              className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-200 text-[#2C1E23] border border-gray-200 transition-colors cursor-pointer"
-                              title="Editar Pedido"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                          )}
+                          {hasPermission('orders.edit') &&
+                            order.status !== 'Cancelado' &&
+                            order.status !== 'Entregado' && (
+                              <button
+                                id={`btn-edit-order-${order.code}`}
+                                onClick={() => navigateToOrderEdit(order.id, 'orders')}
+                                className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-200 text-[#2C1E23] border border-gray-200 transition-colors cursor-pointer"
+                                title="Editar Pedido"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -475,17 +480,19 @@ export const OrdersListView: React.FC = () => {
                       Ver Detalle
                     </button>
 
-                    {order.status !== 'Cancelado' && order.status !== 'Entregado' && (
-                      <button
-                        id={`btn-mobile-edit-${order.code}`}
-                        onClick={() => navigateToOrderEdit(order.id, 'orders')}
-                        className="min-h-[40px] py-2 px-3 rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] hover:bg-gray-50 font-semibold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                        title="Editar Pedido"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                        Editar
-                      </button>
-                    )}
+                    {hasPermission('orders.edit') &&
+                      order.status !== 'Cancelado' &&
+                      order.status !== 'Entregado' && (
+                        <button
+                          id={`btn-mobile-edit-${order.code}`}
+                          onClick={() => navigateToOrderEdit(order.id, 'orders')}
+                          className="min-h-[40px] py-2 px-3 rounded-xl border border-[#F2D6DE] bg-white text-[#2C1E23] hover:bg-gray-50 font-semibold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                          title="Editar Pedido"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          Editar
+                        </button>
+                      )}
                   </div>
                 </div>
               );

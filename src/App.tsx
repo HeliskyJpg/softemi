@@ -21,9 +21,17 @@ import { ProfileView } from './components/views/ProfileView';
 import { SettingsView } from './components/views/SettingsView';
 import { AuditLogView } from './components/views/AuditLogView';
 import { MandatoryPasswordChangeModal } from './components/modals/MandatoryPasswordChangeModal';
+import { AccessDeniedView } from './components/common/AccessDeniedView';
+import { getViewRequiredPermission } from './services/permissionsService';
 
 const AppContent: React.FC = () => {
-  const { currentUser, activeView, selectedOrderId, selectedClientId } = useApp();
+  const {
+    currentUser,
+    activeView,
+    selectedOrderId,
+    selectedClientId,
+    hasPermission,
+  } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // If no logged in user, show Login Screen
@@ -36,8 +44,14 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Render view dynamically
+  // Render view dynamically with route authorization gate
   const renderActiveView = () => {
+    // Route-level granular permission check
+    const requiredPermission = getViewRequiredPermission(activeView);
+    if (requiredPermission && !hasPermission(requiredPermission)) {
+      return <AccessDeniedView requiredPermission={requiredPermission} />;
+    }
+
     switch (activeView) {
       case 'dashboard':
         return <DashboardView />;
@@ -60,11 +74,11 @@ const AppContent: React.FC = () => {
       case 'reports':
         return <ReportsView />;
       case 'users':
-        return currentUser.role === 'Administrador' ? <UsersView /> : <DashboardView />;
+        return <UsersView />;
       case 'audit':
-        return currentUser.role === 'Administrador' ? <AuditLogView /> : <DashboardView />;
+        return <AuditLogView />;
       case 'settings':
-        return currentUser.role === 'Administrador' ? <SettingsView /> : <DashboardView />;
+        return <SettingsView />;
       case 'profile':
         return <ProfileView />;
       default:

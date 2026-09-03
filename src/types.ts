@@ -1,3 +1,5 @@
+import { PermissionCode, PermissionDefinition, EffectivePermissionInfo, PermissionOverrideState } from './types/permissions';
+
 export type UserRole = 'Administrador' | 'Colaborador';
 
 export interface User {
@@ -10,6 +12,7 @@ export interface User {
   password?: string; // Optional internal auth token only, never exposed in UI
   mustChangePassword?: boolean; // If true, requires mandatory password change on first login
   createdAt?: string;
+  permissions?: Partial<Record<PermissionCode, boolean>>; // Custom overrides: true = granted, false = denied, undefined = inherited from role
 }
 
 export interface CreateUserParams {
@@ -19,7 +22,15 @@ export interface CreateUserParams {
   role: UserRole;
   tempPassword?: string;
   mustChangePassword?: boolean;
+  permissions?: Partial<Record<PermissionCode, boolean>>;
 }
+
+export type {
+  PermissionCode,
+  PermissionDefinition,
+  EffectivePermissionInfo,
+  PermissionOverrideState,
+};
 
 export type SystemUser = User;
 

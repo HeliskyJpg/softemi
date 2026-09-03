@@ -78,9 +78,11 @@ export const ComponentsView: React.FC = () => {
     setComponentsViewState,
     getCatalogItems,
     getCatalogSelectOptions,
+    hasPermission,
   } = useApp();
 
   const isAdmin = currentUser?.role === 'Administrador';
+  const canAdjustStock = hasPermission('stock.adjust');
 
   const { activeTab, searchTerm, categoryFilter, statusFilter } = componentsViewState;
 
@@ -410,7 +412,7 @@ export const ComponentsView: React.FC = () => {
           </p>
         </div>
 
-        {isAdmin && (
+        {canAdjustStock && (
           <button
             id="btn-new-component"
             onClick={handleOpenCreate}
@@ -672,25 +674,33 @@ export const ComponentsView: React.FC = () => {
                           {/* Acciones (Only clean, minimal actions: Editar and Ajustar stock) */}
                           <td className="py-3.5 px-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                id={`btn-edit-comp-${comp.id}`}
-                                onClick={() => handleOpenEdit(comp)}
-                                className="px-2.5 py-1.5 rounded-lg border border-[#F2D6DE] bg-white hover:bg-[#FBECEF] text-[#681B2B] font-medium text-xs transition-colors flex items-center gap-1 cursor-pointer"
-                                title="Editar componente"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                                <span>Editar</span>
-                              </button>
+                              {canAdjustStock ? (
+                                <>
+                                  <button
+                                    id={`btn-edit-comp-${comp.id}`}
+                                    onClick={() => handleOpenEdit(comp)}
+                                    className="px-2.5 py-1.5 rounded-lg border border-[#F2D6DE] bg-white hover:bg-[#FBECEF] text-[#681B2B] font-medium text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                                    title="Editar componente"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                    <span>Editar</span>
+                                  </button>
 
-                              <button
-                                id={`btn-adjust-stock-${comp.id}`}
-                                onClick={() => handleOpenStockAdjust(comp)}
-                                className="px-2.5 py-1.5 rounded-lg bg-[#681B2B] hover:bg-[#541421] text-white font-medium text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
-                                title="Ajustar stock"
-                              >
-                                <SlidersHorizontal className="w-3.5 h-3.5" />
-                                <span>Ajustar stock</span>
-                              </button>
+                                  <button
+                                    id={`btn-adjust-stock-${comp.id}`}
+                                    onClick={() => handleOpenStockAdjust(comp)}
+                                    className="px-2.5 py-1.5 rounded-lg bg-[#681B2B] hover:bg-[#541421] text-white font-medium text-xs transition-colors flex items-center gap-1 cursor-pointer shadow-xs"
+                                    title="Ajustar stock"
+                                  >
+                                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                                    <span>Ajustar stock</span>
+                                  </button>
+                                </>
+                              ) : (
+                                <span className="text-[11px] text-[#7D6871] italic">
+                                  Solo lectura
+                                </span>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -788,23 +798,29 @@ export const ComponentsView: React.FC = () => {
                           <span className="text-[10px] font-normal text-[#7D6871]">/{comp.unit || 'ud'}</span>
                         </div>
 
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleOpenEdit(comp)}
-                            className="min-h-[36px] px-3 py-1.5 rounded-lg border border-[#F2D6DE] bg-white text-[#681B2B] hover:bg-[#FBECEF] font-medium text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                            Editar
-                          </button>
+                        {canAdjustStock ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleOpenEdit(comp)}
+                              className="min-h-[36px] px-3 py-1.5 rounded-lg border border-[#F2D6DE] bg-white text-[#681B2B] hover:bg-[#FBECEF] font-medium text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                              Editar
+                            </button>
 
-                          <button
-                            onClick={() => handleOpenStockAdjust(comp)}
-                            className="min-h-[36px] px-3 py-1.5 rounded-lg bg-[#681B2B] hover:bg-[#541421] text-white font-medium text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
-                          >
-                            <SlidersHorizontal className="w-3.5 h-3.5" />
-                            Ajustar stock
-                          </button>
-                        </div>
+                            <button
+                              onClick={() => handleOpenStockAdjust(comp)}
+                              className="min-h-[36px] px-3 py-1.5 rounded-lg bg-[#681B2B] hover:bg-[#541421] text-white font-medium text-xs flex items-center gap-1 shadow-xs transition-colors cursor-pointer"
+                            >
+                              <SlidersHorizontal className="w-3.5 h-3.5" />
+                              Ajustar stock
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-[#7D6871] italic">
+                            Solo lectura
+                          </span>
+                        )}
                       </div>
                     </div>
                   );

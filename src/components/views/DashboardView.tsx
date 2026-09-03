@@ -13,7 +13,7 @@ import { StatusBadge } from '../common/StatusBadge';
 import { OrderStatus } from '../../types';
 
 export const DashboardView: React.FC = () => {
-  const { orders, setActiveView, navigateToOrderDetail, navigateToOrderNew } = useApp();
+  const { orders, setActiveView, navigateToOrderDetail, navigateToOrderNew, hasPermission } = useApp();
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -149,14 +149,16 @@ export const DashboardView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          id="btn-dashboard-new-order"
-          onClick={() => navigateToOrderNew('dashboard')}
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          Nuevo pedido
-        </button>
+        {hasPermission('orders.create') && (
+          <button
+            id="btn-dashboard-new-order"
+            onClick={() => navigateToOrderNew('dashboard')}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs sm:text-sm shadow-xs transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            Nuevo pedido
+          </button>
+        )}
       </div>
 
       {/* 5 Clean Metric Cards */}

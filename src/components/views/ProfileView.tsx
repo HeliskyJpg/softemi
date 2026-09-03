@@ -9,10 +9,13 @@ import {
   Save,
   X,
   CheckCircle2,
+  ShieldCheck,
+  Key,
 } from 'lucide-react';
+import { PERMISSION_DEFINITIONS } from '../../services/permissionsService';
 
 export const ProfileView: React.FC = () => {
-  const { currentUser, updateUserProfile, addToast } = useApp();
+  const { currentUser, updateUserProfile, addToast, hasPermission } = useApp();
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(currentUser?.name || '');
@@ -39,25 +42,9 @@ export const ProfileView: React.FC = () => {
     setIsEditing(false);
   };
 
-  // Role permissions list tailored strictly to the authenticated user
-  const adminPermissions = [
-    'Recepción y creación de pedidos',
-    'Actualización de estados y cobros',
-    'Consulta de catálogo y stock',
-    'Registro y consulta de clientes',
-    'Ajuste manual de existencias',
-    'Gestión de usuarios y roles',
-    'Consulta de reportes y estadísticas',
-  ];
-
-  const collaboratorPermissions = [
-    'Recepción y creación de pedidos',
-    'Actualización de estados y cobros',
-    'Consulta de catálogo y stock',
-    'Registro y consulta de clientes',
-  ];
-
-  const currentPermissions = isAdmin ? adminPermissions : collaboratorPermissions;
+  const userOverridesCount = currentUser.permissions
+    ? Object.keys(currentUser.permissions).length
+    : 0;
 
   return (
     <div id="profile-view-container" className="space-y-6 pb-16">
@@ -270,25 +257,82 @@ export const ProfileView: React.FC = () => {
             )}
           </div>
 
-          {/* Card 2: Permisos de tu rol */}
-          <div className="bg-white rounded-2xl p-6 border border-[#F2D6DE]/60 shadow-xs space-y-3">
-            <h3 className="text-sm font-bold text-[#2C1E23] uppercase tracking-wider flex items-center gap-2">
-              <Shield className="w-4 h-4 text-[#681B2B]" />
-              Permisos de tu rol
-            </h3>
+          {/* Card 2: Permisos de tu cuenta */}
+          <div className="bg-white rounded-2xl p-6 border border-[#F2D6DE]/60 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#F2D6DE]/60 pb-3">
+              <div>
+                <h3 className="text-sm font-bold text-[#2C1E23] uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#681B2B]" />
+                  Permisos Efectivos de tu Cuenta
+                </h3>
+                <p className="text-xs text-[#7D6871] mt-0.5">
+                  Basados en tu rol <strong className="text-[#681B2B]">{currentUser.role}</strong>
+                  {userOverridesCount > 0 ? (
+                    <span> con {userOverridesCount} {userOverridesCount === 1 ? 'ajuste específico' : 'ajustes específicos'}</span>
+                  ) : (
+                    <span> (heredando configuración predeterminada)</span>
+                  )}
+                </p>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
-              {currentPermissions.map((permission, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-xl bg-[#FBECEF]/20 border border-[#F2D6DE]/50 flex items-center gap-2.5"
-                >
-                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+              {userOverridesCount > 0 && (
+                <span className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE]">
+                  <Key className="w-3 h-3" />
+                  {userOverridesCount} permisos personalizados
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
+              {PERMISSION_DEFINITIONS.map((perm) => {
+                const isGranted = hasPermission(perm.code);
+                const hasSpecificOverride =
+                  currentUser.permissions &&
+                  Object.prototype.hasOwnProperty.call(currentUser.permissions, perm.code);
+
+                return (
+                  <div
+                    key={perm.code}
+                    className={`p-3 rounded-xl border flex items-start gap-2.5 transition-colors ${
+                      isGranted
+                        ? 'bg-[#FBECEF]/20 border-[#F2D6DE]/60 hover:bg-[#FBECEF]/40'
+                        : 'bg-stone-50 border-stone-200 opacity-60'
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                        isGranted
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-stone-200 text-stone-500'
+                      }`}
+                    >
+                      {isGranted ? (
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                      ) : (
+                        <X className="w-3.5 h-3.5 stroke-[2.5]" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-bold text-[#2C1E23] leading-tight">
+                          {perm.name}
+                        </span>
+                        {hasSpecificOverride && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
+                            Ajuste
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[#7D6871] line-clamp-1 mt-0.5">
+                        {perm.description}
+                      </p>
+                      <code className="text-[9px] text-[#9C858F] font-mono mt-0.5 block">
+                        {perm.code}
+                      </code>
+                    </div>
                   </div>
-                  <span className="font-medium text-[#2C1E23]">{permission}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
