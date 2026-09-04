@@ -53,7 +53,8 @@ export function resolveOperationType(action: string, module?: string): AuditOper
   }
   if (
     act.includes('reporte') ||
-    act.includes('exportar')
+    act.includes('exportar') ||
+    act.includes('comprobante')
   ) {
     return 'Reportes y Exportaciones';
   }

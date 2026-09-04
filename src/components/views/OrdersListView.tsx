@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   Clock,
   Phone,
+  Printer,
 } from 'lucide-react';
 import {
   StatusBadge,
@@ -29,6 +30,7 @@ export const OrdersListView: React.FC = () => {
     orders,
     navigateToOrderNew,
     navigateToOrderDetail,
+    navigateToOrderReceipt,
     navigateToOrderEdit,
     ordersViewState,
     setOrdersViewState,
@@ -391,6 +393,14 @@ export const OrdersListView: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          <button
+                            id={`btn-receipt-order-${order.code}`}
+                            onClick={() => navigateToOrderReceipt(order.id, 'orders')}
+                            className="p-1.5 rounded-lg bg-white hover:bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE] transition-colors cursor-pointer"
+                            title="Generar / Ver Comprobante"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
                           {hasPermission('orders.edit') &&
                             order.status !== 'Cancelado' &&
                             order.status !== 'Entregado' && (
@@ -503,6 +513,15 @@ export const OrdersListView: React.FC = () => {
                     >
                       <Eye className="w-4 h-4" />
                       Ver Detalle
+                    </button>
+
+                    <button
+                      id={`btn-mobile-receipt-${order.code}`}
+                      onClick={() => navigateToOrderReceipt(order.id, 'orders')}
+                      className="min-h-[40px] px-3 py-2 rounded-xl border border-[#F2D6DE] bg-white text-[#681B2B] hover:bg-[#FBECEF]/40 font-semibold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                      title="Generar Comprobante"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
                     </button>
 
                     {hasPermission('orders.edit') &&

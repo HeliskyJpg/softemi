@@ -11,6 +11,7 @@ import { DashboardView } from './components/views/DashboardView';
 import { OrdersListView } from './components/views/OrdersListView';
 import { OrderFormView } from './components/views/OrderFormView';
 import { OrderDetailView } from './components/views/OrderDetailView';
+import { OrderReceiptView } from './components/views/OrderReceiptView';
 import { ComponentsView } from './components/views/ComponentsView';
 import { ClientsView } from './components/views/ClientsView';
 import { ClientDetailView } from './components/views/ClientDetailView';
@@ -63,6 +64,8 @@ const AppContent: React.FC = () => {
         return <OrderFormView orderIdToEdit={selectedOrderId} />;
       case 'order-detail':
         return <OrderDetailView orderId={selectedOrderId || ''} />;
+      case 'order-receipt':
+        return <OrderReceiptView orderId={selectedOrderId || ''} />;
       case 'components':
         return <ComponentsView />;
       case 'clients':

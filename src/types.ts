@@ -199,6 +199,7 @@ export type ActiveView =
   | 'order-new'
   | 'order-detail'
   | 'order-edit'
+  | 'order-receipt'
   | 'components'
   | 'clients'
   | 'client-detail'

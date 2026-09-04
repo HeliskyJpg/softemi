@@ -113,6 +113,7 @@ interface AppContextType {
     options?: { orderId?: string | null; clientId?: string | null; origin?: ActiveView; clearHistory?: boolean }
   ) => void;
   navigateToOrderDetail: (orderId: string, origin?: ActiveView) => void;
+  navigateToOrderReceipt: (orderId: string, origin?: ActiveView) => void;
   navigateToClientDetail: (clientId: string, origin?: ActiveView) => void;
   navigateToOrderEdit: (orderId: string, origin?: ActiveView) => void;
   navigateToOrderNew: (
@@ -535,6 +536,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     ]);
     setSelectedOrderId(orderId);
     setActiveViewRaw('order-detail');
+  };
+
+  const navigateToOrderReceipt = (orderId: string, origin?: ActiveView) => {
+    if (!hasPermission('orders.view')) {
+      addToast('Acceso restringido: Se requiere el permiso "orders.view" para ver el comprobante.', 'warning', 'No autorizado');
+      return;
+    }
+    const sourceView = origin || activeView;
+    setNavigationHistory((prev) => [
+      ...prev,
+      { view: sourceView, orderId: selectedOrderId, clientId: selectedClientId },
+    ]);
+    setSelectedOrderId(orderId);
+    setActiveViewRaw('order-receipt');
   };
 
   const navigateToClientDetail = (clientId: string, origin?: ActiveView) => {
@@ -2447,6 +2462,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         navigationHistory,
         navigateToView,
         navigateToOrderDetail,
+        navigateToOrderReceipt,
         navigateToClientDetail,
         navigateToOrderEdit,
         navigateToOrderNew,

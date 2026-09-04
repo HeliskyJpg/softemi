@@ -195,3 +195,200 @@ Uso en plantillas Jinja:
 <span>{{ order.total | format_money }}</span>
 <span>{{ order.delivery_date | format_date }}</span>
 ```
+
+---
+
+## 3. Mapeo del Comprobante de Pedido (Flask + Jinja2 + WeasyPrint)
+
+La vista de **Comprobante de pedido** (`OrderReceiptDocument.tsx` / `OrderReceiptView.tsx`) fue diseñada desacoplada como un documento independiente para ser renderizada en el navegador y compilada a PDF mediante **WeasyPrint** en Python/Flask.
+
+> **Regla de Negocio:** No se denomina "Factura", dado que no constituye documento contable fiscal. Todos los montos se expresan exclusivamente en Quetzales (Q).
+
+### 3.1 Controlador en Flask (`orders.py`)
+
+```python
+from flask import Blueprint, render_template, make_response, abort
+from weasyprint import HTML, CSS
+from models import Order
+
+orders_bp = Blueprint('orders', __name__)
+
+@orders_bp.route('/pedidos/<int:order_id>/comprobante')
+def ver_comprobante(order_id):
+    """Renderiza el comprobante como vista web imprimible."""
+    order = Order.query.get_or_404(order_id)
+    return render_template('reports/order_receipt.html', order=order)
+
+@orders_bp.route('/pedidos/<int:order_id>/comprobante.pdf')
+def descargar_comprobante_pdf(order_id):
+    """Compila y descarga el comprobante en formato PDF mediante WeasyPrint."""
+    order = Order.query.get_or_404(order_id)
+    rendered_html = render_template('reports/order_receipt.html', order=order, is_pdf=True)
+    
+    # Renderizar PDF con WeasyPrint
+    pdf = HTML(string=rendered_html).write_pdf()
+    
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename=Comprobante_{order.code}.pdf'
+    return response
+```
+
+### 3.2 Plantilla Jinja2 (`templates/reports/order_receipt.html`)
+
+```jinja
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Comprobante de Pedido {{ order.code }} - EMILA Floristería</title>
+  <style>
+    @page {
+      size: letter portrait;
+      margin: 12mm 15mm;
+      @bottom-center {
+        content: "Documento de control interno no fiscal - EMILA Floristería";
+        font-size: 8pt;
+        color: #7D6871;
+      }
+    }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #2C1E23;
+      background: #FFFFFF;
+      font-size: 11pt;
+      margin: 0;
+      padding: 0;
+    }
+    .header-table { width: 100%; border-bottom: 2px solid #681B2B; padding-bottom: 12px; }
+    .emila-title { font-size: 20pt; font-weight: bold; color: #681B2B; margin: 0; }
+    .badge-comprobante { background: #FBECEF; color: #681B2B; padding: 4px 8px; font-size: 9pt; font-weight: bold; border-radius: 4px; }
+    .order-code { font-size: 18pt; font-weight: bold; color: #2C1E23; margin: 4px 0; }
+    
+    .info-grid { width: 100%; margin: 15px 0; border-collapse: separate; border-spacing: 10px; }
+    .info-card { background: #FDF8F9; border: 1px solid #F2D6DE; border-radius: 8px; padding: 10px; vertical-align: top; width: 50%; font-size: 9pt; }
+    .card-title { color: #681B2B; font-weight: bold; font-size: 9pt; border-bottom: 1px solid #F2D6DE; padding-bottom: 4px; margin-bottom: 6px; text-transform: uppercase; }
+    
+    .table-items { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 9pt; }
+    .table-items th { background: #FBECEF; color: #681B2B; padding: 8px; text-align: left; font-weight: bold; border-bottom: 1px solid #E8C4CE; }
+    .table-items td { padding: 8px; border-bottom: 1px solid #F2D6DE; }
+    
+    .financial-box { background: #FDF8F9; border: 1px solid #E8C4CE; border-radius: 8px; padding: 12px; font-size: 9pt; width: 280px; float: right; margin-bottom: 20px; }
+    .sign-table { width: 100%; margin-top: 40px; clear: both; }
+    .sign-line { border-bottom: 1px solid #999; height: 35px; width: 90%; }
+  </style>
+</head>
+<body>
+  <!-- Encabezado Institucional -->
+  <table class="header-table">
+    <tr>
+      <td style="vertical-align: middle;">
+        <h1 class="emila-title">EMILA Floristería</h1>
+        <div style="font-size: 9pt; color: #7D6871;">Arreglos y Detalles Personalizados &bull; Guatemala</div>
+      </td>
+      <td style="text-align: right; vertical-align: middle;">
+        <span class="badge-comprobante">COMPROBANTE DE PEDIDO</span>
+        <div class="order-code">{{ order.code }}</div>
+        <div style="font-size: 9pt; color: #7D6871;">Estado: <strong>{{ order.status }}</strong></div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Información de Cliente y Entrega -->
+  <table class="info-grid">
+    <tr>
+      <td class="info-card">
+        <div class="card-title">Datos del Cliente</div>
+        <div><strong>Cliente:</strong> {{ order.client_name }}</div>
+        <div><strong>Teléfono:</strong> {{ order.client_phone or 'No registrado' }}</div>
+        <div><strong>Canal:</strong> {{ order.channel }}</div>
+      </td>
+      <td class="info-card">
+        <div class="card-title">Programación de Entrega</div>
+        <div><strong>Fecha Registro:</strong> {{ order.created_at }}</div>
+        <div><strong>Fecha Entrega:</strong> {{ order.delivery_date }}</div>
+        <div><strong>Hora Programada:</strong> {{ order.delivery_time or 'Por coordinar' }}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Descripción del Arreglo -->
+  <div style="margin: 10px 0; font-size: 9.5pt;">
+    <strong>Descripción del Arreglo:</strong> {{ order.description }}
+    {% if order.observations %}
+    <div style="margin-top: 6px; padding: 8px; background: #FBECEF; border: 1px solid #F2D6DE; border-radius: 6px; font-style: italic;">
+      <strong>Dedicatoria / Observaciones:</strong> "{{ order.observations }}"
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Tabla de Componentes -->
+  <table class="table-items">
+    <thead>
+      <tr>
+        <th style="width: 50px; text-align: center;">Cant.</th>
+        <th>Componente / Insumo</th>
+        <th>Categoría</th>
+        <th style="text-align: right; width: 90px;">Precio Unit.</th>
+        <th style="text-align: right; width: 90px;">Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in order.items %}
+      <tr>
+        <td style="text-align: center; font-weight: bold;">{{ item.quantity }}</td>
+        <td>{{ item.component_name }}</td>
+        <td>{{ item.category }}</td>
+        <td style="text-align: right;">Q {{ "%.2f"|format(item.unit_price) }}</td>
+        <td style="text-align: right; font-weight: bold; color: #681B2B;">Q {{ "%.2f"|format(item.subtotal) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Resumen Financiero -->
+  <div class="financial-box">
+    <table style="width: 100%;">
+      <tr>
+        <td>Subtotal:</td>
+        <td style="text-align: right;">Q {{ "%.2f"|format(order.subtotal) }}</td>
+      </tr>
+      <tr style="font-weight: bold; color: #681B2B; font-size: 11pt; border-top: 1px solid #E8C4CE;">
+        <td style="padding-top: 6px;">TOTAL:</td>
+        <td style="text-align: right; padding-top: 6px;">Q {{ "%.2f"|format(order.total) }}</td>
+      </tr>
+      <tr style="color: #059669; font-weight: bold;">
+        <td>Total Pagado:</td>
+        <td style="text-align: right;">Q {{ "%.2f"|format(order.advance_payment) }}</td>
+      </tr>
+      <tr style="font-weight: bold; border-top: 1px solid #E8C4CE;">
+        <td style="padding-top: 6px;">SALDO PENDIENTE:</td>
+        <td style="text-align: right; padding-top: 6px; color: {{ '#059669' if order.balance <= 0 else '#DC2626' }};">
+          Q {{ "%.2f"|format(order.balance) }}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Firmas -->
+  <table class="sign-table">
+    <tr>
+      <td style="width: 50%; text-align: center; font-size: 8pt; color: #7D6871;">
+        <div class="sign-line" style="margin: 0 auto 5px auto;"></div>
+        Recibí Conforme (Firma y DPI del Cliente)
+      </td>
+      <td style="width: 50%; text-align: center; font-size: 8pt; color: #7D6871;">
+        <div class="sign-line" style="margin: 0 auto 5px auto;"></div>
+        Taller EMILA Floristería
+      </td>
+    </tr>
+  </table>
+
+  <!-- Leyenda No Fiscal -->
+  <div style="margin-top: 30px; text-align: center; font-size: 7.5pt; color: #7D6871; border-top: 1px solid #F2D6DE; padding-top: 8px;">
+    <strong>DOCUMENTO INTERNO NO FISCAL.</strong> Constancia de pedido y control de anticipos y saldos en Quetzales (Q).
+  </div>
+</body>
+</html>
+```
+

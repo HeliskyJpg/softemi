@@ -11,6 +11,7 @@ import {
   Phone,
   MessageCircle,
   Receipt,
+  Printer,
   Layers,
   History,
   CheckCircle2,
@@ -32,6 +33,7 @@ import {
 } from '../common';
 import { FormFieldError } from '../common/FormFieldError';
 import { SystemAlert } from '../common/SystemAlert';
+import { OrderReceiptModal } from '../modals/OrderReceiptModal';
 import { OrderStatus } from '../../types';
 
 interface OrderDetailViewProps {
@@ -43,6 +45,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
     orders,
     goBack,
     navigateToOrderEdit,
+    navigateToOrderReceipt,
     changeOrderStatus,
     cancelOrder,
     registerOrderPayment,
@@ -80,6 +83,9 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
   // Cancel Order Modal State
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('Cancelación solicitada por el cliente');
+
+  // Receipt Modal State
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   if (!order) {
     return (
@@ -233,6 +239,17 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Generar Comprobante */}
+          <button
+            id="btn-order-detail-generate-receipt"
+            onClick={() => setShowReceiptModal(true)}
+            className="px-4 py-2 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Generar comprobante de pedido imprimible"
+          >
+            <Printer className="w-4 h-4 text-[#681B2B]" />
+            <span>Generar comprobante</span>
+          </button>
+
           {/* Register Payment Action Button (if pending balance exists and not cancelled) */}
           {!isCancelled && hasPendingBalance && hasPermission('payments.register') && (
             <button
@@ -487,6 +504,17 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                 Pago Completo Liquidado (Q 0.00 pendiente)
               </div>
             )}
+
+            {/* Generar Comprobante Quick Action */}
+            <button
+              id="btn-order-card-generate-receipt"
+              type="button"
+              onClick={() => setShowReceiptModal(true)}
+              className="w-full mt-2.5 py-2 px-3 rounded-xl border border-[#F2D6DE] bg-[#FDF8F9] hover:bg-[#FBECEF]/60 text-[#681B2B] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#681B2B]" />
+              <span>Generar Comprobante</span>
+            </button>
           </div>
 
           {/* Historial Card */}
@@ -864,6 +892,19 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
         confirmText="Sí, Cancelar Pedido"
         cancelText="Volver sin cancelar"
         type="danger"
+      />
+
+      {/* ============================================================ */}
+      {/* MODAL 4: COMPROBANTE DE PEDIDO IMPRIMIBLE (NO FACTURA)       */}
+      {/* ============================================================ */}
+      <OrderReceiptModal
+        isOpen={showReceiptModal}
+        onClose={() => setShowReceiptModal(false)}
+        order={order}
+        onViewFullPage={() => {
+          setShowReceiptModal(false);
+          navigateToOrderReceipt(order.id);
+        }}
       />
     </div>
   );

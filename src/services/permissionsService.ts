@@ -345,6 +345,7 @@ export const getViewRequiredPermission = (view: string): PermissionCode | null =
   switch (view) {
     case 'orders':
     case 'order-detail':
+    case 'order-receipt':
       return 'orders.view';
     case 'order-new':
       return 'orders.create';

@@ -208,4 +208,100 @@ input[type="number"] {
   appearance: textfield;
 }
 
+/* ============================================================ */
+/* EMILA PRINT STYLESHEET (WeasyPrint & Browser Print Support)  */
+/* ============================================================ */
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 10mm 12mm;
+  }
+
+  /* Reset global backgrounds and enforce solid contrast */
+  html, body {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide application chrome: header, demo bar, navbar, sidebar, toasts, action buttons */
+  #demo-scenario-bar,
+  #emila-sidebar,
+  #emila-navbar,
+  .no-print,
+  button,
+  .toast-container {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Reset layout constraints for print */
+  #emila-app-root,
+  .min-h-screen {
+    min-height: auto !important;
+    background: transparent !important;
+    display: block !important;
+  }
+
+  main,
+  #main-content-viewport {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* When printing from modal, remove backdrop and fixed overlay constraints */
+  #order-receipt-modal-container {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  #order-receipt-modal-container > div {
+    max-width: 100% !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Format receipt document for paper */
+  .emila-receipt-sheet {
+    box-shadow: none !important;
+    border: 1px solid #d5a7b4 !important;
+    border-radius: 0 !important;
+    padding: 10mm 12mm !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    background: #ffffff !important;
+  }
+
+  .emila-receipt-sheet table {
+    page-break-inside: auto !important;
+  }
+
+  .emila-receipt-sheet tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .emila-receipt-sheet header,
+  .emila-receipt-sheet footer,
+  .emila-receipt-sheet section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
 
