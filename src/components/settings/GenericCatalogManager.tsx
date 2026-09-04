@@ -23,6 +23,8 @@ import {
   Modal,
   ConfirmDialog,
   FormField,
+  FormRow,
+  Input,
   FormFieldError,
   TextArea,
   SystemAlert,
@@ -623,7 +625,7 @@ export const GenericCatalogManager: React.FC<GenericCatalogManagerProps> = ({
             required
             error={formErrors.name}
           >
-            <input
+            <Input
               id="input-catalog-item-name"
               type="text"
               required
@@ -633,11 +635,7 @@ export const GenericCatalogManager: React.FC<GenericCatalogManagerProps> = ({
                 if (formErrors.name) setFormErrors((prev) => ({ ...prev, name: undefined }));
               }}
               placeholder={definition.namePlaceholder || 'Ingrese el nombre...'}
-              className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl border bg-white outline-none transition-all ${
-                formErrors.name
-                  ? 'border-rose-400 ring-2 ring-rose-100'
-                  : 'border-[#F2D6DE] focus:border-[#681B2B] focus:ring-2 focus:ring-[#681B2B]/15'
-              }`}
+              hasError={!!formErrors.name}
             />
           </FormField>
 
@@ -656,20 +654,20 @@ export const GenericCatalogManager: React.FC<GenericCatalogManagerProps> = ({
           />
 
           {/* Order index & Active toggle */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <FormRow columns={2}>
             <FormField
               id="input-catalog-order-index"
               label="Orden de visualización"
               optional
             >
-              <input
+              <Input
                 id="input-catalog-order-index"
                 type="number"
                 min={1}
                 max={999}
                 value={formOrderIndex}
                 onChange={(e) => setFormOrderIndex(Number(e.target.value) || 1)}
-                className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/15 font-medium"
+                className="font-medium"
               />
             </FormField>
 
@@ -700,7 +698,7 @@ export const GenericCatalogManager: React.FC<GenericCatalogManagerProps> = ({
                 </div>
               </label>
             </div>
-          </div>
+          </FormRow>
         </form>
       </Modal>
 

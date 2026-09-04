@@ -1,6 +1,8 @@
 import React from 'react';
 import { FormFieldError } from './FormFieldError';
-import { FormMaxWidth, tokens } from '../../tokens';
+import { FieldMaxWidth, FormMaxWidth, tokens } from '../../tokens';
+
+export type FormFieldWidth = FormMaxWidth | FieldMaxWidth | 'none';
 
 export interface FormFieldProps {
   id?: string;
@@ -14,7 +16,7 @@ export interface FormFieldProps {
     current: number;
     max: number;
   };
-  maxWidth?: FormMaxWidth | 'none';
+  maxWidth?: FormFieldWidth;
   className?: string;
   children: React.ReactNode;
 }
@@ -38,10 +40,15 @@ export const FormField: React.FC<FormFieldProps> = ({
   className = '',
   children,
 }) => {
-  const maxWidthClass =
-    maxWidth === 'none'
-      ? 'w-full'
-      : tokens.formMaxWidths[maxWidth as FormMaxWidth] || 'w-full';
+  let maxWidthClass = 'w-full';
+
+  if (maxWidth !== 'none') {
+    if (maxWidth in tokens.fieldMaxWidths) {
+      maxWidthClass = tokens.fieldMaxWidths[maxWidth as FieldMaxWidth];
+    } else if (maxWidth in tokens.formMaxWidths) {
+      maxWidthClass = tokens.formMaxWidths[maxWidth as FormMaxWidth];
+    }
+  }
 
   return (
     <div className={`space-y-1.5 ${maxWidthClass} ${className}`}>

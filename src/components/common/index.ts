@@ -6,6 +6,8 @@
 
 export * from './AutocompleteSelect';
 export * from './FormField';
+export * from './FormRow';
+export * from './Input';
 export * from './FormFieldError';
 export * from './QuantityInput';
 export * from './TextArea';

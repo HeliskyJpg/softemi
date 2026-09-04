@@ -18,6 +18,8 @@ import { Client } from '../../types';
 import { SystemAlert } from '../common/SystemAlert';
 import {
   FormField,
+  FormRow,
+  Input,
   TextArea,
   Modal,
   EmptyState,
@@ -450,45 +452,42 @@ export const ClientsView: React.FC = () => {
           </>
         }
       >
-        <form id="form-client-modal" onSubmit={handleSubmit} className="space-y-3.5">
-          <FormField
-            id="input-client-name"
-            label="Nombre Completo"
-            required
-            error={formError}
-          >
-            <input
+        <form id="form-client-modal" onSubmit={handleSubmit} className="space-y-4">
+          <FormRow columns={2}>
+            <FormField
               id="input-client-name"
-              type="text"
+              label="Nombre Completo"
               required
-              value={formName}
-              onChange={(e) => {
-                setFormName(e.target.value);
-                if (formError) setFormError('');
-              }}
-              placeholder="Ej. Sofía Morales"
-              className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none ${
-                formError
-                  ? 'border-rose-400 bg-rose-50/20 ring-1 ring-rose-200'
-                  : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
-              }`}
-            />
-          </FormField>
+              error={formError}
+            >
+              <Input
+                id="input-client-name"
+                type="text"
+                required
+                value={formName}
+                onChange={(e) => {
+                  setFormName(e.target.value);
+                  if (formError) setFormError('');
+                }}
+                placeholder="Ej. Sofía Morales"
+                hasError={!!formError}
+              />
+            </FormField>
 
-          <FormField
-            id="input-client-phone"
-            label="Teléfono / WhatsApp"
-            optional
-          >
-            <input
+            <FormField
               id="input-client-phone"
-              type="text"
-              value={formPhone}
-              onChange={(e) => setFormPhone(e.target.value)}
-              placeholder="Ej. 5555-1234"
-              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-            />
-          </FormField>
+              label="Teléfono / WhatsApp"
+              optional
+            >
+              <Input
+                id="input-client-phone"
+                type="tel"
+                value={formPhone}
+                onChange={(e) => setFormPhone(e.target.value)}
+                placeholder="Ej. 5555-1234"
+              />
+            </FormField>
+          </FormRow>
 
           <TextArea
             id="input-client-notes"

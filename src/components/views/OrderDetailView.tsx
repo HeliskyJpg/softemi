@@ -26,6 +26,8 @@ import {
   ConfirmDialog,
   Modal,
   FormField,
+  FormRow,
+  Input,
   MoneyFormatter,
   DateFormatter,
   AutocompleteSelect,
@@ -621,53 +623,63 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
             </span>
           </div>
 
-          {/* Payment Amount Input */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label
-                htmlFor="input-payment-amount"
-                className="text-xs font-bold text-[#2C1E23]"
-              >
-                Monto a pagar <span className="text-red-500">*</span>
-              </label>
-              <button
-                type="button"
-                id="btn-use-pending-balance"
-                onClick={() => {
-                  setPaymentAmountInput(order.balance.toFixed(2));
-                  setPaymentError(null);
-                }}
-                className="text-[11px] sm:text-xs font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer transition-colors"
-              >
-                Usar saldo pendiente Q{order.balance.toFixed(2)}
-              </button>
-            </div>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs sm:text-sm font-bold text-[#7D6871] pointer-events-none">
-                Q
-              </span>
-              <input
+          {/* Payment Amount and Payment Method sharing row on desktop */}
+          <FormRow columns={2}>
+            <FormField
+              id="input-payment-amount"
+              label="Monto a pagar"
+              required
+              action={
+                <button
+                  type="button"
+                  id="btn-use-pending-balance"
+                  onClick={() => {
+                    setPaymentAmountInput(order.balance.toFixed(2));
+                    setPaymentError(null);
+                  }}
+                  className="text-[11px] font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer"
+                >
+                  Saldo Q{order.balance.toFixed(2)}
+                </button>
+              }
+              error={paymentError}
+            >
+              <Input
                 id="input-payment-amount"
                 type="number"
                 min={0.01}
                 max={order.balance}
                 step="0.01"
                 required
+                prefixElement={<span className="text-xs font-bold text-[#7D6871]">Q</span>}
                 value={paymentAmountInput}
                 onChange={(e) => {
                   setPaymentAmountInput(e.target.value);
                   setPaymentError(null);
                 }}
                 placeholder="0.00"
-                className={`w-full pl-8 pr-3 py-2.5 text-xs sm:text-sm font-bold rounded-xl border outline-none text-[#2C1E23] ${
-                  paymentError
-                    ? 'border-rose-400 ring-1 ring-rose-200 bg-rose-50/20'
-                    : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B]'
-                }`}
+                hasError={!!paymentError}
+                className="font-bold text-[#2C1E23]"
+              />
+            </FormField>
+
+            <div>
+              <AutocompleteSelect
+                id="select-payment-method"
+                label="Forma de pago"
+                required
+                options={getCatalogSelectOptions('payment_methods', {
+                  currentValue: paymentMethod,
+                  isNew: true,
+                  includeDescription: true,
+                })}
+                value={paymentMethod}
+                onChange={(val) => setPaymentMethod(val)}
+                searchable={true}
+                placeholder="Seleccione forma de pago..."
               />
             </div>
-            <FormFieldError id="error-payment-amount" error={paymentError} />
-          </div>
+          </FormRow>
 
           {/* Simplified Calculation Preview */}
           {currentPayNum > 0 && currentPayNum <= order.balance + 0.001 && (
@@ -695,38 +707,16 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
             </div>
           )}
 
-          {/* Payment Method */}
-          <div>
-            <AutocompleteSelect
-              id="select-payment-method"
-              label="Forma de pago"
-              required
-              options={getCatalogSelectOptions('payment_methods', {
-                currentValue: paymentMethod,
-                isNew: true,
-                includeDescription: true,
-              })}
-              value={paymentMethod}
-              onChange={(val) => setPaymentMethod(val)}
-              searchable={true}
-              placeholder="Seleccione forma de pago..."
-            />
-          </div>
-
           {/* Note / Reference */}
-          <div>
-            <label className="block text-xs font-bold text-[#2C1E23] mb-1.5">
-              Referencia o nota (opcional)
-            </label>
-            <input
+          <FormField id="input-payment-note" label="Referencia o nota" optional maxWidth="full">
+            <Input
               id="input-payment-note"
               type="text"
               value={paymentNote}
               onChange={(e) => setPaymentNote(e.target.value)}
               placeholder="Ej. Comprobante #124567, transferencia bancaria..."
-              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] outline-none"
             />
-          </div>
+          </FormField>
         </form>
       </Modal>
 
@@ -809,63 +799,59 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-[#2C1E23]">
-                    Monto a Cobrar (Q) <span className="text-red-500">*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setDeliveryPaymentAmount(order.balance.toFixed(2))}
-                    className="text-[10px] font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer"
-                  >
-                    Pagar Saldo Completo
-                  </button>
-                </div>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-bold text-[#7D6871] pointer-events-none">
-                    Q
-                  </span>
-                  <input
+              <FormRow columns={2}>
+                <FormField
+                  id="input-delivery-payment-amount"
+                  label="Monto a Cobrar (Q)"
+                  required
+                  action={
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryPaymentAmount(order.balance.toFixed(2))}
+                      className="text-[10px] font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer"
+                    >
+                      Saldo Completo
+                    </button>
+                  }
+                  error={deliveryPaymentError}
+                >
+                  <Input
+                    id="input-delivery-payment-amount"
                     type="number"
                     min={0.01}
                     max={order.balance}
                     step="0.01"
                     required
+                    prefixElement={<span className="text-xs font-bold text-[#7D6871]">Q</span>}
                     value={deliveryPaymentAmount}
                     onChange={(e) => {
                       setDeliveryPaymentAmount(e.target.value);
                       setDeliveryPaymentError(null);
                     }}
                     placeholder="0.00"
-                    className={`w-full pl-7 pr-3 py-2 text-xs font-bold rounded-lg border outline-none ${
-                      deliveryPaymentError
-                        ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200'
-                        : 'border-amber-300 bg-white focus:ring-2 focus:ring-amber-500/30'
-                    }`}
+                    hasError={!!deliveryPaymentError}
+                    className="font-bold text-[#2C1E23]"
+                  />
+                </FormField>
+
+                <div>
+                  <AutocompleteSelect
+                    id="select-delivery-payment-method"
+                    label="Método de Cobro"
+                    required
+                    options={getCatalogSelectOptions('payment_methods', {
+                      currentValue: deliveryPaymentMethod,
+                      isNew: true,
+                      includeDescription: true,
+                    })}
+                    value={deliveryPaymentMethod}
+                    onChange={(val) => setDeliveryPaymentMethod(val)}
+                    size="md"
+                    searchable={true}
+                    placeholder="Seleccione método de cobro..."
                   />
                 </div>
-                <FormFieldError id="error-delivery-payment" error={deliveryPaymentError} />
-              </div>
-
-              {/* Payment Method Selector */}
-              <div>
-                <AutocompleteSelect
-                  id="select-delivery-payment-method"
-                  label="Método de Cobro"
-                  required
-                  options={getCatalogSelectOptions('payment_methods', {
-                    currentValue: deliveryPaymentMethod,
-                    isNew: true,
-                    includeDescription: true,
-                  })}
-                  value={deliveryPaymentMethod}
-                  onChange={(val) => setDeliveryPaymentMethod(val)}
-                  size="sm"
-                  searchable={true}
-                  placeholder="Seleccione método de cobro..."
-                />
-              </div>
+              </FormRow>
 
               {/* Outcome Note */}
               {deliveryPayNum > 0 && (

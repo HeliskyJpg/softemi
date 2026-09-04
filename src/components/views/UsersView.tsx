@@ -26,6 +26,9 @@ import { UserPermissionsModal } from '../modals/UserPermissionsModal';
 import {
   ConfirmDialog,
   SystemAlert,
+  FormField,
+  FormRow,
+  Input,
   FormFieldError,
   Modal,
   AutocompleteSelect,
@@ -1056,85 +1059,78 @@ export const UsersView: React.FC = () => {
               <SystemAlert id="alert-create-user-general" type="warning" message={createErrors.general} />
             )}
 
-            {/* Full name input */}
-            <div>
-              <label htmlFor="input-create-name" className="block text-xs font-bold text-[#2C1E23] mb-1">
-                Nombre Completo <span className="text-rose-500">*</span>
-              </label>
-              <input
+            {/* Row 1: Nombre Completo y Nombre de Usuario */}
+            <FormRow columns={2}>
+              <FormField
                 id="input-create-name"
-                type="text"
+                label="Nombre Completo"
                 required
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Ej. Carlos Mendoza"
-                className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
-                  createErrors.name ? 'border-rose-300 focus:ring-rose-200 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
-                }`}
-              />
-              <FormFieldError id="error-create-name" error={createErrors.name} />
-            </div>
+                error={createErrors.name}
+              >
+                <Input
+                  id="input-create-name"
+                  type="text"
+                  required
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  placeholder="Ej. Carlos Mendoza"
+                  hasError={!!createErrors.name}
+                />
+              </FormField>
 
-            {/* Username input */}
-            <div>
-              <label htmlFor="input-create-username" className="block text-xs font-bold text-[#2C1E23] mb-1">
-                Nombre de Usuario (Para inicio de sesión) <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#7D6871]">@</span>
-                <input
+              <FormField
+                id="input-create-username"
+                label="Nombre de Usuario"
+                required
+                helperText="Sin espacios, en minúsculas. Identificador de acceso."
+                error={createErrors.username}
+              >
+                <Input
                   id="input-create-username"
                   type="text"
                   required
+                  prefixElement={<span className="text-xs font-bold text-[#7D6871]">@</span>}
                   value={createUsername}
                   onChange={(e) => setCreateUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
                   placeholder="carlos.mendoza"
-                  className={`w-full pl-7 pr-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
-                    createErrors.username ? 'border-rose-300 focus:ring-rose-200 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
-                  }`}
+                  hasError={!!createErrors.username}
                 />
-              </div>
-              <FormFieldError id="error-create-username" error={createErrors.username} />
-              <p className="text-[11px] text-[#7D6871] mt-1">Sin espacios, en minúsculas. Será su usuario único.</p>
-            </div>
+              </FormField>
+            </FormRow>
 
-            {/* Email input */}
-            <div>
-              <label htmlFor="input-create-email" className="block text-xs font-bold text-[#2C1E23] mb-1">
-                Correo Electrónico (Opcional)
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7D6871]">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <input
+            {/* Row 2: Correo Electrónico y Rol Asignado */}
+            <FormRow columns={2}>
+              <FormField
+                id="input-create-email"
+                label="Correo Electrónico"
+                optional
+              >
+                <Input
                   id="input-create-email"
                   type="email"
+                  prefixElement={<Mail className="w-4 h-4 text-[#7D6871]" />}
                   value={createEmail}
                   onChange={(e) => setCreateEmail(e.target.value)}
                   placeholder="carlos@emila.com"
-                  className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
+                />
+              </FormField>
+
+              <div>
+                <AutocompleteSelect
+                  id="select-create-role"
+                  label="Rol Asignado"
+                  required
+                  value={createRole}
+                  onChange={(val) => setCreateRole(val as UserRole)}
+                  options={[
+                    { value: 'Colaborador', label: 'Colaborador (Recepción, agenda y taller)' },
+                    { value: 'Administrador', label: 'Administrador (Acceso total y configuración)' },
+                  ]}
+                  searchable={false}
+                  size="md"
                 />
               </div>
-            </div>
-
-            {/* Role selection */}
-            <div>
-              <label htmlFor="select-create-role" className="block text-xs font-bold text-[#2C1E23] mb-1">
-                Rol Asignado <span className="text-rose-500">*</span>
-              </label>
-              <AutocompleteSelect
-                id="select-create-role"
-                value={createRole}
-                onChange={(val) => setCreateRole(val as UserRole)}
-                options={[
-                  { value: 'Colaborador', label: 'Colaborador (Recepción de pedidos, agenda y taller)' },
-                  { value: 'Administrador', label: 'Administrador (Acceso total, ajustes de stock y usuarios)' },
-                ]}
-                searchable={false}
-                size="sm"
-              />
-            </div>
+            </FormRow>
 
             {/* Functional temporary password */}
             <div className="p-3.5 bg-[#FBECEF]/30 rounded-2xl border border-[#F2D6DE]/80 space-y-2.5">
@@ -1228,92 +1224,88 @@ export const UsersView: React.FC = () => {
             <SystemAlert id="alert-user-form-error" type="warning" message={formErrors.general} />
           )}
 
-          {/* Full name input */}
-          <div>
-            <label htmlFor="input-edit-user-name" className="block text-xs font-bold text-[#2C1E23] mb-1">
-              Nombre Completo <span className="text-rose-500">*</span>
-            </label>
-            <input
+          {/* Row 1: Nombre Completo y Nombre de Usuario */}
+          <FormRow columns={2}>
+            <FormField
               id="input-edit-user-name"
-              type="text"
+              label="Nombre Completo"
               required
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              placeholder="Ej. Elena Soto"
-              className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
-                formErrors.name ? 'border-rose-300 focus:ring-rose-200 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
-              }`}
-            />
-            <FormFieldError id="error-edit-user-name" error={formErrors.name} />
-          </div>
+              error={formErrors.name}
+            >
+              <Input
+                id="input-edit-user-name"
+                type="text"
+                required
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="Ej. Elena Soto"
+                hasError={!!formErrors.name}
+              />
+            </FormField>
 
-          {/* Username input */}
-          <div>
-            <label htmlFor="input-edit-user-username" className="block text-xs font-bold text-[#2C1E23] mb-1">
-              Nombre de Usuario (Identificador de acceso) <span className="text-rose-500">*</span>
-            </label>
-            <input
+            <FormField
               id="input-edit-user-username"
-              type="text"
+              label="Nombre de Usuario"
               required
-              value={formUsername}
-              onChange={(e) => setFormUsername(e.target.value)}
-              placeholder="Ej. admin"
-              className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl border outline-none text-[#2C1E23] ${
-                formErrors.username ? 'border-rose-300 focus:ring-rose-200 ring-1 ring-rose-200' : 'border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20'
-              }`}
-            />
-            <FormFieldError id="error-edit-user-username" error={formErrors.username} />
-          </div>
+              helperText="Identificador único de acceso"
+              error={formErrors.username}
+            >
+              <Input
+                id="input-edit-user-username"
+                type="text"
+                required
+                prefixElement={<span className="text-xs font-bold text-[#7D6871]">@</span>}
+                value={formUsername}
+                onChange={(e) => setFormUsername(e.target.value)}
+                placeholder="Ej. admin"
+                hasError={!!formErrors.username}
+              />
+            </FormField>
+          </FormRow>
 
-          {/* Email input */}
-          <div>
-            <label htmlFor="input-edit-user-email" className="block text-xs font-bold text-[#2C1E23] mb-1">
-              Correo Electrónico (Contacto)
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#7D6871]">
-                <Mail className="w-4 h-4" />
-              </div>
-              <input
+          {/* Row 2: Correo Electrónico y Rol Asignado */}
+          <FormRow columns={2}>
+            <FormField
+              id="input-edit-user-email"
+              label="Correo Electrónico (Contacto)"
+              optional
+            >
+              <Input
                 id="input-edit-user-email"
                 type="email"
+                prefixElement={<Mail className="w-4 h-4 text-[#7D6871]" />}
                 value={formEmail}
                 onChange={(e) => setFormEmail(e.target.value)}
                 placeholder="usuario@emila.com"
-                className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none text-[#2C1E23]"
               />
+            </FormField>
+
+            <div>
+              <AutocompleteSelect
+                id="select-edit-user-role"
+                label="Rol Asignado"
+                value={formRole}
+                onChange={(val) => setFormRole(val as UserRole)}
+                options={[
+                  { value: 'Colaborador', label: 'Colaborador (Recepción, agenda y taller)' },
+                  { value: 'Administrador', label: 'Administrador (Acceso total y configuración)' },
+                ]}
+                searchable={false}
+                disabled={isEditingOnlyAdmin}
+                size="md"
+              />
+
+              {isEditingOnlyAdmin && (
+                <div className="mt-2">
+                  <SystemAlert
+                    id="alert-user-only-admin"
+                    type="warning"
+                    message="Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema."
+                  />
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Role selection */}
-          <div>
-            <label htmlFor="select-edit-user-role" className="block text-xs font-bold text-[#2C1E23] mb-1">
-              Rol Asignado
-            </label>
-            <AutocompleteSelect
-              id="select-edit-user-role"
-              value={formRole}
-              onChange={(val) => setFormRole(val as UserRole)}
-              options={[
-                { value: 'Colaborador', label: 'Colaborador (Recepción, agenda y taller)' },
-                { value: 'Administrador', label: 'Administrador (Acceso total y configuración)' },
-              ]}
-              searchable={false}
-              disabled={isEditingOnlyAdmin}
-              size="sm"
-            />
-
-            {isEditingOnlyAdmin && (
-              <div className="mt-2">
-                <SystemAlert
-                  id="alert-user-only-admin"
-                  type="warning"
-                  message="Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema."
-                />
-              </div>
-            )}
-          </div>
+          </FormRow>
 
           {/* Active status checkbox */}
           <div className="pt-1">

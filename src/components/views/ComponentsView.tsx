@@ -26,6 +26,9 @@ import { ComponentCategory, ComponentItem, ComponentUnit } from '../../types';
 import {
   ConfirmDialog,
   AutocompleteSelect,
+  FormField,
+  FormRow,
+  Input,
   FormFieldError,
   SystemAlert,
   Modal,
@@ -1028,23 +1031,19 @@ export const ComponentsView: React.FC = () => {
                   </div>
                 )}
               {/* Name */}
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Nombre <span className="text-red-500">*</span>
-                </label>
-                <input
+              <FormField id="input-comp-name" label="Nombre" required maxWidth="full">
+                <Input
                   id="input-comp-name"
                   type="text"
                   required
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
                   placeholder="Ej. Rosas Rosadas de Exportación"
-                  className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                 />
-              </div>
+              </FormField>
 
               {/* Category & Unit */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FormRow columns={2}>
                 {/* Category Combobox */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -1061,14 +1060,13 @@ export const ComponentsView: React.FC = () => {
                   </div>
 
                   {isAddingNewCat ? (
-                    <input
+                    <Input
                       id="input-new-cat"
                       type="text"
                       required
                       value={newCustomCategory}
                       onChange={(e) => setNewCustomCategory(e.target.value)}
                       placeholder="Escriba nueva categoría..."
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium"
                     />
                   ) : (
                     <AutocompleteSelect
@@ -1104,14 +1102,13 @@ export const ComponentsView: React.FC = () => {
                   </div>
 
                   {isAddingNewUnit ? (
-                    <input
+                    <Input
                       id="input-custom-unit"
                       type="text"
                       required
                       value={newCustomUnit}
                       onChange={(e) => setNewCustomUnit(e.target.value)}
                       placeholder="Ej. Docena, Paquete de 25, Kilos..."
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none bg-white font-medium"
                     />
                   ) : (
                     <AutocompleteSelect
@@ -1129,76 +1126,67 @@ export const ComponentsView: React.FC = () => {
                     />
                   )}
                 </div>
-              </div>
+              </FormRow>
 
-              {/* Price & Min Stock & Initial Stock */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Price & Min Stock compartir fila con FormRow type="price-stock" */}
+              <FormRow type="price-stock">
                 {/* Unit Price */}
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Precio Unitario (Q) <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                <FormField id="input-comp-price" label="Precio Unitario (Q)" required>
+                  <Input
                     id="input-comp-price"
                     type="number"
                     min={0}
                     step="any"
                     required
+                    prefixElement={<span className="text-xs font-bold text-[#681B2B]">Q</span>}
                     value={formPrice}
                     onChange={(e) => setFormPrice(parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none font-bold text-[#681B2B]"
+                    className="font-bold text-[#681B2B]"
                   />
-                </div>
+                </FormField>
 
                 {/* Min Stock Alert */}
-                <div>
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Stock Mínimo para Alerta
-                  </label>
-                  <input
+                <FormField id="input-comp-min-stock" label="Stock Mínimo para Alerta" optional>
+                  <Input
+                    id="input-comp-min-stock"
                     type="number"
                     min={0}
                     value={formMinStock}
                     onChange={(e) => setFormMinStock(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
                   />
-                </div>
-              </div>
+                </FormField>
+              </FormRow>
 
               {/* Initial Physical Stock (ONLY when creating) */}
               {!editingComponent && (
-                <div className="p-3 bg-[#FBECEF]/30 rounded-xl border border-[#F2D6DE]">
-                  <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                    Stock Físico Inicial en Taller <span className="text-red-500">*</span>
-                  </label>
-                  <input
+                <div className="p-3.5 bg-[#FBECEF]/30 rounded-xl border border-[#F2D6DE] w-full sm:max-w-xs">
+                  <FormField
                     id="input-comp-initial-stock"
-                    type="number"
-                    min={0}
+                    label="Stock Físico Inicial en Taller"
                     required
-                    value={formInitialPhysicalStock}
-                    onChange={(e) => setFormInitialPhysicalStock(parseInt(e.target.value) || 0)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none font-bold text-[#059669] bg-white"
-                  />
-                  <p className="text-[11px] text-[#7D6871] mt-1">
-                    Cantidad física disponible inmediatamente para pedidos.
-                  </p>
+                    helperText="Cantidad física disponible inmediatamente para pedidos."
+                  >
+                    <Input
+                      id="input-comp-initial-stock"
+                      type="number"
+                      min={0}
+                      required
+                      value={formInitialPhysicalStock}
+                      onChange={(e) => setFormInitialPhysicalStock(parseInt(e.target.value) || 0)}
+                      className="font-bold text-[#059669]"
+                    />
+                  </FormField>
                 </div>
               )}
 
               {/* Description */}
-              <div>
-                <label className="block text-xs font-bold text-[#2C1E23] mb-1">
-                  Descripción / Observaciones
-                </label>
-                <textarea
-                  rows={2}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Detalles sobre presentación, color, proveedor o cuidado..."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none resize-none"
-                />
-              </div>
+              <TextArea
+                label="Descripción / Observaciones"
+                rows={2}
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="Detalles sobre presentación, color, proveedor o cuidado..."
+              />
 
               {/* State (Active / Inactive) */}
               {editingComponent ? (
@@ -1394,16 +1382,15 @@ export const ComponentsView: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2. Cantidad */}
-              <div>
-                <label
-                  htmlFor="input-adjustment-quantity"
-                  className="block text-xs font-bold text-[#2C1E23] mb-1"
+              {/* 2. Cantidad & 3. Motivo compartiendo fila en Desktop, 1 col en Móvil */}
+              <FormRow columns={2}>
+                <FormField
+                  id="input-adjustment-quantity"
+                  label={`Cantidad (${stockComponent.unit || 'unidades'})`}
+                  required
+                  error={stockModalErrors.quantity}
                 >
-                  Cantidad ({stockComponent.unit || 'unidades'}) <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
+                  <Input
                     id="input-adjustment-quantity"
                     type="text"
                     inputMode="numeric"
@@ -1422,40 +1409,35 @@ export const ComponentsView: React.FC = () => {
                       }
                     }}
                     placeholder="Ej. 10"
-                    className={`w-full px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl border bg-white outline-none transition-all ${
-                      stockModalErrors.quantity
-                        ? 'border-rose-400 ring-2 ring-rose-100 text-rose-950'
-                        : 'border-[#F2D6DE] focus:border-[#681B2B] focus:ring-2 focus:ring-[#681B2B]/15 text-[#2C1E23]'
-                    }`}
+                    hasError={!!stockModalErrors.quantity}
+                    className="font-bold"
+                  />
+                </FormField>
+
+                <div>
+                  <AutocompleteSelect
+                    id="select-adjustment-reason"
+                    label="Motivo del ajuste"
+                    required
+                    options={getCatalogSelectOptions('stock_adjustment_reasons', {
+                      currentValue: adjustmentReason,
+                      isNew: true,
+                      includeDescription: true,
+                    })}
+                    value={adjustmentReason}
+                    onChange={(val) => {
+                      setAdjustmentReason(val);
+                      if (stockModalErrors.reason) {
+                        setStockModalErrors((prev) => ({ ...prev, reason: undefined }));
+                      }
+                    }}
+                    error={!!stockModalErrors.reason}
+                    errorMessage={stockModalErrors.reason}
+                    placeholder="Seleccione o busque un motivo..."
+                    searchable={true}
                   />
                 </div>
-                <FormFieldError id="error-adjustment-quantity" error={stockModalErrors.quantity} />
-              </div>
-
-              {/* 3. Motivo del Ajuste (Autocomplete) */}
-              <div>
-                <AutocompleteSelect
-                  id="select-adjustment-reason"
-                  label="Motivo del ajuste"
-                  required
-                  options={getCatalogSelectOptions('stock_adjustment_reasons', {
-                    currentValue: adjustmentReason,
-                    isNew: true,
-                    includeDescription: true,
-                  })}
-                  value={adjustmentReason}
-                  onChange={(val) => {
-                    setAdjustmentReason(val);
-                    if (stockModalErrors.reason) {
-                      setStockModalErrors((prev) => ({ ...prev, reason: undefined }));
-                    }
-                  }}
-                  error={!!stockModalErrors.reason}
-                  errorMessage={stockModalErrors.reason}
-                  placeholder="Seleccione o busque un motivo..."
-                  searchable={true}
-                />
-              </div>
+              </FormRow>
 
               {/* 4. Detalle adicional (TextArea with character counter) */}
               <TextArea

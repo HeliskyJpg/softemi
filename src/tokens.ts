@@ -105,12 +105,29 @@ export const tokens = {
 
   // Maximum Form Container Widths (Preventing overly stretched fields on desktop)
   formMaxWidths: {
-    xs: 'max-w-xs', // 320px - small inline inputs / codes
-    sm: 'max-w-sm', // 384px - compact filters / prompt modal
-    md: 'max-w-md', // 448px - standard entity creation modals
-    lg: 'max-w-2xl', // 672px - medium forms / order sections
-    xl: 'max-w-4xl', // 896px - multi-column detailed form
-    full: 'max-w-5xl', // 1024px - main application page layout
+    xs: 'w-full sm:max-w-xs', // 320px - small inline inputs / codes
+    sm: 'w-full sm:max-w-sm', // 384px - compact filters / prompt modal
+    md: 'w-full sm:max-w-md', // 448px - standard entity creation modals
+    lg: 'w-full sm:max-w-2xl', // 672px - medium forms / order sections
+    xl: 'w-full sm:max-w-4xl', // 896px - multi-column detailed form
+    full: 'w-full', // 100% of container
+  },
+
+  // Field-level Max Widths (Preventing short inputs from expanding across wide screens)
+  fieldMaxWidths: {
+    compact: 'w-full sm:max-w-[180px]', // e.g. time, simple numbers, status codes
+    short: 'w-full sm:max-w-[240px]', // e.g. dates, prices, stock
+    medium: 'w-full sm:max-w-[360px]', // e.g. phone, selects, client names
+    full: 'w-full', // e.g. addresses, notes, titles
+  },
+
+  // Form Row Distribution Patterns (Mobile 1-col, Desktop multi-col)
+  formRows: {
+    row2: 'grid grid-cols-1 sm:grid-cols-2 gap-4 w-full min-w-0',
+    row3: 'grid grid-cols-1 sm:grid-cols-3 gap-4 w-full min-w-0',
+    datetime: 'grid grid-cols-1 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-4 w-full min-w-0',
+    priceStock: 'grid grid-cols-1 sm:grid-cols-2 gap-4 w-full min-w-0',
+    stack: 'space-y-4 w-full min-w-0',
   },
 
   // Responsive Breakpoints
@@ -144,3 +161,5 @@ export const tokens = {
 
 export type InputSize = keyof typeof tokens.inputs;
 export type FormMaxWidth = keyof typeof tokens.formMaxWidths;
+export type FieldMaxWidth = keyof typeof tokens.fieldMaxWidths;
+export type FormRowLayout = keyof typeof tokens.formRows;

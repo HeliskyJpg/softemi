@@ -26,6 +26,8 @@ import {
 import {
   QuantityInput,
   FormField,
+  FormRow,
+  Input,
   FormFieldError,
   SystemAlert,
   AutocompleteSelect,
@@ -455,38 +457,39 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <AutocompleteSelect
-                id="select-order-channel"
-                label="Canal de Recepción"
-                required
-                options={getCatalogSelectOptions('order_channels', {
-                  currentValue: channel,
-                  isNew: !isEditing,
-                  includeDescription: true,
-                })}
-                value={channel}
-                onChange={(val) => setChannel(val as OrderChannel)}
-                searchable={true}
-                placeholder="Seleccione un canal..."
-              />
-            </div>
+          {/* Canal de Recepción */}
+          <div className="w-full sm:max-w-md">
+            <AutocompleteSelect
+              id="select-order-channel"
+              label="Canal de Recepción"
+              required
+              options={getCatalogSelectOptions('order_channels', {
+                currentValue: channel,
+                isNew: !isEditing,
+                includeDescription: true,
+              })}
+              value={channel}
+              onChange={(val) => setChannel(val as OrderChannel)}
+              searchable={true}
+              placeholder="Seleccione un canal..."
+            />
+          </div>
 
+          {/* Fecha + Hora compartiendo fila en Desktop, 1 columna en móvil */}
+          <FormRow type="datetime">
             <FormField
               id="input-order-date"
               label="Fecha de Entrega"
               required
               error={errors.deliveryDate}
+              maxWidth="full"
             >
-              <input
+              <Input
                 id="input-order-date"
                 type="date"
                 value={deliveryDate}
                 onChange={(e) => setDeliveryDate(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
-                  errors.deliveryDate ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
-                }`}
+                hasError={!!errors.deliveryDate}
               />
             </FormField>
 
@@ -495,37 +498,37 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
               label="Hora de Entrega"
               required
               error={errors.deliveryTime}
+              maxWidth="full"
             >
-              <input
+              <Input
                 id="input-order-time"
                 type="time"
                 value={deliveryTime}
                 onChange={(e) => setDeliveryTime(e.target.value)}
-                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
-                  errors.deliveryTime ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
-                }`}
+                hasError={!!errors.deliveryTime}
               />
             </FormField>
-          </div>
+          </FormRow>
 
+          {/* Campo de texto largo ocupando ancho completo */}
           <FormField
             id="input-order-description"
             label="Descripción del Arreglo / Pedido"
             required
             error={errors.description}
+            maxWidth="full"
           >
-            <input
+            <Input
               id="input-order-description"
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ej. Arreglo floral de rosas rojas con caja hexagonal y chocolates"
-              className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-[#2C1E23] bg-white focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 font-medium ${
-                errors.description ? 'border-rose-400 bg-rose-50/30 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
-              }`}
+              hasError={!!errors.description}
             />
           </FormField>
 
+          {/* Dedicatoria ocupando ancho completo */}
           <TextArea
             id="input-order-observations"
             label="Dedicatoria / Observaciones Especiales"
@@ -611,27 +614,22 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
                 >
                   Anticipo Inicial (Opcional)
                 </label>
-                <div className="relative mt-1">
-                  <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-xs font-bold text-[#7D6871] pointer-events-none">
-                    Q
-                  </span>
-                  <input
-                    id="input-order-advance"
-                    type="number"
-                    min={0}
-                    max={calculatedTotal}
-                    step="any"
-                    value={advancePayment === 0 ? '' : advancePayment}
-                    placeholder="0.00"
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      setAdvancePayment(isNaN(val) ? 0 : Math.max(0, val));
-                    }}
-                    className={`w-full pl-7 pr-3 py-1.5 rounded-lg border text-sm font-bold text-[#2C1E23] focus:outline-none focus:ring-2 focus:ring-[#059669]/30 ${
-                      errors.advancePayment ? 'border-rose-400 bg-rose-50/40 ring-1 ring-rose-200' : 'border-[#F2D6DE]'
-                    }`}
-                  />
-                </div>
+                <Input
+                  id="input-order-advance"
+                  type="number"
+                  min={0}
+                  max={calculatedTotal}
+                  step="any"
+                  prefixElement={<span className="text-xs font-bold text-[#7D6871]">Q</span>}
+                  value={advancePayment === 0 ? '' : advancePayment}
+                  placeholder="0.00"
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setAdvancePayment(isNaN(val) ? 0 : Math.max(0, val));
+                  }}
+                  hasError={!!errors.advancePayment}
+                  className="font-bold text-[#2C1E23]"
+                />
                 {errors.advancePayment ? (
                   <FormFieldError id="error-order-advance" error={errors.advancePayment} />
                 ) : (
@@ -722,29 +720,29 @@ export const OrderFormView: React.FC<OrderFormViewProps> = ({ orderIdToEdit }) =
           </>
         }
       >
-        <form id="form-quick-client" onSubmit={handleCreateClientQuick} className="space-y-3.5">
-          <FormField id="input-quick-client-name" label="Nombre Completo" required>
-            <input
-              id="input-quick-client-name"
-              type="text"
-              required
-              value={newClientName}
-              onChange={(e) => setNewClientName(e.target.value)}
-              placeholder="Ej. Andrea López"
-              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-            />
-          </FormField>
+        <form id="form-quick-client" onSubmit={handleCreateClientQuick} className="space-y-4">
+          <FormRow columns={2}>
+            <FormField id="input-quick-client-name" label="Nombre Completo" required>
+              <Input
+                id="input-quick-client-name"
+                type="text"
+                required
+                value={newClientName}
+                onChange={(e) => setNewClientName(e.target.value)}
+                placeholder="Ej. Andrea López"
+              />
+            </FormField>
 
-          <FormField id="input-quick-client-phone" label="Teléfono / WhatsApp" optional>
-            <input
-              id="input-quick-client-phone"
-              type="text"
-              value={newClientPhone}
-              onChange={(e) => setNewClientPhone(e.target.value)}
-              placeholder="Ej. 5512-3456"
-              className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-[#F2D6DE] focus:ring-2 focus:ring-[#681B2B]/20 outline-none"
-            />
-          </FormField>
+            <FormField id="input-quick-client-phone" label="Teléfono / WhatsApp" optional>
+              <Input
+                id="input-quick-client-phone"
+                type="tel"
+                value={newClientPhone}
+                onChange={(e) => setNewClientPhone(e.target.value)}
+                placeholder="Ej. 5512-3456"
+              />
+            </FormField>
+          </FormRow>
 
           <TextArea
             id="input-quick-client-notes"
