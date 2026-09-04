@@ -392,3 +392,79 @@ def descargar_comprobante_pdf(order_id):
 </html>
 ```
 
+---
+
+## 4. Mapeo de Compartir por WhatsApp y Auditoría (Flask + Python)
+
+La funcionalidad de **Compartir por WhatsApp** genera un enlace `https://api.whatsapp.com/send` con el texto resumido precargado y registra el evento en la tabla de auditoría (`audit_logs`).
+
+### 4.1 Generador de Texto en Python (`services/whatsapp.py`)
+
+```python
+import urllib.parse
+import re
+
+def clean_guatemala_phone(phone: str | None) -> str:
+    if not phone:
+        return ""
+    digits = re.sub(r'\D', '', phone)
+    if len(digits) == 8:
+        return f"502{digits}"
+    return digits
+
+def generate_order_whatsapp_summary(order) -> str:
+    lines = [
+        "EMILA",
+        f"Pedido {order.code}",
+        f"Cliente: {order.client_name}",
+        f"Total: Q {order.total:.2f}",
+        f"Pagado: Q {order.advance_payment:.2f}",
+        f"Saldo: Q {order.balance:.2f}",
+        f"Estado: {order.status}",
+    ]
+    if order.delivery_date:
+        time_info = f" ({order.delivery_time})" if order.delivery_time else ""
+        lines.append(f"Entrega: {order.delivery_date}{time_info}")
+    return "\n".join(lines)
+
+def build_whatsapp_share_url(order, target_phone: str | None = None) -> str:
+    phone = clean_guatemala_phone(target_phone or order.client_phone)
+    text = generate_order_whatsapp_summary(order)
+    encoded = urllib.parse.quote(text)
+    if phone:
+        return f"https://api.whatsapp.com/send?phone={phone}&text={encoded}"
+    return f"https://api.whatsapp.com/send?text={encoded}"
+```
+
+### 4.2 Registro en Auditoría y Ruta Flask
+
+```python
+from flask import redirect, request, jsonify
+from models import Order, AuditLog, db
+from services.whatsapp import build_whatsapp_share_url
+
+@orders_bp.route('/pedidos/<int:order_id>/compartir-whatsapp')
+def compartir_whatsapp(order_id):
+    order = Order.query.get_or_404(order_id)
+    url = build_whatsapp_share_url(order)
+
+    # Registrar evento en auditoría
+    audit = AuditLog(
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action="compartir por whatsapp",
+        module="Pedidos",
+        entity_type="Order",
+        record_id=order.code,
+        description=f"Comprobante de pedido {order.code} compartido por WhatsApp para {order.client_name}.",
+        operation_type="Reportes y Exportaciones"
+    )
+    db.session.add(audit)
+    db.session.commit()
+
+    return redirect(url)
+```
+
+> **Separación de "Enviar PDF":** La acción de adjuntar y enviar archivos PDF por WhatsApp requiere una integración posterior con la API oficial de WhatsApp Business (Meta Graph API / Twilio Cloud) y una plantilla aprobada. No se simula el envío binario en esta etapa.
+
+

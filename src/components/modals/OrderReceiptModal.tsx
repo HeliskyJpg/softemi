@@ -9,9 +9,12 @@ import {
   Calendar,
   Share2,
   AlertCircle,
+  MessageCircle,
+  Send,
 } from 'lucide-react';
 import { Order } from '../../types';
 import { OrderReceiptDocument } from '../orders/OrderReceiptDocument';
+import { WhatsAppShareModal } from './WhatsAppShareModal';
 import { useApp } from '../../context/AppContext';
 
 interface OrderReceiptModalProps {
@@ -29,6 +32,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
 }) => {
   const { logAction, addToast } = useApp();
   const [copied, setCopied] = React.useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = React.useState(false);
   const hasLoggedAudit = useRef(false);
 
   // Registrar auditoría al abrir el comprobante
@@ -140,6 +144,30 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
 
           {/* Botones de acción */}
           <div className="flex items-center gap-2">
+            {/* Compartir por WhatsApp */}
+            <button
+              id="btn-receipt-share-whatsapp"
+              type="button"
+              onClick={() => setShowWhatsAppModal(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              title="Compartir resumen del comprobante por WhatsApp"
+            >
+              <MessageCircle className="w-3.5 h-3.5 fill-white" />
+              <span>Compartir por WhatsApp</span>
+            </button>
+
+            {/* Futura acción: Enviar PDF (separada para integración posterior) */}
+            <button
+              id="btn-receipt-send-pdf"
+              type="button"
+              disabled
+              className="hidden lg:inline-flex px-3 py-1.5 rounded-xl border border-gray-200 bg-gray-100 text-gray-400 text-xs font-semibold items-center gap-1.5 cursor-not-allowed"
+              title="Próxima integración: El envío directo de PDF requiere WhatsApp Business API"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Enviar PDF (Próximamente)</span>
+            </button>
+
             {/* Copiar texto para WhatsApp */}
             <button
               id="btn-receipt-copy-summary"
@@ -219,6 +247,13 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Modal para compartir por WhatsApp */}
+      <WhatsAppShareModal
+        isOpen={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+        order={order}
+      />
     </div>
   );
 };

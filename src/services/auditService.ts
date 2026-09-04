@@ -54,7 +54,9 @@ export function resolveOperationType(action: string, module?: string): AuditOper
   if (
     act.includes('reporte') ||
     act.includes('exportar') ||
-    act.includes('comprobante')
+    act.includes('comprobante') ||
+    act.includes('compartir') ||
+    act.includes('whatsapp')
   ) {
     return 'Reportes y Exportaciones';
   }

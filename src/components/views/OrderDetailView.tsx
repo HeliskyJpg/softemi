@@ -34,6 +34,7 @@ import {
 import { FormFieldError } from '../common/FormFieldError';
 import { SystemAlert } from '../common/SystemAlert';
 import { OrderReceiptModal } from '../modals/OrderReceiptModal';
+import { WhatsAppShareModal } from '../modals/WhatsAppShareModal';
 import { OrderStatus } from '../../types';
 
 interface OrderDetailViewProps {
@@ -86,6 +87,9 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
   // Receipt Modal State
   const [showReceiptModal, setShowReceiptModal] = useState(false);
+
+  // WhatsApp Share Modal State
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   if (!order) {
     return (
@@ -248,6 +252,17 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
           >
             <Printer className="w-4 h-4 text-[#681B2B]" />
             <span>Generar comprobante</span>
+          </button>
+
+          {/* Compartir por WhatsApp */}
+          <button
+            id="btn-order-detail-share-whatsapp"
+            onClick={() => setShowWhatsAppModal(true)}
+            className="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            title="Compartir resumen del comprobante por WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4 fill-white" />
+            <span>Compartir WhatsApp</span>
           </button>
 
           {/* Register Payment Action Button (if pending balance exists and not cancelled) */}
@@ -905,6 +920,15 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
           setShowReceiptModal(false);
           navigateToOrderReceipt(order.id);
         }}
+      />
+
+      {/* ============================================================ */}
+      {/* MODAL 5: COMPARTIR POR WHATSAPP                              */}
+      {/* ============================================================ */}
+      <WhatsAppShareModal
+        isOpen={showWhatsAppModal}
+        onClose={() => setShowWhatsAppModal(false)}
+        order={order}
       />
     </div>
   );
