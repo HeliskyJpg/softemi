@@ -29,12 +29,14 @@ export function formatMoney(
 }
 
 export interface MoneyFormatterProps {
-  value: number | null | undefined;
+  value?: number | null | undefined;
+  amount?: number | null | undefined;
   currency?: string;
   decimals?: number;
   showCurrency?: boolean;
   colorScheme?: 'neutral' | 'positive' | 'negative' | 'auto';
   className?: string;
+  size?: 'sm' | 'md' | 'lg';
   id?: string;
 }
 
@@ -43,7 +45,8 @@ export interface MoneyFormatterProps {
  * Renders consistent currency typography throughout tables, cards, and summaries.
  */
 export const MoneyFormatter: React.FC<MoneyFormatterProps> = ({
-  value = 0,
+  value,
+  amount,
   currency = 'Q',
   decimals = 2,
   showCurrency = true,
@@ -51,7 +54,8 @@ export const MoneyFormatter: React.FC<MoneyFormatterProps> = ({
   className = '',
   id,
 }) => {
-  const num = Number(value || 0);
+  const actualValue = value !== undefined ? value : amount;
+  const num = Number(actualValue ?? 0);
   const formatted = formatMoney(num, { currency, decimals, showCurrency });
 
   let colorClass = 'text-[#2C1E23]';

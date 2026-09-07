@@ -16,6 +16,7 @@ import {
   History,
   CheckCircle2,
   AlertTriangle,
+  AlertCircle,
   CreditCard,
   Banknote,
   Sparkles,
@@ -149,6 +150,31 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
     }
   };
 
+  // Real pending balance in integer cents from registered order data
+  const realPendingBalanceCents = Math.max(
+    0,
+    Math.round((typeof order.balance === 'number' ? order.balance : order.total - order.advancePayment) * 100)
+  );
+  const realPendingBalance = realPendingBalanceCents / 100;
+
+  // Helper for consistent Q0.00 currency formatting
+  const formatQ = (val: number) =>
+    `Q${val.toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  // Delivery modal input parsing and projection in integer cents
+  const trimmedDeliveryAmount = deliveryPaymentAmount.trim();
+  const parsedDeliveryNum = parseFloat(trimmedDeliveryAmount);
+  const isValidDeliveryNum = trimmedDeliveryAmount !== '' && !isNaN(parsedDeliveryNum) && isFinite(parsedDeliveryNum);
+  const deliveryPayCents = isValidDeliveryNum ? Math.round(parsedDeliveryNum * 100) : null;
+  const deliveryRemainingCents = deliveryPayCents !== null ? realPendingBalanceCents - deliveryPayCents : null;
+  const deliveryRemainingBalance = deliveryRemainingCents !== null ? Math.max(0, deliveryRemainingCents) / 100 : realPendingBalance;
+
+  // Financial preview evaluation states
+  const isDeliveryExcess = deliveryPayCents !== null && deliveryPayCents > realPendingBalanceCents;
+  const willDeliver = deliveryPayCents !== null && deliveryPayCents === realPendingBalanceCents && deliveryPayCents > 0;
+  const isDeliveryPartial = deliveryPayCents !== null && deliveryPayCents > 0 && deliveryPayCents < realPendingBalanceCents;
+  const isDeliveryInvalid = deliveryPayCents === null || deliveryPayCents <= 0;
+
   // Open Status Change Modal
   const handleOpenStatusModal = () => {
     if (order.status === 'Pendiente') setNewStatus('En preparación');
@@ -157,7 +183,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
     else setNewStatus(order.status);
 
     setStatusNote('');
-    setDeliveryPaymentAmount(order.balance > 0 ? order.balance.toFixed(2) : '');
+    setDeliveryPaymentAmount(realPendingBalanceCents > 0 ? (realPendingBalanceCents / 100).toFixed(2) : '');
     const active = getCatalogItems('payment_methods', true);
     setDeliveryPaymentMethod(active[0]?.name || 'Efectivo');
     setDeliveryPaymentError(null);
@@ -169,21 +195,20 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
     e.preventDefault();
 
     // If changing to "Entregado" and order has pending balance
-    if (newStatus === 'Entregado' && order.balance > 0) {
-      const parsedAmount = parseFloat(deliveryPaymentAmount);
-
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        setDeliveryPaymentError('Para entregar el pedido con saldo pendiente, ingrese el monto a cobrar (mayor a Q 0.00).');
+    if (newStatus === 'Entregado' && realPendingBalanceCents > 0) {
+      if (deliveryPayCents === null || deliveryPayCents <= 0) {
+        setDeliveryPaymentError('Para entregar el pedido con saldo pendiente, ingrese el monto a cobrar (mayor a Q0.00).');
         return;
       }
 
-      if (parsedAmount > order.balance + 0.001) {
-        setDeliveryPaymentError(`El monto no puede ser mayor al saldo de Q ${order.balance.toFixed(2)}.`);
+      if (deliveryPayCents > realPendingBalanceCents) {
+        setDeliveryPaymentError(`El monto no puede superar el saldo pendiente de ${formatQ(realPendingBalance)}.`);
         return;
       }
 
+      const parsedAmount = deliveryPayCents / 100;
       // If full settlement
-      const isFullSettlement = Math.abs(parsedAmount - order.balance) < 0.01;
+      const isFullSettlement = deliveryPayCents === realPendingBalanceCents;
 
       const res = registerOrderPayment(order.id, parsedAmount, {
         note: `Pago al entregar (${deliveryPaymentMethod})`,
@@ -214,11 +239,6 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
   const projectedPaid = Math.min(order.total, Math.round((order.advancePayment + currentPayNum) * 100) / 100);
   const projectedBalance = Math.max(0, Math.round((order.balance - currentPayNum) * 100) / 100);
 
-  // Helper calculation for delivery modal live projection
-  const deliveryPayNum = parseFloat(deliveryPaymentAmount) || 0;
-  const deliveryProjectedBalance = Math.max(0, Math.round((order.balance - deliveryPayNum) * 100) / 100);
-  const willDeliver = deliveryPayNum > 0 && Math.abs(deliveryPayNum - order.balance) < 0.01;
-
   return (
     <div id="order-detail-view-container" className="max-w-5xl mx-auto space-y-6 pb-16">
       {/* Top Navigation & Action Bar */}
@@ -245,17 +265,6 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Generar Comprobante */}
-          <button
-            id="btn-order-detail-generate-receipt"
-            onClick={() => setShowReceiptModal(true)}
-            className="px-4 py-2 rounded-xl border border-[#F2D6DE] bg-white hover:bg-[#FBECEF]/40 text-[#2C1E23] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-            title="Generar comprobante de pedido imprimible"
-          >
-            <Printer className="w-4 h-4 text-[#681B2B]" />
-            <span>Generar comprobante</span>
-          </button>
-
           {/* Compartir por WhatsApp */}
           <button
             id="btn-order-detail-share-whatsapp"
@@ -266,19 +275,6 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
             <MessageCircle className="w-4 h-4 fill-white" />
             <span>Compartir WhatsApp</span>
           </button>
-
-          {/* Register Payment Action Button (if pending balance exists and not cancelled) */}
-          {!isCancelled && hasPendingBalance && hasPermission('payments.register') && (
-            <button
-              id="btn-order-detail-register-payment"
-              onClick={handleOpenPaymentModal}
-              className="px-4 py-2 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-              title="Registrar pago o abono a este pedido"
-            >
-              <Receipt className="w-4 h-4 text-white/80" />
-              <span>Registrar Pago</span>
-            </button>
-          )}
 
           {/* Edit button */}
           {!isCancelled && !isDelivered && hasPermission('orders.edit') && (
@@ -747,14 +743,15 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
               id="btn-confirm-status-update"
               form="form-change-status"
               type="submit"
-              className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px]"
+              disabled={newStatus === 'Entregado' && realPendingBalanceCents > 0 && (isDeliveryExcess || isDeliveryInvalid)}
+              className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#541421] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[36px]"
             >
-              {newStatus === 'Entregado' && order.balance > 0 && willDeliver ? (
+              {newStatus === 'Entregado' && realPendingBalanceCents > 0 && willDeliver ? (
                 <>
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>Cobrar y Marcar como Entregado</span>
                 </>
-              ) : newStatus === 'Entregado' && order.balance > 0 && !willDeliver ? (
+              ) : newStatus === 'Entregado' && realPendingBalanceCents > 0 && !willDeliver ? (
                 <>
                   <Receipt className="w-4 h-4 shrink-0" />
                   <span>Registrar Abono</span>
@@ -785,59 +782,60 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
           />
 
           {/* Conditional Block when user selects "Entregado" and order has pending balance */}
-          {newStatus === 'Entregado' && order.balance > 0 && (
-            <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 space-y-3">
-              <div className="flex items-start gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-xs font-bold text-amber-900">
-                    Este pedido tiene un saldo pendiente de <MoneyFormatter amount={order.balance} />.
-                  </h4>
-                  <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
-                    Para marcar el pedido como <strong>Entregado</strong>, registre el pago del saldo pendiente. Si registra un abono parcial, el pago quedará asentado pero el estado no se cambiará a Entregado hasta su liquidación total.
-                  </p>
-                </div>
-              </div>
-
-              <FormRow columns={2}>
-                <FormField
-                  id="input-delivery-payment-amount"
-                  label="Monto a Cobrar (Q)"
-                  required
-                  action={
-                    <button
-                      type="button"
-                      onClick={() => setDeliveryPaymentAmount(order.balance.toFixed(2))}
-                      className="text-[10px] font-semibold text-[#681B2B] hover:text-[#541421] hover:underline cursor-pointer"
-                    >
-                      Saldo Completo
-                    </button>
-                  }
-                  error={deliveryPaymentError}
-                >
+          {newStatus === 'Entregado' && realPendingBalanceCents > 0 && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                {/* Columna Izquierda: Monto a cobrar con botón Completar integrado */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="input-delivery-payment-amount"
+                    className="block text-xs font-bold text-[#2C1E23] tracking-tight"
+                  >
+                    Monto a cobrar <span className="text-rose-500 font-semibold" title="Campo obligatorio">*</span>
+                  </label>
                   <Input
                     id="input-delivery-payment-amount"
                     type="number"
                     min={0.01}
-                    max={order.balance}
+                    max={realPendingBalance}
                     step="0.01"
-                    required
                     prefixElement={<span className="text-xs font-bold text-[#7D6871]">Q</span>}
+                    suffixElement={
+                      <button
+                        type="button"
+                        id="btn-delivery-payment-complete"
+                        onClick={() => {
+                          setDeliveryPaymentAmount(realPendingBalance.toFixed(2));
+                          setDeliveryPaymentError(null);
+                        }}
+                        className="px-2.5 py-1 text-xs font-semibold text-[#681B2B] bg-[#FBECEF] hover:bg-[#F2D6DE] border border-[#F2D6DE] rounded-lg transition-colors cursor-pointer shrink-0"
+                        title="Rellenar saldo pendiente"
+                        aria-label="Completar saldo pendiente"
+                      >
+                        Completar
+                      </button>
+                    }
                     value={deliveryPaymentAmount}
                     onChange={(e) => {
                       setDeliveryPaymentAmount(e.target.value);
                       setDeliveryPaymentError(null);
                     }}
                     placeholder="0.00"
-                    hasError={!!deliveryPaymentError}
-                    className="font-bold text-[#2C1E23]"
+                    hasError={isDeliveryExcess || !!deliveryPaymentError}
+                    className="font-bold text-[#2C1E23] pr-24 sm:pr-24"
                   />
-                </FormField>
+                </div>
 
-                <div>
+                {/* Columna Derecha: Método de cobro */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="select-delivery-payment-method"
+                    className="block text-xs font-bold text-[#2C1E23] tracking-tight"
+                  >
+                    Método de cobro <span className="text-rose-500 font-semibold" title="Campo obligatorio">*</span>
+                  </label>
                   <AutocompleteSelect
                     id="select-delivery-payment-method"
-                    label="Método de Cobro"
                     required
                     options={getCatalogSelectOptions('payment_methods', {
                       currentValue: deliveryPaymentMethod,
@@ -851,23 +849,57 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
                     placeholder="Seleccione método de cobro..."
                   />
                 </div>
-              </FormRow>
+              </div>
 
-              {/* Outcome Note */}
-              {deliveryPayNum > 0 && (
-                <div className="p-2 rounded-lg bg-white border border-amber-200 text-[11px]">
-                  {willDeliver ? (
-                    <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
+              {/* Mensaje contextual único según el caso */}
+              {(() => {
+                if (isDeliveryExcess) {
+                  return (
+                    <p id="msg-delivery-payment-excess" className="text-xs text-rose-600 font-medium flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>El monto no puede superar el saldo pendiente de {formatQ(realPendingBalance)}.</span>
+                    </p>
+                  );
+                }
+
+                if (deliveryPaymentError) {
+                  return (
+                    <p id="msg-delivery-payment-error" className="text-xs text-rose-600 font-medium flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>{deliveryPaymentError}</span>
+                    </p>
+                  );
+                }
+
+                if (deliveryPayCents !== null && deliveryPayCents <= 0) {
+                  return (
+                    <p id="msg-delivery-payment-invalid" className="text-xs text-rose-600 font-medium flex items-center gap-1.5">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>El monto debe ser mayor a Q0.00.</span>
+                    </p>
+                  );
+                }
+
+                if (willDeliver) {
+                  return (
+                    <p id="msg-delivery-payment-complete" className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      Saldo liquidado (Q 0.00 restante). El pedido se marcará como <strong>Entregado</strong>.
-                    </span>
-                  ) : (
-                    <span className="text-amber-900 leading-snug block">
-                      <strong>Abono Parcial:</strong> Quedará un saldo pendiente de <strong><MoneyFormatter amount={deliveryProjectedBalance} /></strong>. El pedido <strong>NO</strong> se marcará como Entregado.
-                    </span>
-                  )}
-                </div>
-              )}
+                      <span>El pago cubre el saldo. Se marcará como Entregado.</span>
+                    </p>
+                  );
+                }
+
+                if (isDeliveryPartial) {
+                  return (
+                    <p id="msg-delivery-payment-partial" className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Para marcar como Entregado, faltan {formatQ(deliveryRemainingBalance)} por pagar.</span>
+                    </p>
+                  );
+                }
+
+                return null;
+              })()}
             </div>
           )}
 
