@@ -130,7 +130,7 @@ export const OrderReceiptView: React.FC<OrderReceiptViewProps> = ({ orderId }) =
               </span>
             </div>
             <p className="text-xs text-[#7D6871] mt-0.5">
-              Documento imprimible &bull; Formato A4/Carta compatible con Flask / WeasyPrint
+              Documento imprimible &bull; Formato estándar A4 / Carta
             </p>
           </div>
         </div>

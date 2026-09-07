@@ -26,18 +26,10 @@ interface OrderReceiptDocumentProps {
 export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
   order,
   compact = false,
-  issuedAt,
   showWatermark = true,
 }) => {
   const isSettled = order.balance <= 0.001;
   const isCancelled = order.status === 'Cancelado';
-  const currentDate = issuedAt || new Date().toLocaleDateString('es-GT', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   // Extraer pagos registrados en el historial para transparencia del cliente
   const paymentHistory = (order.history || []).filter(
@@ -104,9 +96,6 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
             <span className="text-[11px] text-[#7D6871]">Estado:</span>
             <StatusBadge status={order.status} size="sm" />
           </div>
-          <div className="text-[10px] text-[#9E8691] mt-1 font-medium">
-            Documento de control interno no fiscal
-          </div>
         </div>
       </header>
 
@@ -115,23 +104,19 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       {/* ============================================================ */}
       <section className="py-5 border-b border-[#F2D6DE]/70 grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
         {/* Columna Izquierda: Información del Cliente */}
-        <div className="bg-[#FDF8F9] p-4 rounded-xl border border-[#F2D6DE]/60 space-y-2">
-          <h2 className="text-[11px] font-bold text-[#681B2B] uppercase tracking-wider border-b border-[#F2D6DE]/40 pb-1">
-            Datos del Cliente
-          </h2>
-          <div>
-            <span className="text-[10px] text-[#7D6871] block uppercase tracking-wide">Nombre / Contacto:</span>
-            <span className="text-sm font-bold text-[#2C1E23] block mt-0.5">{order.clientName}</span>
+        <div className="bg-[#FDF8F9] p-4 rounded-xl border border-[#F2D6DE]/60 space-y-2 flex flex-col justify-between">
+          <div className="space-y-2">
+            <h2 className="text-[11px] font-bold text-[#681B2B] uppercase tracking-wider border-b border-[#F2D6DE]/40 pb-1">
+              Datos del Cliente
+            </h2>
+            <div>
+              <span className="text-[10px] text-[#7D6871] block uppercase tracking-wide">Nombre / Contacto:</span>
+              <span className="text-sm font-bold text-[#2C1E23] block mt-0.5">{order.clientName}</span>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <div>
-              <span className="text-[10px] text-[#7D6871] block">Teléfono:</span>
-              <span className="font-semibold text-[#2C1E23]">{order.clientPhone || 'No registrado'}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-[#7D6871] block">Canal de Pedido:</span>
-              <span className="font-semibold text-[#681B2B]">{order.channel}</span>
-            </div>
+          <div className="pt-1 border-t border-[#F2D6DE]/40">
+            <span className="text-[10px] text-[#7D6871] block">Teléfono:</span>
+            <span className="text-sm font-semibold text-[#2C1E23] block mt-0.5">{order.clientPhone || 'No registrado'}</span>
           </div>
         </div>
 
@@ -316,41 +301,15 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       </section>
 
       {/* ============================================================ */}
-      {/* 6. FIRMA DE RECIBIDO Y PIE DE PÁGINA                         */}
+      {/* 6. PIE DE PÁGINA SIMPLIFICADO                                */}
       {/* ============================================================ */}
-      <footer className="pt-6 space-y-6">
-        {/* Acuse de Recibo / Firma */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-          <div className="space-y-1">
-            <div className="border-b border-gray-400 h-10"></div>
-            <div className="flex justify-between text-[10px] text-[#7D6871] pt-1">
-              <span>Firma y Nombre de quien recibe</span>
-              <span>DPI: ________________</span>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="border-b border-gray-400 h-10"></div>
-            <div className="flex justify-between text-[10px] text-[#7D6871] pt-1">
-              <span>Firma de Entrega (Taller EMILA)</span>
-              <span>Fecha / Hora: ____/____/____</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Leyenda No Fiscal & Mensaje */}
-        <div className="pt-4 border-t border-[#F2D6DE]/60 text-center space-y-1 text-[10px] text-[#9E8691]">
-          <p className="font-semibold text-[#7D6871]">
-            ¡Gracias por confiar en EMILA Floristería para tus fechas especiales!
-          </p>
-          <p className="max-w-xl mx-auto leading-normal">
-            <strong>DOCUMENTO INTERNO NO FISCAL.</strong> Este comprobante acredita la confección,
-            reserva de insumos, especificaciones técnicas y los abonos monetarios recibidos para
-            el pedido referenciado. No constituye factura contable ni comprobante de crédito fiscal.
-          </p>
-          <p className="text-[9px] text-gray-400 pt-1">
-            Comprobante emitido el {currentDate} &bull; Código de Verificación: EMILA-{order.code}-{order.clientId.substring(0, 6)}
-          </p>
-        </div>
+      <footer className="pt-5 border-t border-[#F2D6DE]/60 text-center space-y-1">
+        <p className="text-xs font-semibold text-[#7D6871]">
+          ¡Gracias por confiar en EMILA Floristería para tus fechas especiales!
+        </p>
+        <p className="text-[11px] text-[#9E8691]">
+          Comprobante de pedido. No es un documento fiscal.
+        </p>
       </footer>
     </div>
   );

@@ -8,7 +8,6 @@ import {
   FileText,
   Calendar,
   Share2,
-  AlertCircle,
   MessageCircle,
   Send,
 } from 'lucide-react';
@@ -137,7 +136,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
                 <span className="text-[#681B2B] font-extrabold">{order.code}</span>
               </h2>
               <p className="text-[11px] text-[#7D6871]">
-                Vista previa imprimible &bull; Formato optimizado para PDF (Flask / WeasyPrint)
+                Vista previa del comprobante
               </p>
             </div>
           </div>
@@ -231,19 +230,6 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#EFE9EB]/70">
           <div className="emila-receipt-print-wrapper">
             <OrderReceiptDocument order={order} />
-          </div>
-        </div>
-
-        {/* Barra Inferior Informativa */}
-        <div className="p-3 px-5 bg-white border-t border-[#F2D6DE]/60 flex flex-col sm:flex-row sm:items-center sm:justify-between text-[11px] text-[#7D6871] gap-2 no-print">
-          <div className="flex items-center gap-1.5">
-            <AlertCircle className="w-3.5 h-3.5 text-[#681B2B]" />
-            <span>
-              <strong>Nota:</strong> Este documento es un comprobante interno de pedido y control de pagos en Quetzales (Q), no es una factura contable fiscal.
-            </span>
-          </div>
-          <div className="text-[10px] text-[#9E8691] shrink-0">
-            EMILA &bull; WeasyPrint Ready
           </div>
         </div>
       </div>
