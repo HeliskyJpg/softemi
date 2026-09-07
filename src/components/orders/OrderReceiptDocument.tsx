@@ -63,7 +63,7 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       {/* ============================================================ */}
       {/* 1. ENCABEZADO INSTITUCIONAL EMILA                           */}
       {/* ============================================================ */}
-      <header className="border-b-2 border-[#681B2B] pb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <header className="receipt-header border-b-2 border-[#681B2B] pb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         {/* Marca & Identidad */}
         <div className="flex items-start gap-3.5">
           <EmilaLogo size={58} variant="circle" className="shrink-0 drop-shadow-xs" />
@@ -102,7 +102,7 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       {/* ============================================================ */}
       {/* 2. DATOS GENERALES: CLIENTE Y ENTREGA                        */}
       {/* ============================================================ */}
-      <section className="py-5 border-b border-[#F2D6DE]/70 grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+      <section className="receipt-section-client py-5 border-b border-[#F2D6DE]/70 grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
         {/* Columna Izquierda: Información del Cliente */}
         <div className="bg-[#FDF8F9] p-4 rounded-xl border border-[#F2D6DE]/60 space-y-2 flex flex-col justify-between">
           <div className="space-y-2">
@@ -151,7 +151,7 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       {/* ============================================================ */}
       {/* 3. DESCRIPCIÓN DEL ARREGLO Y DEDICATORIA                     */}
       {/* ============================================================ */}
-      <section className="py-4 border-b border-[#F2D6DE]/70 space-y-2.5 text-xs">
+      <section className="receipt-section-description py-4 border-b border-[#F2D6DE]/70 space-y-2.5 text-xs">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6871] block">
             Descripción del Detalle / Arreglo:
@@ -176,7 +176,7 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       {/* ============================================================ */}
       {/* 4. TABLA DETALLADA DE COMPONENTES E INSUMOS                  */}
       {/* ============================================================ */}
-      <section className="py-5 border-b border-[#F2D6DE]/70">
+      <section className="receipt-section-items py-5 border-b border-[#F2D6DE]/70">
         <h2 className="text-[11px] font-bold text-[#681B2B] uppercase tracking-wider mb-3">
           Detalle de Componentes e Insumos Utilizados
         </h2>
@@ -225,7 +225,7 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       {/* ============================================================ */}
       {/* 5. RESUMEN FINANCIERO Y CONTROL DE SALDO (EXCLUSIVAMENTE Q)  */}
       {/* ============================================================ */}
-      <section className="py-5 border-b border-[#F2D6DE]/70 grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
+      <section className="receipt-section-financial py-5 border-b border-[#F2D6DE]/70 grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
         {/* Columna Izquierda: Notas y Desglose de Pagos */}
         <div className="space-y-3 text-xs">
           {paymentHistory.length > 0 && (
@@ -303,7 +303,7 @@ export const OrderReceiptDocument: React.FC<OrderReceiptDocumentProps> = ({
       {/* ============================================================ */}
       {/* 6. PIE DE PÁGINA SIMPLIFICADO                                */}
       {/* ============================================================ */}
-      <footer className="pt-5 border-t border-[#F2D6DE]/60 text-center space-y-1">
+      <footer className="receipt-footer pt-5 border-t border-[#F2D6DE]/60 text-center space-y-1">
         <p className="text-xs font-semibold text-[#7D6871]">
           ¡Gracias por confiar en EMILA Floristería para tus fechas especiales!
         </p>

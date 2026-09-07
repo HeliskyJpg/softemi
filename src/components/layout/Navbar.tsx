@@ -25,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
   const isColaborador = currentUser.role === 'Colaborador';
 
   return (
-    <header className="sticky top-0 z-30 bg-[#FBECEF]/90 backdrop-blur-xs px-4 sm:px-8 py-3.5 transition-all">
+    <header id="emila-navbar" className="no-print sticky top-0 z-30 bg-[#FBECEF]/90 backdrop-blur-xs px-4 sm:px-8 py-3.5 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Mobile menu trigger */}
         <div className="flex items-center gap-3 lg:hidden">

@@ -75,7 +75,11 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
 
   // Imprimir comprobante
   const handlePrint = () => {
-    window.print();
+    try {
+      window.print();
+    } catch (err) {
+      console.warn('El diálogo de impresión del navegador fue restringido por el entorno (iframe sandbox):', err);
+    }
   };
 
   // Copiar resumen de texto rápido para WhatsApp / mensaje
@@ -227,7 +231,7 @@ export const OrderReceiptModal: React.FC<OrderReceiptModalProps> = ({
         </div>
 
         {/* Cuerpo con Scroll y Hoja de Papel Simulada */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-[#EFE9EB]/70">
+        <div className="modal-dialog-body flex-1 overflow-y-auto p-3 sm:p-6 bg-[#EFE9EB]/70">
           <div className="emila-receipt-print-wrapper">
             <OrderReceiptDocument order={order} />
           </div>

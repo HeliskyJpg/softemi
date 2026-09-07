@@ -72,7 +72,11 @@ export const OrderReceiptView: React.FC<OrderReceiptViewProps> = ({ orderId }) =
   }
 
   const handlePrint = () => {
-    window.print();
+    try {
+      window.print();
+    } catch (err) {
+      console.warn('El diálogo de impresión del navegador fue restringido por el entorno (iframe sandbox):', err);
+    }
   };
 
   const handleCopySummary = () => {

@@ -305,7 +305,7 @@ input[type="number"] {
 @media print {
   @page {
     size: letter portrait;
-    margin: 10mm 12mm;
+    margin: 8mm 10mm;
   }
 
   /* Reset global backgrounds and enforce solid contrast */
@@ -314,72 +314,210 @@ input[type="number"] {
     background: #ffffff !important;
     color: #1a1a1a !important;
     font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: auto !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide application chrome: header, demo bar, navbar, sidebar, toasts, action buttons */
+  /* Hide application chrome, navigation, headers, sidebars, buttons and toasts */
   #demo-scenario-bar,
+  #app-main-sidebar,
   #emila-sidebar,
+  aside,
   #emila-navbar,
+  header.no-print,
+  header.sticky,
   .no-print,
   button,
   .toast-container {
     display: none !important;
     visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
   }
 
-  /* Reset layout constraints for print */
+  /* When printing from modal or receipt view, hide order detail main content (info, items, audit) */
+  #order-detail-main-content,
+  #order-detail-view-container:has(#order-receipt-modal-container) > *:not(#order-receipt-modal-container) {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Reset root containers to avoid reserving space or generating blank pages */
   #emila-app-root,
   .min-h-screen {
     min-height: auto !important;
+    height: auto !important;
     background: transparent !important;
     display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
 
-  main,
-  #main-content-viewport {
+  #emila-app-root > div,
+  #emila-app-root > div > div {
+    display: block !important;
     padding: 0 !important;
     margin: 0 !important;
     max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
   }
 
-  /* When printing from modal, remove backdrop and fixed overlay constraints */
+  main,
+  #main-content-viewport,
+  #main-content-viewport > div {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  #order-receipt-view-container,
+  #order-detail-view-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    display: block !important;
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Neutralize modal wrapper when printing from modal */
   #order-receipt-modal-container {
     position: static !important;
+    inset: auto !important;
     background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     padding: 0 !important;
     margin: 0 !important;
     overflow: visible !important;
     display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
   }
 
   #order-receipt-modal-container > div {
     max-width: 100% !important;
+    width: 100% !important;
     max-height: none !important;
+    height: auto !important;
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
     margin: 0 !important;
+    padding: 0 !important;
     overflow: visible !important;
+    display: block !important;
+    border-radius: 0 !important;
+  }
+
+  #order-receipt-modal-container .modal-dialog-body,
+  #order-receipt-modal-container > div > div:last-child {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    display: block !important;
+    flex: none !important;
+  }
+
+  .emila-receipt-print-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: block !important;
   }
 
   /* Format receipt document for paper */
   .emila-receipt-sheet {
     box-shadow: none !important;
     border: 1px solid #d5a7b4 !important;
-    border-radius: 0 !important;
-    padding: 10mm 12mm !important;
+    border-radius: 4px !important;
+    padding: 6mm 8mm !important;
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 auto !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    page-break-before: avoid !important;
+    break-before: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
     background: #ffffff !important;
   }
 
-  .emila-receipt-sheet table {
+  /* Section-specific spacing and page break controls */
+  .receipt-header,
+  .emila-receipt-sheet header {
+    padding-bottom: 3.5mm !important;
+    margin-bottom: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border-bottom: 2px solid #681B2B !important;
+  }
+
+  .receipt-section-client {
+    padding-top: 3mm !important;
+    padding-bottom: 3mm !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .receipt-section-description {
+    padding-top: 2.5mm !important;
+    padding-bottom: 2.5mm !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .receipt-section-items {
+    padding-top: 3mm !important;
+    padding-bottom: 3mm !important;
     page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .emila-receipt-sheet .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  .emila-receipt-sheet table {
+    width: 100% !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+    border-collapse: collapse !important;
+  }
+
+  .emila-receipt-sheet thead {
+    display: table-header-group !important;
   }
 
   .emila-receipt-sheet tr {
@@ -387,11 +525,33 @@ input[type="number"] {
     break-inside: avoid !important;
   }
 
-  .emila-receipt-sheet header,
-  .emila-receipt-sheet footer,
-  .emila-receipt-sheet section {
+  .emila-receipt-sheet th,
+  .emila-receipt-sheet td {
+    padding-top: 1.5mm !important;
+    padding-bottom: 1.5mm !important;
+  }
+
+  .receipt-section-financial {
+    padding-top: 3.5mm !important;
+    padding-bottom: 3.5mm !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+  }
+
+  .receipt-section-financial > div {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .receipt-footer,
+  .emila-receipt-sheet footer {
+    padding-top: 3mm !important;
+    margin-top: 2mm !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: auto !important;
+    break-before: auto !important;
+    border-top: 1px solid #F2D6DE !important;
   }
 }
 

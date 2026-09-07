@@ -241,8 +241,10 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
 
   return (
     <div id="order-detail-view-container" className="max-w-5xl mx-auto space-y-6 pb-16">
-      {/* Top Navigation & Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Contenedor principal del detalle (excluido de la impresión al estar abierta la modal del comprobante) */}
+      <div id="order-detail-main-content" className={`space-y-6 ${showReceiptModal ? 'no-print' : ''}`}>
+        {/* Top Navigation & Action Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
             id="btn-order-detail-back"
@@ -926,6 +928,7 @@ export const OrderDetailView: React.FC<OrderDetailViewProps> = ({ orderId }) => 
         cancelText="Volver sin cancelar"
         type="danger"
       />
+      </div>
 
       {/* ============================================================ */}
       {/* MODAL 4: COMPROBANTE DE PEDIDO IMPRIMIBLE (NO FACTURA)       */}

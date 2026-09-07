@@ -126,7 +126,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onCloseMobile }) => {
       {/* Sidebar container */}
       <aside
         id="app-main-sidebar"
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 bg-white border-r border-[#F2D6DE] shadow-xs flex flex-col justify-between p-5 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`no-print fixed top-0 bottom-0 left-0 z-40 w-64 bg-white border-r border-[#F2D6DE] shadow-xs flex flex-col justify-between p-5 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
