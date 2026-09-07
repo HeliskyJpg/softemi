@@ -87,7 +87,11 @@ interface AppContextType {
   createUser: (userData: CreateUserParams) => { success: boolean; user?: User; error?: string; tempPassword?: string };
   changePassword: (newPassword: string, userId?: string) => { success: boolean; error?: string };
   toggleUserActive: (id: string) => void;
-  resetUserPassword: (id: string, tempPassword?: string) => { success: boolean; tempPassword?: string; error?: string };
+  resetUserPassword: (
+    id: string,
+    tempPassword?: string,
+    options?: { silent?: boolean }
+  ) => { success: boolean; tempPassword?: string; error?: string };
 
   // Granular Permissions (RBAC Extendido)
   hasPermission: (permissionCode: PermissionCode) => boolean;
@@ -1084,7 +1088,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const resetUserPassword = (
     id: string,
-    tempPassword?: string
+    tempPassword?: string,
+    options?: { silent?: boolean }
   ): { success: boolean; tempPassword?: string; error?: string } => {
     if (!hasPermission('users.manage')) {
       const errorMsg = 'Acceso denegado: Se requiere el permiso "users.manage" para restablecer contraseñas.';
@@ -1145,11 +1150,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       },
     });
 
-    addToast(
-      `Contraseña de @${targetUser.username} restablecida. Entregue la clave temporal al usuario.`,
-      'success',
-      'Contraseña restablecida'
-    );
+    if (!options?.silent) {
+      addToast('Contraseña restablecida correctamente', 'success');
+    }
     return { success: true, tempPassword: generated };
   };
 
