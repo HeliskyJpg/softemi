@@ -201,10 +201,10 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
       onClose={onClose}
       title="Gestión de Permisos Granulares"
       subtitle={`Usuario: ${targetUser.name} (@${targetUser.username}) — Rol base: ${targetUser.role}`}
-      size="xl"
+      size="permissions"
       footer={
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
-          <div className="flex items-center gap-2 text-xs text-[#7D6871]">
+          <div className="flex items-center gap-2 text-xs text-[#7D6871] flex-wrap">
             <span className="font-bold text-[#2C1E23]">{activeGrantedCount}</span> de{' '}
             <span>{totalPermissions} permitidos</span>
             {totalOverridesCount > 0 ? (
@@ -218,12 +218,12 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
             )}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex flex-col-reverse sm:flex-row items-center gap-2 w-full sm:w-auto justify-end">
             <button
               type="button"
               id="btn-cancel-user-permissions"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-[#7D6871] hover:text-[#2C1E23] rounded-xl hover:bg-stone-100 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-semibold text-[#7D6871] hover:text-[#2C1E23] rounded-xl hover:bg-stone-100 cursor-pointer min-h-[40px] sm:min-h-[36px] flex items-center justify-center transition-colors"
             >
               Cancelar
             </button>
@@ -231,7 +231,7 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
               type="button"
               id="btn-save-user-permissions"
               onClick={handleSave}
-              className="px-5 py-2 text-xs font-bold text-white bg-[#681B2B] hover:bg-[#531422] rounded-xl cursor-pointer shadow-xs flex items-center gap-1.5"
+              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold text-white bg-[#681B2B] hover:bg-[#531422] rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[36px] transition-colors"
             >
               <Check className="w-3.5 h-3.5" />
               Guardar Permisos Granulares
@@ -338,8 +338,8 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
           </div>
         </div>
 
-        {/* Permissions Grouped Matrix */}
-        <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1">
+        {/* Permissions Grouped Matrix - flows naturally within the modal's single scrollable body */}
+        <div className="space-y-4">
           {moduleKeys.map((mod) => {
             const moduleDefs = grouped[mod].filter(filterMatches);
             if (moduleDefs.length === 0) return null;
@@ -366,7 +366,7 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                       <div
                         key={def.code}
                         id={`perm-row-${def.code.replace('.', '-')}`}
-                        className={`p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
+                        className={`p-3 sm:p-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors ${
                           state.isOverridden
                             ? state.effective
                               ? 'bg-emerald-50/40'
@@ -377,7 +377,7 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                         {/* Left: Code, Name, Description */}
                         <div className="space-y-1 min-w-0 flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-bold text-[#2C1E23]">{def.name}</span>
+                            <span className="text-xs sm:text-sm font-bold text-[#2C1E23]">{def.name}</span>
                             <span className="font-mono text-[10px] font-bold bg-[#FAF6F4] text-[#681B2B] border border-[#F2D6DE] px-2 py-0.2 rounded-md select-all">
                               {def.code}
                             </span>
@@ -403,14 +403,14 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                         </div>
 
                         {/* Right: State Selector & Effective Status Badge */}
-                        <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between md:justify-end gap-2.5 shrink-0">
                           {/* Segmented 3-state control */}
                           <div className="inline-flex rounded-xl bg-gray-100 p-0.5 border border-gray-200 text-xs">
                             <button
                               type="button"
                               id={`btn-override-inherit-${def.code.replace('.', '-')}`}
                               onClick={() => handleSetOverride(def.code, 'inherited')}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
+                              className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all cursor-pointer ${
                                 state.overrideState === 'inherited'
                                   ? 'bg-white text-[#2C1E23] shadow-2xs font-bold'
                                   : 'text-[#7D6871] hover:text-[#2C1E23]'
@@ -424,7 +424,7 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                               type="button"
                               id={`btn-override-grant-${def.code.replace('.', '-')}`}
                               onClick={() => handleSetOverride(def.code, 'granted')}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 ${
+                              className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 ${
                                 state.overrideState === 'granted'
                                   ? 'bg-emerald-600 text-white shadow-2xs font-bold'
                                   : 'text-[#7D6871] hover:text-emerald-700'
@@ -439,7 +439,7 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                               type="button"
                               id={`btn-override-deny-${def.code.replace('.', '-')}`}
                               onClick={() => handleSetOverride(def.code, 'denied')}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 ${
+                              className={`px-2 sm:px-2.5 py-1 rounded-lg text-[10px] sm:text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 ${
                                 state.overrideState === 'denied'
                                   ? 'bg-rose-600 text-white shadow-2xs font-bold'
                                   : 'text-[#7D6871] hover:text-rose-700'
@@ -452,7 +452,7 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
                           </div>
 
                           {/* Effective result badge */}
-                          <div className="w-24 text-right">
+                          <div className="min-w-[100px] text-right">
                             {state.effective ? (
                               <span
                                 className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${

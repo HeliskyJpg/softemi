@@ -935,7 +935,7 @@ export const UsersView: React.FC = () => {
             ? 'Entregue la contraseña temporal directamente al colaborador.'
             : 'Registre un nuevo colaborador o administrador con contraseña temporal funcional.'
         }
-        size="md"
+        size={createdSummary ? 'confirm' : 'user-form'}
         footer={
           createdSummary ? (
             <div className="w-full flex justify-end">
@@ -943,18 +943,18 @@ export const UsersView: React.FC = () => {
                 id="btn-close-created-summary"
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="w-full sm:w-auto px-6 py-2.5 text-xs font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer"
+                className="w-full sm:w-auto px-6 py-2.5 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[40px] sm:min-h-[36px] flex items-center justify-center transition-colors"
               >
                 Entendido / Finalizar
               </button>
             </div>
           ) : (
-            <>
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 w-full">
               <button
                 type="button"
                 id="btn-cancel-create-user"
                 onClick={() => setShowCreateModal(false)}
-                className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-semibold text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[40px] sm:min-h-[36px] flex items-center justify-center transition-colors"
               >
                 Cancelar
               </button>
@@ -962,12 +962,12 @@ export const UsersView: React.FC = () => {
                 id="btn-submit-create-user"
                 form="form-create-user"
                 type="submit"
-                className="w-full sm:w-auto px-5 py-2 text-xs font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[40px] sm:min-h-[36px] flex items-center justify-center gap-2 transition-colors"
               >
                 <UserPlus className="w-4 h-4" />
                 Crear Usuario
               </button>
-            </>
+            </div>
           )
         }
       >
@@ -1123,8 +1123,16 @@ export const UsersView: React.FC = () => {
                   value={createRole}
                   onChange={(val) => setCreateRole(val as UserRole)}
                   options={[
-                    { value: 'Colaborador', label: 'Colaborador (Recepción, agenda y taller)' },
-                    { value: 'Administrador', label: 'Administrador (Acceso total y configuración)' },
+                    {
+                      value: 'Colaborador',
+                      label: 'Colaborador',
+                      description: 'Recepción, agenda y taller',
+                    },
+                    {
+                      value: 'Administrador',
+                      label: 'Administrador',
+                      description: 'Acceso total y configuración',
+                    },
                   ]}
                   searchable={false}
                   size="md"
@@ -1196,14 +1204,14 @@ export const UsersView: React.FC = () => {
         onClose={() => setShowEditModal(false)}
         title="Editar Usuario"
         subtitle="Modifique los datos permitidos, rol y estado de la cuenta en EMILA."
-        size="md"
+        size="user-form"
         footer={
-          <>
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 w-full">
             <button
               type="button"
               id="btn-cancel-edit-user"
               onClick={() => setShowEditModal(false)}
-              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-[#7D6871] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+              className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-semibold text-[#7D6871] hover:text-[#2C1E23] hover:bg-gray-100 rounded-xl cursor-pointer min-h-[40px] sm:min-h-[36px] flex items-center justify-center transition-colors"
             >
               Cancelar
             </button>
@@ -1211,11 +1219,11 @@ export const UsersView: React.FC = () => {
               id="btn-save-edit-user"
               form="form-edit-user"
               type="submit"
-              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[42px] sm:min-h-[36px] flex items-center justify-center"
+              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold bg-[#681B2B] hover:bg-[#531422] text-white rounded-xl shadow-xs cursor-pointer min-h-[40px] sm:min-h-[36px] flex items-center justify-center transition-colors"
             >
               Guardar Cambios
             </button>
-          </>
+          </div>
         }
       >
         <form id="form-edit-user" onSubmit={handleEditSubmit} className="space-y-4">
@@ -1287,25 +1295,34 @@ export const UsersView: React.FC = () => {
                 value={formRole}
                 onChange={(val) => setFormRole(val as UserRole)}
                 options={[
-                  { value: 'Colaborador', label: 'Colaborador (Recepción, agenda y taller)' },
-                  { value: 'Administrador', label: 'Administrador (Acceso total y configuración)' },
+                  {
+                    value: 'Colaborador',
+                    label: 'Colaborador',
+                    description: 'Recepción, agenda y taller',
+                  },
+                  {
+                    value: 'Administrador',
+                    label: 'Administrador',
+                    description: 'Acceso total y configuración',
+                  },
                 ]}
                 searchable={false}
                 disabled={isEditingOnlyAdmin}
                 size="md"
               />
-
-              {isEditingOnlyAdmin && (
-                <div className="mt-2">
-                  <SystemAlert
-                    id="alert-user-only-admin"
-                    type="warning"
-                    message="Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema."
-                  />
-                </div>
-              )}
             </div>
           </FormRow>
+
+          {/* Advertencia larga en ancho completo */}
+          {isEditingOnlyAdmin && (
+            <div className="w-full">
+              <SystemAlert
+                id="alert-user-only-admin"
+                type="warning"
+                message="Este usuario es el único Administrador activo. Para cambiar su rol, primero asigne otro Administrador en el sistema."
+              />
+            </div>
+          )}
 
           {/* Active status checkbox */}
           <div className="pt-1">
@@ -1433,15 +1450,15 @@ export const UsersView: React.FC = () => {
               : `Flujo administrativo para @${userToReset.username} (${userToReset.name})`
             : undefined
         }
-        size="md"
+        size={resetStep === 'success' ? 'confirm' : 'reset-password'}
         footer={
           resetStep === 'form' ? (
-            <div className="flex items-center justify-end gap-3 w-full">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 w-full">
               <button
                 type="button"
                 id="btn-cancel-reset-password"
                 onClick={() => setShowResetModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-[#7D6871] hover:text-[#2C1E23] rounded-xl hover:bg-stone-50 cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-semibold text-[#7D6871] hover:text-[#2C1E23] rounded-xl hover:bg-stone-50 cursor-pointer min-h-[40px] sm:min-h-[36px] flex items-center justify-center transition-colors"
               >
                 Cancelar
               </button>
@@ -1450,7 +1467,7 @@ export const UsersView: React.FC = () => {
                 id="btn-confirm-save-reset-password"
                 onClick={handleConfirmResetPassword}
                 disabled={!resetConfirmed || resetTempPassword.trim().length < 4}
-                className="px-5 py-2 text-xs font-bold text-white bg-[#681B2B] hover:bg-[#531422] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl cursor-pointer shadow-xs flex items-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold text-white bg-[#681B2B] hover:bg-[#531422] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[36px] transition-colors"
               >
                 <Key className="w-3.5 h-3.5" />
                 Guardar y Restablecer Contraseña
@@ -1462,16 +1479,16 @@ export const UsersView: React.FC = () => {
                 type="button"
                 id="btn-test-login-reset-user"
                 onClick={handleTestLoginWithUser}
-                className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-[#681B2B] bg-[#FBECEF] hover:bg-[#F2D6DE] border border-[#F2D6DE] rounded-xl cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-bold text-[#681B2B] bg-[#FBECEF] hover:bg-[#F2D6DE] border border-[#F2D6DE] rounded-xl cursor-pointer flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[36px] transition-colors"
               >
                 <Power className="w-3.5 h-3.5" />
-                Probar inicio de sesión con este usuario
+                Probar inicio de sesión
               </button>
               <button
                 type="button"
                 id="btn-finish-reset-password"
                 onClick={() => setShowResetModal(false)}
-                className="w-full sm:w-auto px-5 py-2 text-xs font-bold text-white bg-[#681B2B] hover:bg-[#531422] rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold text-white bg-[#681B2B] hover:bg-[#531422] rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[36px] transition-colors"
               >
                 <Check className="w-4 h-4" />
                 Finalizar
@@ -1679,19 +1696,19 @@ export const UsersView: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-4 bg-stone-900 text-stone-100 rounded-xl space-y-3 font-mono">
-              <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-800">
-                <span className="text-stone-400">Usuario:</span>
+            <div className="p-4 bg-[#2C1E23] text-stone-100 rounded-xl space-y-3 font-mono border border-white/10 shadow-xs">
+              <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10">
+                <span className="text-[#D9A3B5]">Usuario:</span>
                 <span className="font-bold text-white select-all">@{userToReset.username}</span>
               </div>
-              <div className="flex justify-between items-center text-xs pb-2 border-b border-stone-800">
-                <span className="text-stone-400">Contraseña temporal:</span>
+              <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10">
+                <span className="text-[#D9A3B5]">Contraseña temporal:</span>
                 <span className="font-bold text-amber-300 text-sm tracking-wider select-all">
                   {resetTempPassword}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-stone-400">Estado de acceso:</span>
+                <span className="text-[#D9A3B5]">Estado de acceso:</span>
                 <span className="text-emerald-400 font-bold">Cambio obligatorio activo</span>
               </div>
             </div>

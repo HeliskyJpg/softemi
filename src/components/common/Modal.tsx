@@ -2,7 +2,16 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 
-export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+export type ModalSize =
+  | 'sm'
+  | 'md'
+  | 'lg'
+  | 'xl'
+  | 'full'
+  | 'user-form'
+  | 'permissions'
+  | 'reset-password'
+  | 'confirm';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -56,6 +65,11 @@ export const Modal: React.FC<ModalProps> = ({
     lg: 'max-w-2xl', // ~672px
     xl: 'max-w-4xl', // ~896px
     full: 'max-w-5xl', // ~1024px
+    // Adaptable variants for User & Roles modals:
+    'user-form': 'max-w-[640px]', // 600 - 680 px (Crear / Editar usuario)
+    'permissions': 'max-w-[860px]', // 800 - 900 px (Permisos granulares)
+    'reset-password': 'max-w-[600px]', // 560 - 640 px (Restablecer contraseña)
+    'confirm': 'max-w-[460px]', // 420 - 480 px (Confirmaciones / resultados)
   };
 
   const selectedSizeClass = sizeClasses[size] || sizeClasses.md;

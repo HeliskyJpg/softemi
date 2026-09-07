@@ -85,7 +85,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.16 }}
           id="modal-confirm-content"
-          className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-[#F2D6DE] relative overflow-hidden flex flex-col my-auto max-h-[90dvh]"
+          className="bg-white rounded-2xl w-full max-w-[460px] p-4 sm:p-6 shadow-2xl border border-[#F2D6DE] relative overflow-hidden flex flex-col my-auto max-h-[90dvh]"
         >
           {/* Header row with icon, title, and close button */}
           <div className="flex items-start justify-between gap-3 pb-3 border-b border-[#F2D6DE]/60 shrink-0">
