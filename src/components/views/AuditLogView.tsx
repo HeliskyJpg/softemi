@@ -5,7 +5,6 @@ import {
   Search,
   Filter,
   FileSpreadsheet,
-  FileCode,
   RotateCcw,
   Layers,
   ShoppingBag,
@@ -19,7 +18,6 @@ import {
 import { AuditModule } from '../../types';
 import {
   exportAuditLogsToCsv,
-  exportAuditLogsToJson,
   formatAuditHumanDate,
 } from '../../services/auditService';
 
@@ -172,21 +170,6 @@ export const AuditLogView: React.FC = () => {
     });
   };
 
-  // Handle Export to JSON
-  const handleExportJson = () => {
-    exportAuditLogsToJson(filteredLogs);
-    logAction({
-      action: 'exportar reporte',
-      module: 'Reportes',
-      entityType: 'AuditLog',
-      recordId: `EXP-JSON-${Date.now()}`,
-      description: `Exportación de bitácora de auditoría a formato JSON SQL-Ready (${filteredLogs.length} registros).`,
-      previousValue: null,
-      newValue: `JSON con ${filteredLogs.length} eventos estructurados`,
-      metadata: { format: 'JSON', count: filteredLogs.length },
-    });
-  };
-
   // Badge styles based on action type
   const getActionBadge = (action: string) => {
     const act = action.toLowerCase();
@@ -245,8 +228,8 @@ export const AuditLogView: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Buttons: Export CSV and Export JSON */}
-          <div className="flex items-center gap-2">
+          {/* Action Button: Export CSV */}
+          <div className="flex items-center">
             <button
               id="btn-audit-export-csv"
               onClick={handleExportCsv}
@@ -254,15 +237,6 @@ export const AuditLogView: React.FC = () => {
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
               <span>Exportar CSV</span>
-            </button>
-
-            <button
-              id="btn-audit-export-json"
-              onClick={handleExportJson}
-              className="px-3.5 py-2 text-xs font-semibold text-white bg-[#681B2B] hover:bg-[#521522] rounded-xl transition-colors flex items-center gap-1.5 shadow-2xs"
-            >
-              <FileCode className="w-4 h-4" />
-              <span>Exportar JSON (SQL)</span>
             </button>
           </div>
         </div>

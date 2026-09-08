@@ -8,7 +8,6 @@ import {
 } from '../../services/permissionsService';
 import { Modal } from '../common/Modal';
 import {
-  RotateCcw,
   Check,
   X,
   Search,
@@ -92,13 +91,6 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
       }
       return next;
     });
-  };
-
-  /**
-   * Restaura todos los permisos a los valores por defecto del rol base.
-   */
-  const handleRestoreRoleDefaults = () => {
-    setOverrides({});
   };
 
   /**
@@ -192,33 +184,20 @@ export const UserPermissionsModal: React.FC<UserPermissionsModalProps> = ({
       }
     >
       <div className="space-y-4">
-        {/* Cabecera única de usuario y rol con acción discreta de restauración */}
-        <div className="bg-[#FAF6F4] p-3.5 rounded-2xl border border-[#F2D6DE] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#681B2B] text-white font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
-              {targetUser.name.charAt(0)}
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h4 className="text-sm font-bold text-[#2C1E23]">{targetUser.name}</h4>
-                <span className="text-xs text-[#7D6871] font-mono">@{targetUser.username}</span>
-              </div>
-              <p className="text-xs text-[#7D6871] mt-0.5">
-                Rol: <strong className="text-[#681B2B] font-semibold">{targetUser.role}</strong>
-              </p>
-            </div>
+        {/* Cabecera de usuario y rol */}
+        <div className="bg-[#FAF6F4] p-3.5 rounded-2xl border border-[#F2D6DE] flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#681B2B] text-white font-bold flex items-center justify-center text-sm shadow-2xs shrink-0">
+            {targetUser.name.charAt(0)}
           </div>
-
-          <button
-            type="button"
-            id="btn-restore-role-defaults"
-            onClick={handleRestoreRoleDefaults}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#7D6871] hover:text-[#2C1E23] bg-white hover:bg-[#FBECEF]/40 border border-[#F2D6DE] rounded-xl transition-colors cursor-pointer self-start sm:self-auto"
-            title="Restaurar todos los permisos a los valores por defecto del rol"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-[#681B2B]" />
-            <span>Restaurar permisos del rol</span>
-          </button>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="text-sm font-bold text-[#2C1E23]">{targetUser.name}</h4>
+              <span className="text-xs text-[#7D6871] font-mono">@{targetUser.username}</span>
+            </div>
+            <p className="text-xs text-[#7D6871] mt-0.5">
+              Rol: <strong className="text-[#681B2B] font-semibold">{targetUser.role}</strong>
+            </p>
+          </div>
         </div>
 
         {/* Barra de búsqueda y filtro por módulo */}

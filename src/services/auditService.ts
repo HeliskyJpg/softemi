@@ -335,11 +335,3 @@ export function exportAuditLogsToCsv(logs: AuditLogEntry[], filename?: string): 
   downloadCSV(name, content);
 }
 
-/**
- * Convenience helper to export and trigger JSON download
- */
-export function exportAuditLogsToJson(logs: AuditLogEntry[], filename?: string): void {
-  const name = filename || `bitacora_emila_${new Date().toISOString().split('T')[0]}.json`;
-  downloadJSON(name, logs);
-}
-

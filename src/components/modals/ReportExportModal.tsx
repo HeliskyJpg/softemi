@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   FileText,
   FileSpreadsheet,
@@ -10,6 +10,7 @@ import {
   Loader2,
   Receipt,
   Info,
+  AlertCircle,
 } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { useApp } from '../../context/AppContext';
@@ -52,90 +53,157 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
 }) => {
   const { logAction, addToast } = useApp();
 
-  // Estados de simulación de generación
-  const [generationStep, setGenerationStep] = useState<'preparing' | 'completed'>('preparing');
-  const [progressPercent, setProgressPercent] = useState<number>(15);
+  // Estados de generación y descarga
+  const [generationStep, setGenerationStep] = useState<'preparing' | 'completed' | 'error'>('preparing');
+  const [progressPercent, setProgressPercent] = useState<number>(25);
   const [preparedResult, setPreparedResult] = useState<PreparedExportResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // Referencias estables para evitar re-ejecuciones y bucles infinitos por dependencias inestables
   const hasLoggedAudit = useRef(false);
+  const runIdRef = useRef(0);
+  const logActionRef = useRef(logAction);
+  logActionRef.current = logAction;
 
-  // Reiniciar estado cada vez que se abre la modal o cambia de formato
-  useEffect(() => {
-    if (!isOpen) {
-      setGenerationStep('preparing');
-      setProgressPercent(15);
-      setPreparedResult(null);
-      setIsDownloading(false);
-      hasLoggedAudit.current = false;
-      return;
-    }
+  const paramsRef = useRef({
+    format,
+    periodLabel,
+    startDate,
+    endDate,
+    orders,
+    metrics,
+  });
+  paramsRef.current = {
+    format,
+    periodLabel,
+    startDate,
+    endDate,
+    orders,
+    metrics,
+  };
 
+  const startGeneration = useCallback(() => {
+    const currentRunId = ++runIdRef.current;
     setGenerationStep('preparing');
     setProgressPercent(25);
+    setPreparedResult(null);
+    setErrorMessage(null);
+    setIsDownloading(false);
     hasLoggedAudit.current = false;
 
-    // Simulación progresiva de generación
+    // Simulación progresiva con temporizadores protegidos por token de ejecución
     const timer1 = setTimeout(() => {
+      if (currentRunId !== runIdRef.current) return;
       setProgressPercent(65);
-    }, 450);
+    }, 350);
 
     const timer2 = setTimeout(() => {
-      setProgressPercent(100);
-      const result = generateReportFile({
-        format,
-        periodLabel,
-        startDate,
-        endDate,
-        orders,
-        metrics,
-      });
-      setPreparedResult(result);
-      setGenerationStep('completed');
+      if (currentRunId !== runIdRef.current) return;
 
-      // Registrar en Auditoría (solo una vez por apertura)
-      if (!hasLoggedAudit.current) {
-        hasLoggedAudit.current = true;
-        const formatTitle = format === 'pdf' ? 'PDF' : 'Excel';
-        logAction({
-          action: `exportar reporte ${formatTitle}`,
-          module: 'Reportes',
-          entityType: 'Report',
-          operationType: 'Reportes y Exportaciones',
-          recordId: `REP-${format.toUpperCase()}-${startDate}_${endDate}`,
-          description: `Exportación de reporte en formato ${formatTitle} para el período: "${periodLabel}" (${orders.length} pedidos, Total: Q ${metrics.totalSales.toFixed(2)})`,
-          previousValue: null,
-          newValue: `Reporte preparado correctamente (${formatTitle})`,
-          metadata: {
-            format,
-            periodLabel,
-            startDate,
-            endDate,
-            totalOrders: orders.length,
-            totalSales: metrics.totalSales,
-            totalAdvance: metrics.totalAdvance,
-            totalBalance: metrics.totalBalance,
-          },
+      try {
+        const {
+          format: currentFormat,
+          periodLabel: currentLabel,
+          startDate: currentStart,
+          endDate: currentEnd,
+          orders: currentOrders,
+          metrics: currentMetrics,
+        } = paramsRef.current;
+
+        const result = generateReportFile({
+          format: currentFormat,
+          periodLabel: currentLabel,
+          startDate: currentStart,
+          endDate: currentEnd,
+          orders: currentOrders,
+          metrics: currentMetrics,
         });
+
+        if (currentRunId !== runIdRef.current) return;
+
+        setProgressPercent(100);
+        setPreparedResult(result);
+        setGenerationStep('completed');
+
+        // Registrar en Auditoría exactamente una sola vez por apertura exitosa
+        if (!hasLoggedAudit.current) {
+          hasLoggedAudit.current = true;
+          const formatTitle = currentFormat === 'pdf' ? 'PDF' : 'Excel';
+          logActionRef.current({
+            action: `exportar reporte ${formatTitle}`,
+            module: 'Reportes',
+            entityType: 'Report',
+            operationType: 'Reportes y Exportaciones',
+            recordId: `REP-${currentFormat.toUpperCase()}-${currentStart}_${currentEnd}`,
+            description: `Exportación de reporte en formato ${formatTitle} para el período: "${currentLabel}" (${currentOrders.length} pedidos, Total: Q ${currentMetrics.totalSales.toFixed(2)})`,
+            previousValue: null,
+            newValue: `Reporte preparado correctamente (${formatTitle})`,
+            metadata: {
+              format: currentFormat,
+              periodLabel: currentLabel,
+              startDate: currentStart,
+              endDate: currentEnd,
+              totalOrders: currentOrders.length,
+              totalSales: currentMetrics.totalSales,
+              totalAdvance: currentMetrics.totalAdvance,
+              totalBalance: currentMetrics.totalBalance,
+              isSimulated: !!result.isSimulated,
+            },
+          });
+        }
+      } catch (err) {
+        if (currentRunId !== runIdRef.current) return;
+        setGenerationStep('error');
+        setErrorMessage(
+          err instanceof Error
+            ? err.message
+            : 'Ocurrió un inconveniente al procesar los datos del período seleccionado.'
+        );
       }
-    }, 1100);
+    }, 850);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [isOpen, format, periodLabel, startDate, endDate, orders, metrics, logAction]);
+  }, []);
+
+  // Reiniciar estado limpiamente cada vez que se abre la modal o cambia de formato
+  useEffect(() => {
+    if (!isOpen) {
+      runIdRef.current++;
+      setGenerationStep('preparing');
+      setProgressPercent(25);
+      setPreparedResult(null);
+      setErrorMessage(null);
+      setIsDownloading(false);
+      hasLoggedAudit.current = false;
+      return;
+    }
+
+    const cancel = startGeneration();
+    return () => {
+      if (cancel) cancel();
+      runIdRef.current++;
+    };
+  }, [isOpen, format, startGeneration]);
 
   if (!isOpen) return null;
 
   const isPdf = format === 'pdf';
   const formatName = isPdf ? 'PDF' : 'Excel';
   const formatDescription = isPdf
-    ? 'Documento listo para impresión y distribución'
-    : 'Hoja de cálculo estructurada con fórmulas y datos tabulares';
+    ? 'Documento operativo estructurado para distribución'
+    : 'Exportación de datos tabulares en formato CSV (compatible con Microsoft Excel)';
 
   const handleDownload = () => {
     if (!preparedResult?.downloadBlob) {
-      addToast('No fue posible procesar la descarga.', 'error', 'Error');
+      addToast(
+        'No fue posible procesar la descarga del archivo.',
+        'error',
+        'Descarga no disponible'
+      );
       return;
     }
 
@@ -211,8 +279,17 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
             id="btn-confirm-download-report"
             type="button"
             onClick={handleDownload}
-            disabled={generationStep !== 'completed' || isDownloading}
+            disabled={
+              generationStep !== 'completed' ||
+              isDownloading ||
+              !preparedResult?.downloadBlob
+            }
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#681B2B] hover:bg-[#541421] text-white font-bold text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-md active:scale-98"
+            title={
+              generationStep === 'completed' && !preparedResult?.downloadBlob
+                ? 'Descarga nativa no disponible en este prototipo (requiere servicio backend PDF)'
+                : undefined
+            }
           >
             {isDownloading ? (
               <>
@@ -231,7 +308,7 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
     >
       <div className="space-y-4">
         {/* Banner de Estado de Preparación */}
-        {generationStep === 'preparing' ? (
+        {generationStep === 'preparing' && (
           <div className="bg-[#FDF8F9] border border-[#F2D6DE] rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-3">
               <Loader2 className="w-5 h-5 text-[#681B2B] animate-spin shrink-0" />
@@ -253,30 +330,83 @@ export const ReportExportModal: React.FC<ReportExportModalProps> = ({
               />
             </div>
           </div>
-        ) : (
-          <div
-            id="report-ready-banner"
-            className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 animate-in fade-in duration-300"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-emerald-900">
-                  Reporte preparado correctamente
-                </h4>
-                <p className="text-[11px] text-emerald-700">
-                  {preparedResult?.fileName || `reporte_${formatName.toLowerCase()}`}
-                  {preparedResult?.formattedFileSize && ` • ${preparedResult.formattedFileSize}`}
-                </p>
-              </div>
-            </div>
+        )}
 
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
-              Listo
-            </span>
+        {generationStep === 'error' && (
+          <div
+            id="report-error-banner"
+            className="bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2 text-rose-900 animate-in fade-in duration-300"
+          >
+            <div className="flex items-center gap-2 font-bold text-xs">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>No se pudo preparar el reporte</span>
+            </div>
+            <p className="text-[11px] text-rose-700">
+              {errorMessage || 'Ocurrió un inconveniente al estructurar los datos del período seleccionado.'}
+            </p>
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={startGeneration}
+                className="text-xs font-bold text-rose-800 underline hover:text-rose-950 cursor-pointer"
+              >
+                Reintentar preparación
+              </button>
+            </div>
           </div>
+        )}
+
+        {generationStep === 'completed' && (
+          preparedResult?.isSimulated ? (
+            <div
+              id="report-ready-banner"
+              className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 flex items-start justify-between gap-3 animate-in fade-in duration-300"
+            >
+              <div className="flex items-start gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                  <Info className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-amber-900">
+                    Preparación completada (Simulación de prototipo)
+                  </h4>
+                  <p className="text-[11px] text-amber-700 mt-0.5">
+                    {preparedResult?.simulationNote ||
+                      'Datos consolidados del período. La descarga nativa en archivo .pdf requiere el servicio backend (WeasyPrint).'}
+                  </p>
+                </div>
+              </div>
+
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 shrink-0">
+                Simulado
+              </span>
+            </div>
+          ) : (
+            <div
+              id="report-ready-banner"
+              className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 animate-in fade-in duration-300"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-900">
+                    Reporte preparado correctamente
+                  </h4>
+                  <p className="text-[11px] text-emerald-700">
+                    {preparedResult?.fileName || `reporte_${formatName.toLowerCase()}`}
+                    {preparedResult?.formattedFileSize && ` • ${preparedResult.formattedFileSize}`}
+                    {isPdf ? ' • Documento PDF listo para descarga' : ' • Archivo CSV estructurado para Excel'}
+                  </p>
+                </div>
+              </div>
+
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0">
+                Listo
+              </span>
+            </div>
+          )
         )}
 
         {/* Resumen del Período y Filtros Aplicados */}

@@ -1,3 +1,5 @@
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Order } from '../types';
 
 export type ReportExportFormat = 'pdf' | 'excel';
@@ -28,6 +30,8 @@ export interface PreparedExportResult {
   formattedFileSize: string;
   downloadUrl?: string;
   downloadBlob?: Blob;
+  isSimulated?: boolean;
+  simulationNote?: string;
 }
 
 /**
@@ -101,111 +105,182 @@ export const generateReportFile = (params: ReportExportParams): PreparedExportRe
 
     return {
       fileName,
-      mimeType: 'application/vnd.ms-excel',
+      mimeType: 'text/csv;charset=utf-8;',
       fileSizeBytes: size,
       formattedFileSize: formatFileSize(size || 15400),
       downloadBlob: blob,
+      isSimulated: false,
+      simulationNote: 'Archivo tabular en formato CSV con codificación UTF-8 compatible con Microsoft Excel',
     };
   }
 
   // Format: PDF
-  const fileName = `reporte_operativo_emila_${timestampStr}.pdf`;
+  const fileName = `reporte-emila-${startDate}-${endDate}.pdf`;
 
-  // Construimos un documento HTML estilizado con el formato de reporte imprimible de EMILA
-  const htmlContent = `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Reporte Operativo — Remix EMILA</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #2C1E23; margin: 40px; }
-    .header { border-bottom: 2px solid #681B2B; padding-bottom: 12px; margin-bottom: 20px; }
-    .brand { font-size: 24px; font-weight: bold; color: #681B2B; }
-    .subtitle { color: #7D6871; font-size: 13px; margin-top: 4px; }
-    .grid { display: flex; gap: 16px; margin-bottom: 24px; }
-    .card { flex: 1; background: #FDF8F9; border: 1px solid #F2D6DE; border-radius: 8px; padding: 12px; }
-    .card-title { font-size: 11px; color: #7D6871; text-transform: uppercase; font-weight: bold; }
-    .card-val { font-size: 20px; font-weight: bold; color: #2C1E23; margin-top: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; }
-    th { text-align: left; padding: 8px; background: #FBECEF; color: #681B2B; border-bottom: 1px solid #F2D6DE; }
-    td { padding: 8px; border-bottom: 1px solid #F2D6DE; }
-    .text-right { text-align: right; }
-    .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; background: #F2D6DE; color: #681B2B; }
-    .footer { margin-top: 40px; font-size: 11px; color: #7D6871; border-top: 1px solid #F2D6DE; padding-top: 10px; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="brand">Remix EMILA — Reporte Operativo y Ventas</div>
-    <div class="subtitle">Período: ${params.periodLabel} (${startDate} al ${endDate}) • Generado: ${new Date().toLocaleString('es-GT')}</div>
-  </div>
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
 
-  <div class="grid">
-    <div class="card">
-      <div class="card-title">Total Vendido</div>
-      <div class="card-val">Q ${metrics.totalSales.toFixed(2)}</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Total Cobrado</div>
-      <div class="card-val" style="color: #047857;">Q ${metrics.totalAdvance.toFixed(2)}</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Saldo Pendiente</div>
-      <div class="card-val" style="color: #B45309;">Q ${metrics.totalBalance.toFixed(2)}</div>
-    </div>
-    <div class="card">
-      <div class="card-title">Pedidos Totales</div>
-      <div class="card-val">${orders.length}</div>
-    </div>
-  </div>
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 14;
+  const contentWidth = pageWidth - margin * 2;
 
-  <h3>Detalle de Pedidos del Período</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Código</th>
-        <th>Cliente</th>
-        <th>Canal</th>
-        <th>Fecha Entrega</th>
-        <th>Estado</th>
-        <th class="text-right">Total</th>
-        <th class="text-right">Saldo</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${orders
-        .map(
-          (o) => `
-        <tr>
-          <td><strong>${o.code}</strong></td>
-          <td>${o.clientName}</td>
-          <td>${o.channel}</td>
-          <td>${o.deliveryDate} ${o.deliveryTime || ''}</td>
-          <td><span class="badge">${o.status}</span></td>
-          <td class="text-right">Q ${o.total.toFixed(2)}</td>
-          <td class="text-right">${o.balance > 0 ? `Q ${o.balance.toFixed(2)}` : 'Liquidado'}</td>
-        </tr>
-      `
-        )
-        .join('')}
-    </tbody>
-  </table>
+  // Barra de acento institucional EMILA (#681B2B)
+  doc.setFillColor(104, 27, 43);
+  doc.rect(margin, 12, contentWidth, 1.5, 'F');
 
-  <div class="footer">
-    Reporte generado automáticamente por Remix EMILA. Documento para uso administrativo interno.
-  </div>
-</body>
-</html>`;
+  // Encabezado del reporte
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(104, 27, 43);
+  doc.text('REMIX EMILA — REPORTE OPERATIVO Y VENTAS', margin, 20);
 
-  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
-  // Estimar tamaño representativo de PDF
-  const estimatedPdfBytes = 85000 + orders.length * 950;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(125, 104, 113);
+  const nowStr = new Date().toLocaleDateString('es-GT', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  doc.text(
+    `Período: ${params.periodLabel} (${startDate} al ${endDate}) • Generado: ${nowStr}`,
+    margin,
+    26
+  );
+
+  // Tarjetas de Métricas Ejecutivas del período seleccionado
+  const cardY = 31;
+  const cardHeight = 17;
+  const cardGap = 3;
+  const cardWidth = (contentWidth - cardGap * 3) / 4;
+
+  const metricCards = [
+    { label: 'TOTAL VENDIDO', value: `Q ${metrics.totalSales.toFixed(2)}`, color: [104, 27, 43] },
+    { label: 'TOTAL COBRADO', value: `Q ${metrics.totalAdvance.toFixed(2)}`, color: [4, 120, 87] },
+    { label: 'SALDO PENDIENTE', value: `Q ${metrics.totalBalance.toFixed(2)}`, color: [180, 83, 9] },
+    { label: 'PEDIDOS TOTALES', value: `${orders.length}`, color: [44, 30, 35] },
+  ];
+
+  metricCards.forEach((card, index) => {
+    const cardX = margin + index * (cardWidth + cardGap);
+    // Fondo y borde suave
+    doc.setFillColor(250, 247, 245);
+    doc.setDrawColor(242, 214, 222);
+    doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 1.5, 1.5, 'FD');
+
+    // Etiqueta
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(125, 104, 113);
+    doc.text(card.label, cardX + 3.5, cardY + 5.5);
+
+    // Valor en Quetzales / unidades
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(card.color[0], card.color[1], card.color[2]);
+    doc.text(card.value, cardX + 3.5, cardY + 12.5);
+  });
+
+  // Resumen del desglose por estado
+  const statusSummaryY = 53;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.8);
+  doc.setTextColor(125, 104, 113);
+  doc.text(
+    `Desglose: Entregados (${metrics.deliveredCount}) • Listos (${metrics.readyCount}) • En preparación (${metrics.inPrepCount}) • Pendientes (${metrics.pendingCount}) • Cancelados (${metrics.cancelledCount})`,
+    margin,
+    statusSummaryY
+  );
+
+  // Tabla con Detalle de Pedidos
+  const tableRows =
+    orders.length > 0
+      ? orders.map((o) => [
+          o.code,
+          o.clientName,
+          o.channel,
+          `${o.deliveryDate}${o.deliveryTime ? ` ${o.deliveryTime}` : ''}`,
+          o.status,
+          `Q ${o.total.toFixed(2)}`,
+          `Q ${o.advancePayment.toFixed(2)}`,
+          o.balance > 0 ? `Q ${o.balance.toFixed(2)}` : 'Q 0.00',
+        ])
+      : [['--', 'Sin pedidos registrados en este período', '--', '--', '--', 'Q 0.00', 'Q 0.00', 'Q 0.00']];
+
+  const runAutoTable = typeof autoTable === 'function' ? autoTable : (autoTable as unknown as { default: typeof autoTable }).default;
+  runAutoTable(doc, {
+    startY: 57,
+    head: [['Código', 'Cliente', 'Canal', 'Fecha Entrega', 'Estado', 'Total', 'Anticipo', 'Saldo']],
+    body: tableRows,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [104, 27, 43],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8,
+      halign: 'left',
+      cellPadding: 2.2,
+    },
+    bodyStyles: {
+      textColor: [44, 30, 35],
+      fontSize: 7.5,
+      cellPadding: 2,
+    },
+    alternateRowStyles: {
+      fillColor: [253, 248, 249],
+    },
+    columnStyles: {
+      0: { cellWidth: 22, fontStyle: 'bold' },
+      1: { cellWidth: 'auto' },
+      2: { cellWidth: 22 },
+      3: { cellWidth: 28 },
+      4: { cellWidth: 23 },
+      5: { cellWidth: 20, halign: 'right' },
+      6: { cellWidth: 20, halign: 'right' },
+      7: { cellWidth: 20, halign: 'right' },
+    },
+    margin: { left: margin, right: margin, bottom: 18 },
+    showHead: 'everyPage',
+  });
+
+  // Numeración de páginas y pie administrativo en cada página generada
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    // Línea divisoria
+    doc.setDrawColor(242, 214, 222);
+    doc.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
+
+    // Texto de pie de página
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(125, 104, 113);
+    doc.text(
+      `Remix EMILA — Reporte Administrativo • Período: ${params.periodLabel}`,
+      margin,
+      pageHeight - 8.5
+    );
+    doc.text(
+      `Página ${i} de ${totalPages}`,
+      pageWidth - margin,
+      pageHeight - 8.5,
+      { align: 'right' }
+    );
+  }
+
+  const pdfBlob = doc.output('blob');
+  const size = pdfBlob.size;
 
   return {
     fileName,
     mimeType: 'application/pdf',
-    fileSizeBytes: estimatedPdfBytes,
-    formattedFileSize: formatFileSize(estimatedPdfBytes),
-    downloadBlob: blob,
+    fileSizeBytes: size,
+    formattedFileSize: formatFileSize(size),
+    downloadBlob: pdfBlob,
+    isSimulated: false,
   };
 };
