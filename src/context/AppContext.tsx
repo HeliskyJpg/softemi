@@ -286,6 +286,48 @@ const deduplicateStrings = (arr: unknown[]): string[] => {
   return result;
 };
 
+export interface UserLookupResult {
+  user?: User;
+  duplicateEmail?: boolean;
+}
+
+export const findUserByIdentifier = (
+  usersList: User[],
+  rawIdentifier: string
+): UserLookupResult => {
+  const clean = rawIdentifier.trim();
+  if (!clean) return {};
+  const lower = clean.toLowerCase();
+
+  // Check matching by registered email (trim exterior spaces, case-insensitive)
+  const matchesByEmail = usersList.filter(
+    (u) => Boolean(u.email && u.email.trim().toLowerCase() === lower)
+  );
+
+  // Check matching by username (case-insensitive, preserving existing username behavior)
+  const matchByUsername = usersList.find(
+    (u) => u.username.toLowerCase() === lower
+  );
+
+  // If there are duplicate accounts with this email
+  // "Si hay correos duplicados, no elijas arbitrariamente una cuenta: informa la inconsistencia sin cambiar datos automáticamente."
+  if (matchesByEmail.length > 1) {
+    return { duplicateEmail: true };
+  }
+
+  // If matched by username
+  if (matchByUsername) {
+    return { user: matchByUsername };
+  }
+
+  // If matched by registered email
+  if (matchesByEmail.length === 1) {
+    return { user: matchesByEmail[0] };
+  }
+
+  return {};
+};
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Load initial state from LocalStorage or Fallback to seed
   const [users, setUsers] = useState<User[]>(() => {
@@ -798,14 +840,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Auth Methods
-  const login = (username: string, password?: string): boolean => {
-    const found = users.find((u) => u.username.toLowerCase() === username.trim().toLowerCase());
+  const login = (identifier: string, password?: string): boolean => {
+    const lookup = findUserByIdentifier(users, identifier);
+
+    if (lookup.duplicateEmail) {
+      addToast(
+        'Existe más de una cuenta con este correo registrado. Inicie sesión con su nombre de usuario.',
+        'error',
+        'Inconsistencia de cuentas'
+      );
+      return false;
+    }
+
+    const found = lookup.user;
     if (!found) {
-      addToast('Usuario no encontrado en el sistema.', 'error', 'Error de credenciales');
+      addToast('Usuario o correo no encontrado en el sistema.', 'error', 'Error de credenciales');
       return false;
     }
     if (!found.active) {
-      addToast(`La cuenta de "${found.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`, 'error', 'Acceso denegado');
+      addToast(
+        `La cuenta de "${found.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`,
+        'error',
+        'Acceso denegado'
+      );
       return false;
     }
 

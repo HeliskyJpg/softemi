@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp, findUserByIdentifier } from '../../context/AppContext';
 import { Shield, User, Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { EmilaLogo } from '../common/EmilaLogo';
@@ -23,7 +23,7 @@ export const LoginView: React.FC = () => {
     setErrorMsg('');
 
     if (!username.trim()) {
-      setErrorMsg('Por favor ingrese su nombre de usuario.');
+      setErrorMsg('Por favor ingrese su usuario o correo.');
       return;
     }
 
@@ -36,9 +36,11 @@ export const LoginView: React.FC = () => {
     setTimeout(() => {
       const ok = login(username, password);
       if (!ok) {
-        const target = users.find((x) => x.username.toLowerCase() === username.trim().toLowerCase());
-        if (target && !target.active) {
-          setErrorMsg(`La cuenta de "${target.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`);
+        const lookup = findUserByIdentifier(users, username);
+        if (lookup.duplicateEmail) {
+          setErrorMsg('Existe más de una cuenta registrada con este correo electrónico. Inicie sesión con su nombre de usuario.');
+        } else if (lookup.user && !lookup.user.active) {
+          setErrorMsg(`La cuenta de "${lookup.user.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`);
         } else {
           setErrorMsg('Credenciales inválidas. Revise su usuario o contraseña.');
         }
@@ -55,9 +57,11 @@ export const LoginView: React.FC = () => {
     setTimeout(() => {
       const ok = login(user, pass);
       if (!ok) {
-        const target = users.find((x) => x.username.toLowerCase() === user.toLowerCase());
-        if (target && !target.active) {
-          setErrorMsg(`La cuenta de "${target.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`);
+        const lookup = findUserByIdentifier(users, user);
+        if (lookup.duplicateEmail) {
+          setErrorMsg('Existe más de una cuenta registrada con este correo electrónico. Inicie sesión con su nombre de usuario.');
+        } else if (lookup.user && !lookup.user.active) {
+          setErrorMsg(`La cuenta de "${lookup.user.name}" está desactivada. Ya no puede iniciar sesión hasta que un administrador la vuelva a activar.`);
         } else {
           setErrorMsg('Credenciales inválidas. Revise su usuario o contraseña.');
         }
@@ -114,7 +118,7 @@ export const LoginView: React.FC = () => {
                 htmlFor="input-login-username"
                 className="block text-xs font-bold text-[#2C1E23] uppercase tracking-wider mb-1.5"
               >
-                Usuario
+                Usuario o correo
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7D6871]">
@@ -125,7 +129,7 @@ export const LoginView: React.FC = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Ej. empleado o admin"
+                  placeholder="Usuario o correo"
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#F2D6DE]/60 bg-[#FBECEF]/10 focus:bg-white text-sm text-[#2C1E23] placeholder-[#7D6871]/50 focus:outline-none focus:ring-2 focus:ring-[#681B2B]/20 focus:border-[#681B2B] transition-all"
                   autoComplete="username"
                   required
