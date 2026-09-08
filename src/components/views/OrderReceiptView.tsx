@@ -145,10 +145,10 @@ export const OrderReceiptView: React.FC<OrderReceiptViewProps> = ({ orderId }) =
           <button
             id="btn-receipt-view-share-whatsapp"
             onClick={() => setShowWhatsAppModal(true)}
-            className="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            className="px-4 py-2 rounded-xl bg-white hover:bg-[#FBECEF] text-[#681B2B] border border-[#F2D6DE] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#681B2B]/20"
             title="Compartir resumen del comprobante por WhatsApp"
           >
-            <MessageCircle className="w-4 h-4 fill-white" />
+            <MessageCircle className="w-4 h-4 text-emerald-600" />
             <span>Compartir por WhatsApp</span>
           </button>
 
