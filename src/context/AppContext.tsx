@@ -22,6 +22,7 @@ import {
   AuditLogEntry,
   LogActionParams,
   CreateUserParams,
+  PasswordResetToken,
 } from '../types';
 import { PermissionCode } from '../types/permissions';
 import {
@@ -87,11 +88,13 @@ interface AppContextType {
   createUser: (userData: CreateUserParams) => { success: boolean; user?: User; error?: string; tempPassword?: string };
   changePassword: (newPassword: string, userId?: string) => { success: boolean; error?: string };
   toggleUserActive: (id: string) => void;
-  resetUserPassword: (
-    id: string,
-    tempPassword?: string,
-    options?: { silent?: boolean }
-  ) => { success: boolean; tempPassword?: string; error?: string };
+  // Simulated link reset password flow
+  generatePasswordResetLink: (userId: string) => { success: boolean; token?: string; error?: string };
+  validateResetToken: (tokenString: string) => { valid: boolean; user?: User; error?: string };
+  completePasswordReset: (tokenString: string, newPassword: string) => { success: boolean; error?: string };
+  activeResetToken: string | null;
+  openResetPasswordLink: (token: string) => void;
+  clearResetToken: () => void;
 
   // Granular Permissions (RBAC Extendido)
   hasPermission: (permissionCode: PermissionCode) => boolean;
@@ -263,6 +266,7 @@ const STORAGE_KEYS = {
   STOCK_LOGS: 'emila_stock_logs_v2',
   CATALOGS: 'emila_catalogs_v2',
   AUDIT_LOGS: 'emila_audit_logs_v2',
+  RESET_TOKENS: 'emila_password_reset_tokens_v1',
 };
 
 const deduplicateStrings = (arr: unknown[]): string[] => {
@@ -310,6 +314,50 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return INITIAL_USERS[0];
     }
   });
+
+  // Simulated Password Reset Tokens state
+  const [resetTokens, setResetTokens] = useState<PasswordResetToken[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.RESET_TOKENS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [activeResetToken, setActiveResetToken] = useState<string | null>(() => {
+    try {
+      const hash = window.location.hash;
+      if (hash.includes('reset-password')) {
+        const match = hash.match(/token=([^&]+)/);
+        if (match && match[1]) return decodeURIComponent(match[1]);
+      }
+      const search = new URLSearchParams(window.location.search);
+      const token = search.get('resetToken') || search.get('token');
+      if (token) return token;
+    } catch {
+      // ignore
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.includes('reset-password')) {
+        const match = hash.match(/token=([^&]+)/);
+        if (match && match[1]) {
+          setActiveResetToken(decodeURIComponent(match[1]));
+        }
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Granular RBAC Authorization Engine
   const hasPermission = (code: PermissionCode): boolean => {
@@ -1086,74 +1134,216 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     addToast(`Usuario "${userToToggle.name}" ${newStatus} correctamente.`, 'info');
   };
 
-  const resetUserPassword = (
-    id: string,
-    tempPassword?: string,
-    options?: { silent?: boolean }
-  ): { success: boolean; tempPassword?: string; error?: string } => {
+  // Simulated Password Reset Link Flow
+  const generatePasswordResetLink = (
+    userId: string
+  ): { success: boolean; token?: string; error?: string } => {
     if (!hasPermission('users.manage')) {
       const errorMsg = 'Acceso denegado: Se requiere el permiso "users.manage" para restablecer contraseñas.';
       addToast(errorMsg, 'error', 'No autorizado');
       return { success: false, error: errorMsg };
     }
 
-    const targetUser = users.find((u) => u.id === id);
+    const targetUser = users.find((u) => u.id === userId);
     if (!targetUser) {
       return { success: false, error: 'Usuario no encontrado.' };
     }
 
-    const generated = tempPassword?.trim() || `Emila${Math.floor(1000 + Math.random() * 9000)}!`;
-    if (generated.length < 4) {
-      return { success: false, error: 'La contraseña temporal debe contener al menos 4 caracteres.' };
+    if (!targetUser.email || !targetUser.email.trim()) {
+      return { success: false, error: 'Agrega un correo al usuario para generar el enlace' };
     }
 
-    // Actualizar usuario en el estado con contraseña temporal y bandera de cambio obligatorio
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
+    // Token simulado no predecible asociado exclusivamente a este usuario
+    const randomHex = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+    const token = `rst_${randomHex}`;
+    const now = Date.now();
+    const expiresAt = now + 30 * 60 * 1000; // Vencimiento a 30 minutos
+
+    // Invalidar cualquier enlace no utilizado previo de este usuario (un nuevo enlace invalida el anterior)
+    setResetTokens((prev) => {
+      const updated = prev.map((t) => (t.userId === userId && !t.used ? { ...t, used: true } : t));
+      const nextList = [...updated, { token, userId, createdAt: now, expiresAt, used: false }];
+      try {
+        localStorage.setItem(STORAGE_KEYS.RESET_TOKENS, JSON.stringify(nextList));
+      } catch {
+        // ignore
+      }
+      return nextList;
+    });
+
+    // Auditoría central: Distinguir enlace simulado generado de contraseña efectivamente restablecida
+    // NUNCA registrar contraseñas, tokens ni enlaces completos en auditoría
+    logAction({
+      action: 'generar enlace de restablecimiento',
+      module: 'Usuarios',
+      entityType: 'User',
+      recordId: `@${targetUser.username}`,
+      description: `Enlace de restablecimiento simulado generado para el usuario @${targetUser.username} (${targetUser.name}). Válido por 30 minutos.`,
+      previousValue: undefined,
+      newValue: 'Enlace simulado generado (vigencia 30 min)',
+      metadata: {
+        targetUserId: targetUser.id,
+        targetUsername: targetUser.username,
+      },
+    });
+
+    // Generar el enlace NO cambia ni invalida la contraseña actual del usuario
+    // No se muestra toast repetitivo
+    return { success: true, token };
+  };
+
+  const validateResetToken = (
+    tokenString: string
+  ): { valid: boolean; user?: User; error?: string } => {
+    if (!tokenString || !tokenString.trim()) {
+      return {
+        valid: false,
+        error: 'El enlace no es válido o venció. Solicita uno nuevo al administrador.',
+      };
+    }
+
+    const cleanToken = tokenString.trim();
+    const foundToken = resetTokens.find((t) => t.token === cleanToken);
+
+    if (!foundToken) {
+      return {
+        valid: false,
+        error: 'El enlace no es válido o venció. Solicita uno nuevo al administrador.',
+      };
+    }
+
+    if (foundToken.used) {
+      return {
+        valid: false,
+        error: 'El enlace no es válido o venció. Solicita uno nuevo al administrador.',
+      };
+    }
+
+    if (Date.now() > foundToken.expiresAt) {
+      return {
+        valid: false,
+        error: 'El enlace no es válido o venció. Solicita uno nuevo al administrador.',
+      };
+    }
+
+    const targetUser = users.find((u) => u.id === foundToken.userId);
+    if (!targetUser || !targetUser.active) {
+      return {
+        valid: false,
+        error: 'El enlace no es válido o venció. Solicita uno nuevo al administrador.',
+      };
+    }
+
+    return { valid: true, user: targetUser };
+  };
+
+  const completePasswordReset = (
+    tokenString: string,
+    newPassword: string
+  ): { success: boolean; error?: string } => {
+    const validation = validateResetToken(tokenString);
+    if (!validation.valid || !validation.user) {
+      return {
+        success: false,
+        error: validation.error || 'El enlace no es válido o venció. Solicita uno nuevo al administrador.',
+      };
+    }
+
+    const cleanPass = newPassword.trim();
+    if (cleanPass.length < 4) {
+      return {
+        success: false,
+        error: 'La nueva contraseña debe contener al menos 4 caracteres.',
+      };
+    }
+
+    const targetUser = validation.user;
+
+    // Solo al guardar correctamente: actualiza la contraseña del usuario mediante el almacenamiento existente del prototipo
+    // Como el usuario ya eligió su contraseña definitiva, no debe pedírsele cambiarla otra vez por una marca anterior de contraseña temporal (mustChangePassword: false)
+    setUsers((prev) => {
+      const updated = prev.map((u) =>
+        u.id === targetUser.id
           ? {
               ...u,
-              password: generated,
-              mustChangePassword: true,
+              password: cleanPass,
+              mustChangePassword: false,
             }
           : u
-      )
-    );
+      );
+      try {
+        localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
 
-    if (currentUser?.id === id) {
+    // Si el usuario actual con sesión activa es el mismo usuario restablecido, actualizar su sesión
+    if (currentUser?.id === targetUser.id) {
       setCurrentUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              password: generated,
-              mustChangePassword: true,
-            }
-          : null
+        prev ? { ...prev, password: cleanPass, mustChangePassword: false } : null
       );
     }
 
-    // Registrar en auditoría SIN registrar el valor de la contraseña
+    // Invalida el enlace (un solo uso)
+    setResetTokens((prev) => {
+      const updated = prev.map((t) =>
+        t.token === tokenString.trim() ? { ...t, used: true } : t
+      );
+      try {
+        localStorage.setItem(STORAGE_KEYS.RESET_TOKENS, JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
+
+    // Auditoría central: registrar contraseña efectivamente restablecida
+    // SIN registrar contraseñas, tokens ni enlaces completos
     logAction({
       action: 'restablecer contraseña',
       module: 'Usuarios',
       entityType: 'User',
       recordId: `@${targetUser.username}`,
-      description: `Restablecimiento de contraseña para el usuario @${targetUser.username} (${targetUser.name}). Contraseña temporal asignada con cambio obligatorio en el próximo inicio de sesión.`,
-      previousValue: 'Contraseña anterior (protegida, no visible)',
-      newValue: 'Contraseña temporal asignada (requiere cambio obligatorio)',
+      description: `Contraseña restablecida exitosamente mediante enlace de restablecimiento para @${targetUser.username} (${targetUser.name}). Contraseña actualizada.`,
+      previousValue: 'Contraseña anterior (protegida)',
+      newValue: 'Nueva contraseña personal configurada mediante enlace',
       metadata: {
         targetUserId: targetUser.id,
-        targetUserName: targetUser.name,
         targetUsername: targetUser.username,
-        mustChangePassword: true,
-        // NUNCA incluir el valor de la contraseña en auditoría
       },
     });
 
-    if (!options?.silent) {
-      addToast('Contraseña restablecida correctamente', 'success');
+    return { success: true };
+  };
+
+  const openResetPasswordLink = (token: string) => {
+    setActiveResetToken(token);
+    try {
+      window.location.hash = `reset-password?token=${encodeURIComponent(token)}`;
+    } catch {
+      // ignore
     }
-    return { success: true, tempPassword: generated };
+  };
+
+  const clearResetToken = () => {
+    setActiveResetToken(null);
+    try {
+      if (window.location.hash.includes('reset-password')) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('resetToken') || url.searchParams.has('token')) {
+        url.searchParams.delete('resetToken');
+        url.searchParams.delete('token');
+        window.history.replaceState(null, '', url.pathname + url.search);
+      }
+    } catch {
+      // ignore
+    }
   };
 
   const updateUserPermissions = (
@@ -2436,6 +2626,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setAuditLogs(INITIAL_AUDIT_LOGS);
     setSelectedOrderId(null);
     setActiveView('components');
+    setResetTokens([]);
+    setActiveResetToken(null);
+    try {
+      localStorage.removeItem(STORAGE_KEYS.RESET_TOKENS);
+    } catch {
+      // ignore
+    }
     addToast('Datos del sistema restablecidos a los valores iniciales.', 'info', 'Reinicio completo');
   };
 
@@ -2452,7 +2649,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         createUser,
         changePassword,
         toggleUserActive,
-        resetUserPassword,
+        generatePasswordResetLink,
+        validateResetToken,
+        completePasswordReset,
+        activeResetToken,
+        openResetPasswordLink,
+        clearResetToken,
         updateUserPermissions,
         hasPermission,
 

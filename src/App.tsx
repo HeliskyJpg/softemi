@@ -21,6 +21,7 @@ import { UsersView } from './components/views/UsersView';
 import { ProfileView } from './components/views/ProfileView';
 import { SettingsView } from './components/views/SettingsView';
 import { AuditLogView } from './components/views/AuditLogView';
+import { ResetPasswordView } from './components/views/ResetPasswordView';
 import { MandatoryPasswordChangeModal } from './components/modals/MandatoryPasswordChangeModal';
 import { AccessDeniedView } from './components/common/AccessDeniedView';
 import { getViewRequiredPermission } from './services/permissionsService';
@@ -32,8 +33,19 @@ const AppContent: React.FC = () => {
     selectedOrderId,
     selectedClientId,
     hasPermission,
+    activeResetToken,
   } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  // If opening simulated reset password link, render independent reset password view
+  if (activeResetToken) {
+    return (
+      <>
+        <ResetPasswordView token={activeResetToken} />
+        <ToastContainer />
+      </>
+    );
+  }
 
   // If no logged in user, show Login Screen
   if (!currentUser) {

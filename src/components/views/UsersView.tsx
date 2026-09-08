@@ -17,6 +17,8 @@ import {
   AlertCircle,
   User as UserIcon,
   ShieldCheck,
+  Link2,
+  ExternalLink,
 } from 'lucide-react';
 import { SystemUser, UserRole } from '../../types';
 import { PermissionCode } from '../../types/permissions';
@@ -40,7 +42,8 @@ export const UsersView: React.FC = () => {
     toggleUserActive,
     addToast,
     switchUserRole,
-    resetUserPassword,
+    generatePasswordResetLink,
+    openResetPasswordLink,
     updateUserPermissions,
     hasPermission,
   } = useApp();
@@ -57,11 +60,11 @@ export const UsersView: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<'all' | 'Administrador' | 'Colaborador'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
-  // Modal State for "Restablecer Contraseña"
+  // Modal State for "Restablecer Contraseña" (Simulated Link)
   const [showResetModal, setShowResetModal] = useState(false);
   const [userToReset, setUserToReset] = useState<SystemUser | null>(null);
-  const [resetTempPassword, setResetTempPassword] = useState('');
-  const [showResetPasswordText, setShowResetPasswordText] = useState(false);
+  const [resetSimulationDone, setResetSimulationDone] = useState(false);
+  const [generatedLinkToken, setGeneratedLinkToken] = useState<string | null>(null);
   const [resetErrorMsg, setResetErrorMsg] = useState('');
 
   // Modal State for Creating User
@@ -123,11 +126,11 @@ export const UsersView: React.FC = () => {
     return `${prefix}${num}${symbol}`;
   };
 
-  // Open Dedicated Reset Password Modal
+  // Open Dedicated Reset Password Modal (Simulated Link)
   const handleOpenResetPassword = (user: SystemUser) => {
     setUserToReset(user);
-    setResetTempPassword(generateRandomTempPassword());
-    setShowResetPasswordText(false);
+    setResetSimulationDone(false);
+    setGeneratedLinkToken(null);
     setResetErrorMsg('');
     setShowResetModal(true);
   };
@@ -148,31 +151,24 @@ export const UsersView: React.FC = () => {
     setUserForPermissions(null);
   };
 
-  // Handle Confirm Reset Password
-  const handleConfirmResetPassword = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  // Handle Generate Simulated Reset Link
+  const handleGenerateResetLink = () => {
+    if (!userToReset) return;
     setResetErrorMsg('');
 
-    if (!userToReset) return;
-
-    const cleanPass = resetTempPassword.trim();
-    if (!cleanPass) {
-      setResetErrorMsg('La contraseña temporal es obligatoria.');
-      return;
-    }
-    if (cleanPass.length < 4) {
-      setResetErrorMsg('La contraseña temporal debe contener al menos 4 caracteres.');
+    if (!userToReset.email || !userToReset.email.trim()) {
+      setResetErrorMsg('Agrega un correo al usuario para generar el enlace');
       return;
     }
 
-    const res = resetUserPassword(userToReset.id, cleanPass, { silent: true });
+    const res = generatePasswordResetLink(userToReset.id);
     if (!res.success) {
-      setResetErrorMsg(res.error || 'No se pudo restablecer la contraseña.');
+      setResetErrorMsg(res.error || 'No se pudo generar el enlace.');
       return;
     }
 
-    addToast('Contraseña restablecida correctamente', 'success');
-    setShowResetModal(false);
+    setGeneratedLinkToken(res.token || null);
+    setResetSimulationDone(true);
   };
 
   // Open Create User Modal
@@ -1177,7 +1173,7 @@ export const UsersView: React.FC = () => {
       </Modal>
 
       {/* ============================================================ */}
-      {/* MODAL: RESTABLECER CONTRASEÑA                                */}
+      {/* MODAL: RESTABLECER CONTRASEÑA (SIMULACIÓN DE ENLACE)        */}
       {/* ============================================================ */}
       <Modal
         id="modal-reset-password"
@@ -1195,21 +1191,24 @@ export const UsersView: React.FC = () => {
             >
               Cancelar
             </button>
-            <button
-              type="button"
-              id="btn-confirm-save-reset-password"
-              onClick={handleConfirmResetPassword}
-              disabled={resetTempPassword.trim().length < 4}
-              className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold text-white bg-[#681B2B] hover:bg-[#531422] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[36px] transition-colors"
-            >
-              <Key className="w-3.5 h-3.5" />
-              Restablecer contraseña
-            </button>
+            {!resetSimulationDone && (
+              <button
+                type="button"
+                id="btn-generate-reset-link"
+                onClick={handleGenerateResetLink}
+                disabled={!userToReset?.email || !userToReset.email.trim()}
+                className="w-full sm:w-auto px-5 py-2 text-xs sm:text-sm font-bold text-white bg-[#681B2B] hover:bg-[#531422] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl cursor-pointer shadow-xs flex items-center justify-center gap-1.5 min-h-[40px] sm:min-h-[36px] transition-colors"
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                Generar enlace
+              </button>
+            )}
           </div>
         }
       >
         {userToReset && (
           <div className="space-y-4">
+            {/* Identificación del usuario */}
             <div className="p-3.5 bg-[#FAF6F4] rounded-xl border border-[#F2D6DE] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#681B2B] text-white font-bold flex items-center justify-center text-sm shadow-2xs">
@@ -1237,46 +1236,50 @@ export const UsersView: React.FC = () => {
               <SystemAlert id="alert-reset-error" type="error" message={resetErrorMsg} />
             )}
 
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label htmlFor="input-reset-temp-password" className="text-xs font-semibold text-[#2C1E23] flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5 text-[#681B2B]" />
-                  Contraseña temporal <span className="text-rose-500">*</span>
-                </label>
+            {!resetSimulationDone ? (
+              userToReset.email && userToReset.email.trim() ? (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[#2C1E23] block">
+                    Correo registrado
+                  </label>
+                  <div className="px-3.5 py-2.5 rounded-xl bg-stone-50 border border-[#F2D6DE] text-xs sm:text-sm text-[#2C1E23] flex items-center gap-2 font-medium">
+                    <Mail className="w-4 h-4 text-[#7D6871] shrink-0" />
+                    <span className="truncate">{userToReset.email}</span>
+                  </div>
+                  <p className="text-[11px] text-[#7D6871]">
+                    Se simulará el envío al correo registrado.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <span>Agrega un correo al usuario para generar el enlace</span>
+                </div>
+              )
+            ) : (
+              <div className="p-4 bg-stone-50 border border-[#F2D6DE] rounded-xl text-center space-y-3">
+                <div className="w-10 h-10 rounded-full bg-stone-200/80 text-[#681B2B] flex items-center justify-center mx-auto">
+                  <Link2 className="w-5 h-5" />
+                </div>
+                <p className="text-xs sm:text-sm font-semibold text-[#2C1E23]">
+                  Enlace generado. No se envió ningún correo.
+                </p>
                 <button
                   type="button"
-                  id="btn-generate-reset-temp"
-                  onClick={() => setResetTempPassword(generateRandomTempPassword())}
-                  className="text-xs font-semibold text-[#681B2B] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  id="btn-open-test-link"
+                  onClick={() => {
+                    if (generatedLinkToken) {
+                      setShowResetModal(false);
+                      openResetPasswordLink(generatedLinkToken);
+                    }
+                  }}
+                  className="w-full py-2.5 px-4 text-xs sm:text-sm font-bold text-white bg-[#681B2B] hover:bg-[#531422] rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  Sugerir otra
+                  <ExternalLink className="w-4 h-4" />
+                  Abrir enlace de prueba
                 </button>
               </div>
-
-              <div className="relative">
-                <input
-                  id="input-reset-temp-password"
-                  type={showResetPasswordText ? 'text' : 'password'}
-                  value={resetTempPassword}
-                  onChange={(e) => setResetTempPassword(e.target.value)}
-                  placeholder="Contraseña temporal"
-                  className="w-full pl-3 pr-10 py-2 font-mono text-xs sm:text-sm rounded-xl border border-[#F2D6DE] bg-white outline-none focus:ring-2 focus:ring-[#681B2B]/20 text-[#2C1E23]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowResetPasswordText(!showResetPasswordText)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7D6871] hover:text-[#2C1E23] cursor-pointer"
-                  tabIndex={-1}
-                  aria-label={showResetPasswordText ? 'Ocultar contraseña' : 'Ver contraseña'}
-                >
-                  {showResetPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <p className="text-[11px] text-[#7D6871]">
-                El usuario deberá cambiar la contraseña en su próximo inicio de sesión.
-              </p>
-            </div>
+            )}
           </div>
         )}
       </Modal>

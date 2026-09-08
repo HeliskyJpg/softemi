@@ -25,6 +25,20 @@ export interface CreateUserParams {
   permissions?: Partial<Record<PermissionCode, boolean>>;
 }
 
+export interface PasswordResetToken {
+  token: string;
+  userId: string;
+  createdAt: number;
+  expiresAt: number;
+  used: boolean;
+}
+
+export interface TokenValidationResult {
+  valid: boolean;
+  user?: User;
+  error?: string;
+}
+
 export type {
   PermissionCode,
   PermissionDefinition,

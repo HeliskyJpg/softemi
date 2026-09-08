@@ -203,7 +203,7 @@ export const DemoScenarioBar: React.FC = () => {
               onClick={() => {
                 setActiveView('users');
                 addToast(
-                  'Haga clic en el botón "Restablecer" de cualquier usuario para iniciar el flujo de reseteo con clave temporal.',
+                  'Haga clic en el botón "Restablecer" de cualquier usuario para generar un enlace simulado de restablecimiento.',
                   'info',
                   'Tarea 7 — Restablecer Clave'
                 );
@@ -214,7 +214,7 @@ export const DemoScenarioBar: React.FC = () => {
               <div>
                 <strong className="block text-amber-200 text-[11px]">7. Restablecer Clave</strong>
                 <span className="text-[10px] text-amber-100/80">
-                  Clave temporal y cambio forzado.
+                  Enlace simulado y cambio definitivo.
                 </span>
               </div>
             </button>
